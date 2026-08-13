@@ -1,0 +1,31 @@
+# docker-compose cho evo-scheduler-service
+# Cac service that su dung sau nay duoc them vao duoi day.
+# Bien moi truong nam trong file .env o root (khong commit).
+
+services:
+  # backend:
+  #   build: ./backend
+  #   env_file: .env
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - redis
+  #
+  # worker:
+  #   build: ./backend
+  #   command: celery -A config worker -l info
+  #   env_file: .env
+  #   depends_on:
+  #     - redis
+  #
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #
+  # frontend:
+  #   build: ./frontend
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NEXT_PUBLIC_API_URL=http://backend:8000
