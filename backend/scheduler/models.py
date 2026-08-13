@@ -293,6 +293,7 @@ class Schedule(models.Model):
     )
     week_start = models.DateField(null=True, blank=True)
     objective_value = models.FloatField(null=True, blank=True)
+    weights_json = models.JSONField(default=dict, blank=True)
 
     class Meta:
         ordering = ["tenant", "-id"]

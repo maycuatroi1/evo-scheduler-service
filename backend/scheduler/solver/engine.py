@@ -3,6 +3,7 @@ from ortools.sat.python import cp_model
 from scheduler.solver.context import BuildContext
 from scheduler.solver.constraints import apply_rule
 from scheduler.solver.result import SolveResult, Assignment, RulePenalty
+from scheduler.solver import objectives
 
 DEFAULT_MAX_TIME_SECONDS = 10.0
 DEFAULT_SEED = 42
@@ -259,7 +260,7 @@ def _resource_overlap(ctx):
                 ctx.model.Add(sum(terms) <= cap)
 
 
-def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAULT_SEED, verbose=False, persist_callback=None):
+def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAULT_SEED, verbose=False, persist_callback=None, weights=None):
     model = cp_model.CpModel()
     ctx = BuildContext(model, data)
     if not ctx.sessions:
@@ -284,6 +285,7 @@ def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAUL
             soft_count += 1
         else:
             hard_count += 1
+    objective_terms = objectives.build_objective(ctx, weights, objective_terms)
     if objective_terms:
         model.Minimize(sum(objective_terms))
     num_constraints = len(model.Proto().constraints)
@@ -351,7 +353,7 @@ def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAUL
     return result
 
 
-def solve(schedule, constraint_rules, data=None, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAULT_SEED, verbose=False, persist=False):
+def solve(schedule, constraint_rules, data=None, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAULT_SEED, verbose=False, persist=False, weights=None):
     data = extract(schedule, constraint_rules, data)
     persist_cb = None
     if persist:
@@ -373,4 +375,4 @@ def solve(schedule, constraint_rules, data=None, max_time_seconds=DEFAULT_MAX_TI
                 }
                 sess.assigned_resource = res_by_code.get(a.resource_code)
                 sess.save(update_fields=["assigned_timeslot", "assigned_resource"])
-    return build_and_solve(data, max_time_seconds=max_time_seconds, seed=seed, verbose=verbose, persist_callback=persist_cb)
+    return build_and_solve(data, max_time_seconds=max_time_seconds, seed=seed, verbose=verbose, persist_callback=persist_cb, weights=weights)
