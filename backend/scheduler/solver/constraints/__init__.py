@@ -7,6 +7,9 @@ from scheduler.solver.constraints import (
     exclusion,
     adjacency,
     distribution,
+    teacher_no_overlap,
+    student_no_overlap,
+    shared_resource_pool,
 )
 
 RULE_MODULES = {
@@ -18,6 +21,9 @@ RULE_MODULES = {
     "exclusion": exclusion,
     "adjacency": adjacency,
     "distribution": distribution,
+    "teacher_no_overlap": teacher_no_overlap,
+    "student_no_overlap": student_no_overlap,
+    "shared_resource_pool": shared_resource_pool,
 }
 
 __all__ = ["RULE_MODULES", "apply_rule"]

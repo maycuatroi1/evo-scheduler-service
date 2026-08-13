@@ -111,6 +111,46 @@ def update_schedule_weights(request, schedule_id, payload: WeightsIn):
     return {"schedule_id": schedule.id, "weights": merged}
 
 
+class SolveResponse(Schema):
+    solve_job_id: str
+    status: str
+    tier_mode: str
+    objective_value: float | None = None
+    tier_results: list
+    violations: list
+
+
+@api.post(
+    "/schedule/{schedule_id}/solve",
+    auth=tenant_auth,
+    response=SolveResponse,
+    url_name="schedule_solve",
+)
+def solve_schedule(request, schedule_id):
+    from scheduler.solver.orchestrator import orchestrate
+
+    schedule = _get_tenant_schedule(request, schedule_id)
+    result = orchestrate(schedule)
+    return {
+        "solve_job_id": result.solve_job_id,
+        "status": result.status,
+        "tier_mode": result.tier_mode,
+        "objective_value": result.objective_value,
+        "tier_results": [
+            {
+                "tier": tr.tier,
+                "status": tr.status,
+                "objective_value": tr.objective_value,
+                "num_sessions": tr.num_sessions,
+                "num_assignments": len(tr.assignments),
+                "violations": list(tr.violations),
+            }
+            for tr in result.tier_results
+        ],
+        "violations": list(result.violations),
+    }
+
+
 XLSX_CONTENT_TYPE = (
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
