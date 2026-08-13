@@ -36,6 +36,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "scheduler.middleware.TenantScopeMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -105,3 +106,10 @@ CELERY_RESULT_BACKEND = os.environ.get(
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
+
+JWT_SIGNING_KEY = os.environ.get(
+    "JWT_SIGNING_KEY",
+    "dev-insecure-signing-key-change-me",
+)
+JWT_ISSUER = os.environ.get("JWT_ISSUER", "")
+JWT_AUDIENCE = os.environ.get("JWT_AUDIENCE", "")
