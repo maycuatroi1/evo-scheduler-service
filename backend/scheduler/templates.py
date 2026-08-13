@@ -7,30 +7,30 @@ from openpyxl.utils import get_column_letter
 from scheduler.excel_parser import SHEET_NAMES
 
 SHEET_HEADERS = {
-    "Teachers": ["Ma GV", "Ho ten", "Blocks", "Quota"],
-    "StudentGroups": ["Ma LH", "Ten LH", "Loai hinh", "Si so"],
-    "Resources": ["Ma TB", "Ten TB", "Loai", "Suc chua", "So luong", "Con lai"],
-    "Modules": ["Ma MH", "Ten MH", "LT", "TH", "Ma LH"],
-    "TeacherModule": ["Ma GV", "Ma MH"],
-    "FixedSessions": ["Ma MH", "Ma LH", "Loai", "So tiet", "Cap", "Ma TB", "Ma GV"],
+    "Teachers": ["Mã GV", "Họ tên", "Khối", "Định mức"],
+    "StudentGroups": ["Mã LH", "Tên LH", "Loại hình", "Sĩ số"],
+    "Resources": ["Mã TB", "Tên TB", "Loại", "Sức chứa", "Số lượng", "Còn lại"],
+    "Modules": ["Mã MH", "Tên MH", "Lý thuyết", "Thực hành", "Mã LH"],
+    "TeacherModule": ["Mã GV", "Mã MH"],
+    "FixedSessions": ["Mã MH", "Mã LH", "Loại", "Số tiết", "Cấp", "Mã TB", "Mã GV"],
 }
 
 EXAMPLE_ROWS = {
     "Teachers": [
-        ["GV001", "Nguyen Van A", "culture", 14],
-        ["GV002", "Tran Thi B", "vocational", 16],
+        ["GV001", "Nguyễn Văn An", "culture", 14],
+        ["GV002", "Trần Thị Bình", "vocational", 16],
     ],
     "StudentGroups": [
-        ["LH001", "Lop 10A1", "dual_degree", 30],
-        ["LH002", "Lop 11B2", "college", 25],
+        ["LH001", "Lớp 10A1", "dual_degree", 30],
+        ["LH002", "Lớp 11B2", "college", 25],
     ],
     "Resources": [
-        ["P101", "Phong Ly thuyet 101", "theory_room", 40, 1, 1],
-        ["TS01", "Bo dung cu thuc hanh", "tool_set", 0, 10, 10],
+        ["P101", "Phòng Lý thuyết 101", "theory_room", 40, 1, 1],
+        ["TS01", "Bộ dụng cụ thực hành", "tool_set", 0, 10, 10],
     ],
     "Modules": [
-        ["MH001", "Toan hoc", 60, 0, "LH001"],
-        ["MH002", "Co khi", 0, 90, "LH002"],
+        ["MH001", "Toán học", 60, 0, "LH001"],
+        ["MH002", "Cơ khí", 0, 90, "LH002"],
     ],
     "TeacherModule": [
         ["GV001", "MH001"],
