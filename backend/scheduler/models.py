@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 
 
@@ -274,6 +276,7 @@ class Schedule(models.Model):
         DRAFT = "draft", "Draft"
         SOLVING = "solving", "Solving"
         SOLVED = "solved", "Solved"
+        FAILED = "failed", "Failed"
         PUBLISHED = "published", "Published"
 
     class Tier(models.TextChoices):
@@ -306,3 +309,50 @@ class Schedule(models.Model):
 
     def __str__(self):
         return f"{self.tenant.code}/{self.name} ({self.status})"
+
+
+class SolveJob(models.Model):
+    class Status(models.TextChoices):
+        QUEUED = "queued", "Queued"
+        SOLVING = "solving", "Solving"
+        SOLVED = "solved", "Solved"
+        FAILED = "failed", "Failed"
+
+    class Phase(models.TextChoices):
+        BUILDING_MODEL = "building_model", "Building Model"
+        SOLVING = "solving", "Solving"
+        POST_PROCESSING = "post_processing", "Post Processing"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey(
+        Tenant, on_delete=models.CASCADE, related_name="solve_jobs"
+    )
+    schedule = models.ForeignKey(
+        Schedule, on_delete=models.CASCADE, related_name="solve_jobs"
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.QUEUED,
+        db_index=True,
+    )
+    phase = models.CharField(
+        max_length=32, choices=Phase.choices, null=True, blank=True
+    )
+    progress = models.PositiveSmallIntegerField(default=0)
+    objective_value = models.FloatField(null=True, blank=True)
+    error = models.TextField(blank=True, default="")
+    metrics_json = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(
+                fields=["tenant", "status"], name="idx_solvejob_t_status"
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.tenant.code}/{self.id} ({self.status})"

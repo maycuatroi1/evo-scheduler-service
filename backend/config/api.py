@@ -19,6 +19,7 @@ from scheduler.models import (
     Resource,
     Schedule,
     Session,
+    SolveJob,
     StudentGroup,
     Teacher,
     TeacherModule,
@@ -489,43 +490,70 @@ def move_session(request, session_id, payload: MoveSessionIn):
     return diff.to_dict()
 
 
-class SolveResponse(Schema):
-    solve_job_id: str
-    status: str
-    tier_mode: str
-    objective_value: float | None = None
-    tier_results: list
-    violations: list
-
-
 @api.post(
     "/schedule/{schedule_id}/solve",
     auth=tenant_auth,
-    response=SolveResponse,
     url_name="schedule_solve",
 )
 def solve_schedule(request, schedule_id):
-    from scheduler.solver.orchestrator import orchestrate
+    from scheduler.tasks import solve_schedule as solve_schedule_task
 
     schedule = _get_tenant_schedule(request, schedule_id)
-    result = orchestrate(schedule)
+    job = SolveJob.objects.create(
+        tenant_id=request.auth["tenant_id"],
+        schedule=schedule,
+        status=SolveJob.Status.QUEUED,
+        phase=None,
+        progress=0,
+    )
+    solve_schedule_task.delay(
+        str(schedule.id), {"solve_job_id": str(job.id)}
+    )
+    return JsonResponse(
+        {
+            "solve_job_id": str(job.id),
+            "schedule_id": schedule.id,
+            "status": job.status,
+        },
+        status=202,
+    )
+
+
+class SolveStatusResponse(Schema):
+    job_id: str
+    schedule_id: int
+    status: str
+    phase: str | None = None
+    progress: int
+    objective_value: float | None = None
+    error: str
+    metrics: dict
+
+
+@api.get(
+    "/solve/{job_id}/status",
+    auth=tenant_auth,
+    response=SolveStatusResponse,
+    url_name="solve_job_status",
+)
+def solve_job_status(request, job_id):
+    from django.core.exceptions import ValidationError
+
+    try:
+        job = SolveJob.objects.select_related("schedule").get(id=job_id)
+    except (SolveJob.DoesNotExist, ValidationError, ValueError, TypeError):
+        raise HttpError(404, "solve job not found")
+    if job.tenant_id != request.auth["tenant_id"]:
+        raise HttpError(404, "solve job not found")
     return {
-        "solve_job_id": result.solve_job_id,
-        "status": result.status,
-        "tier_mode": result.tier_mode,
-        "objective_value": result.objective_value,
-        "tier_results": [
-            {
-                "tier": tr.tier,
-                "status": tr.status,
-                "objective_value": tr.objective_value,
-                "num_sessions": tr.num_sessions,
-                "num_assignments": len(tr.assignments),
-                "violations": list(tr.violations),
-            }
-            for tr in result.tier_results
-        ],
-        "violations": list(result.violations),
+        "job_id": str(job.id),
+        "schedule_id": job.schedule_id,
+        "status": job.status,
+        "phase": job.phase,
+        "progress": job.progress,
+        "objective_value": job.objective_value,
+        "error": job.error,
+        "metrics": job.metrics_json or {},
     }
 
 
