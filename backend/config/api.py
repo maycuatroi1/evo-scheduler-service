@@ -457,6 +457,38 @@ def update_schedule_weights(request, schedule_id, payload: WeightsIn):
     return {"schedule_id": schedule.id, "weights": merged}
 
 
+class MoveSessionIn(Schema):
+    schedule_id: int
+    new_day: int
+    new_period: int
+    new_resource: str | None = None
+
+
+@api.post("/sessions/{session_id}/move", auth=tenant_auth, url_name="session_move")
+def move_session(request, session_id, payload: MoveSessionIn):
+    from scheduler.solver.incremental import InfeasibleMove, incremental_resolve
+
+    tenant = request.auth["tenant"]
+    try:
+        session_id_int = int(session_id)
+    except (TypeError, ValueError):
+        raise HttpError(404, "session not found")
+    if not tenant.sessions.filter(id=session_id_int).exists():
+        raise HttpError(404, "session not found")
+    schedule = _get_tenant_schedule(request, payload.schedule_id)
+    try:
+        diff = incremental_resolve(
+            schedule,
+            session_id_int,
+            payload.new_day,
+            payload.new_period,
+            payload.new_resource,
+        )
+    except InfeasibleMove as exc:
+        raise HttpError(409, str(exc))
+    return diff.to_dict()
+
+
 class SolveResponse(Schema):
     solve_job_id: str
     status: str

@@ -15,7 +15,9 @@ import {
 import {
   distinctTeachers,
   distinctValues,
+  type ChangedSession,
   type Conflict,
+  type MoveSessionResponse,
   type SessionRow,
 } from "@/lib/api";
 import {
@@ -48,6 +50,12 @@ type Props = {
   loading: boolean;
   error: string | null;
   onRefresh: () => void;
+  onMove: (
+    sessionId: string,
+    day: number,
+    period: number,
+    currentRoom: string,
+  ) => Promise<MoveSessionResponse>;
 };
 
 export function ScheduleGrid({
@@ -57,10 +65,13 @@ export function ScheduleGrid({
   loading,
   error,
   onRefresh,
+  onMove,
 }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [view, setView] = useState<ViewMode>("teacher");
   const [localOverride, setLocalOverride] = useState<Session[] | null>(null);
+  const [moveError, setMoveError] = useState<string | null>(null);
+  const [moving, setMoving] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     teacher: NONE,
     classCode: NONE,
@@ -121,7 +132,30 @@ export function ScheduleGrid({
 
   const onDragStart = (e: DragStartEvent) => setActiveId(String(e.active.id));
 
-  const onDragEnd = (e: DragEndEvent) => {
+  const applyDiff = (
+    base: Session[],
+    draggedId: string,
+    day: number,
+    period: number,
+    diff: MoveSessionResponse,
+  ) => {
+    const byId = new Map<string, ChangedSession>();
+    for (const c of diff.changed_sessions) {
+      byId.set(String(c.session_id), c);
+    }
+    return base.map((s) => {
+      const c = byId.get(s.id);
+      if (c) {
+        return { ...s, day: c.new_day, period: c.new_period, room: c.new_resource };
+      }
+      if (s.id === draggedId) {
+        return { ...s, day, period };
+      }
+      return s;
+    });
+  };
+
+  const onDragEnd = async (e: DragEndEvent) => {
     setActiveId(null);
     if (!e.over) return;
     const dragged = effectiveSessions.find((s) => s.id === String(e.active.id));
@@ -131,10 +165,24 @@ export function ScheduleGrid({
     const day = Number(match[1]);
     const period = Number(match[2]);
     if (dragged.day === day && dragged.period === period) return;
-    setLocalOverride((prev) => {
-      const base = prev ?? effectiveSessions;
-      return base.map((s) => (s.id === dragged.id ? { ...s, day, period } : s));
-    });
+
+    const previous = localOverride ?? effectiveSessions;
+    setLocalOverride(
+      previous.map((s) => (s.id === dragged.id ? { ...s, day, period } : s)),
+    );
+    setMoveError(null);
+    setMoving(true);
+    try {
+      const diff = await onMove(dragged.id, day, period, dragged.room);
+      setLocalOverride(applyDiff(sessions, dragged.id, day, period, diff));
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Keo-tha that bai, da hoan tac";
+      setMoveError(msg);
+      setLocalOverride(null);
+    } finally {
+      setMoving(false);
+    }
   };
 
   const onDragCancel = (_e: DragCancelEvent) => setActiveId(null);
@@ -185,6 +233,21 @@ export function ScheduleGrid({
 
   return (
     <div className="flex flex-col gap-4">
+      {moveError && (
+        <div className="flex items-start justify-between gap-3 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+          <span>
+            <span className="font-semibold">Không thể di chuyển:</span>{" "}
+            {moveError}
+          </span>
+          <button
+            type="button"
+            onClick={() => setMoveError(null)}
+            className="font-semibold underline"
+          >
+            Đóng
+          </button>
+        </div>
+      )}
       <div className="flex flex-wrap items-end gap-4 rounded-lg border border-border bg-sidebar p-3 text-sidebar-foreground">
         <FilterSelect
           label="Giáo viên"
@@ -241,14 +304,17 @@ export function ScheduleGrid({
         {localOverride && (
           <button
             type="button"
-            onClick={() => setLocalOverride(null)}
+            onClick={() => {
+              setLocalOverride(null);
+              setMoveError(null);
+            }}
             className="self-end rounded-md border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-primary/10"
           >
             Hoàn tác kéo thả
           </button>
         )}
         <div className="ml-auto self-end text-xs text-foreground/60">
-          {effectiveSessions.length} buổi
+          {moving ? "Đang sửa lịch..." : "%s buổi".replace("%s", String(effectiveSessions.length))}
           {conflicts.length > 0 && (
             <span className="ml-2 rounded bg-destructive/15 px-1.5 py-0.5 font-semibold text-destructive">
               {conflicts.length} xung đột
@@ -311,8 +377,7 @@ export function ScheduleGrid({
       </DndContext>
 
       <p className="text-xs text-foreground/60">
-        Kéo thẻ giữa các ô. Viền đỏ = trùng giáo viên, phòng hoặc lớp. Bấm thẻ
-        để lọc theo giáo viên.
+        Kéo thẻ giữa các ô. Buổi học liên quan sẽ tự xếp lại; viền đỏ = trùng giáo viên, phòng hoặc lớp. Bấm thẻ để lọc theo giáo viên.
       </p>
     </div>
   );

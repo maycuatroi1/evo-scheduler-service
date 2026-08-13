@@ -121,6 +121,27 @@ export type StatsResponse = {
   schedules: ScheduleSummary[];
 };
 
+export type ChangedSession = {
+  session_id: number;
+  old_day: number | null;
+  old_period: number | null;
+  old_resource: string | null;
+  new_day: number;
+  new_period: number;
+  new_resource: string;
+  is_dragged: boolean;
+};
+
+export type MoveSessionResponse = {
+  changed_sessions: ChangedSession[];
+  unchanged_session_ids: number[];
+  unchanged_count: number;
+  objective_value: number;
+  status: string;
+  wall_time: number;
+  dragged_session_id: number | null;
+};
+
 export type ApiClient = {
   listTeachers: () => Promise<Teacher[]>;
   listSchedules: () => Promise<ScheduleSummary[]>;
@@ -135,6 +156,13 @@ export type ApiClient = {
   templateUrl: () => string;
   exportUrl: (scheduleId: number) => string;
   getStats: () => Promise<StatsResponse>;
+  moveSession: (
+    sessionId: number,
+    scheduleId: number,
+    newDay: number,
+    newPeriod: number,
+    newResource?: string,
+  ) => Promise<MoveSessionResponse>;
 };
 
 async function parseError(res: Response): Promise<ApiError> {
@@ -246,6 +274,21 @@ export function createApiClient(token: string | null): ApiClient {
     },
     async getStats() {
       return request<StatsResponse>("/stats");
+    },
+    async moveSession(sessionId, scheduleId, newDay, newPeriod, newResource) {
+      return request<MoveSessionResponse>(
+        "/sessions/" + sessionId + "/move",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            schedule_id: scheduleId,
+            new_day: newDay,
+            new_period: newPeriod,
+            new_resource: newResource ?? null,
+          }),
+        },
+      );
     },
   };
 }

@@ -9,6 +9,7 @@ import {
   exportBlob,
   toGridSessions,
   type Conflict,
+  type MoveSessionResponse,
   type SessionRow,
 } from "@/lib/api";
 
@@ -53,6 +54,24 @@ export default function SchedulePage() {
 
   const gridSessions = useMemo(() => toGridSessions(rows), [rows]);
 
+  async function handleMove(
+    sessionId: string,
+    day: number,
+    period: number,
+    currentRoom: string,
+  ): Promise<MoveSessionResponse> {
+    if (scheduleId === null) {
+      throw new Error("Chua chon lich");
+    }
+    return api.moveSession(
+      Number(sessionId),
+      scheduleId,
+      day,
+      period,
+      currentRoom || undefined,
+    );
+  }
+
   async function handleExport() {
     if (scheduleId === null) return;
     setExporting(true);
@@ -94,6 +113,7 @@ export default function SchedulePage() {
         loading={loading}
         error={error}
         onRefresh={load}
+        onMove={handleMove}
       />
     </div>
   );
