@@ -165,6 +165,41 @@ export type ApiClient = {
   ) => Promise<MoveSessionResponse>;
 };
 
+export type AuthUser = { id: string; email: string; name: string };
+
+export type AuthResult = {
+  token: string;
+  user: AuthUser;
+  tenant_id: number;
+};
+
+export async function authRegister(input: {
+  name: string;
+  email: string;
+  password: string;
+}): Promise<AuthResult> {
+  const res = await fetch(API_URL + "/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw await parseError(res);
+  return (await res.json()) as AuthResult;
+}
+
+export async function authLogin(input: {
+  email: string;
+  password: string;
+}): Promise<AuthResult> {
+  const res = await fetch(API_URL + "/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!res.ok) throw await parseError(res);
+  return (await res.json()) as AuthResult;
+}
+
 async function parseError(res: Response): Promise<ApiError> {
   let message = "Lỗi %s".replace("%s", String(res.status));
   try {

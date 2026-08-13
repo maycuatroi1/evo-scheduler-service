@@ -356,3 +356,20 @@ class SolveJob(models.Model):
 
     def __str__(self):
         return f"{self.tenant.code}/{self.id} ({self.status})"
+
+
+class User(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    email = models.EmailField(unique=True, db_index=True)
+    name = models.CharField(max_length=255)
+    password_hash = models.CharField(max_length=255)
+    tenant = models.ForeignKey(
+        Tenant, on_delete=models.CASCADE, related_name="users"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.email} ({self.tenant.code})"

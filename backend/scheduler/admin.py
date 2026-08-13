@@ -10,6 +10,7 @@ from .models import (
     Teacher,
     TeacherModule,
     Tenant,
+    User,
 )
 
 
@@ -18,6 +19,15 @@ class TenantAdmin(admin.ModelAdmin):
     list_display = ("id", "code", "name")
     search_fields = ("code", "name")
     ordering = ("code",)
+
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ("id", "email", "name", "tenant", "created_at")
+    list_filter = ("tenant",)
+    search_fields = ("email", "name")
+    list_select_related = ("tenant",)
+    ordering = ("-created_at",)
 
 
 @admin.register(Teacher)

@@ -3,6 +3,7 @@ NinjaAPI instance and project-level endpoints.
 """
 
 import io
+import uuid
 
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
@@ -13,6 +14,7 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 from scheduler import excel_parser, templates, validator
+from scheduler.accounts import hash_password, mint_token, verify_password
 from scheduler.auth import tenant_auth
 from scheduler.models import (
     Module,
@@ -23,8 +25,11 @@ from scheduler.models import (
     StudentGroup,
     Teacher,
     TeacherModule,
+    Tenant,
+    User,
 )
 from scheduler.scoping import scoped_queryset
+from scheduler.seed import seed_demo_data
 from scheduler.solver import objectives
 
 
@@ -34,6 +39,95 @@ api = NinjaAPI(title="evo-scheduler-service API", version="1.0.0")
 @api.get("/health")
 def health(request):
     return {"status": "ok"}
+
+
+class AuthUserOut(Schema):
+    id: str
+    email: str
+    name: str
+
+
+class AuthResponse(Schema):
+    token: str
+    user: AuthUserOut
+    tenant_id: int
+
+
+class RegisterIn(Schema):
+    name: str
+    email: str
+    password: str
+
+
+class LoginIn(Schema):
+    email: str
+    password: str
+
+
+def _normalize_email(email: str) -> str:
+    return (email or "").strip().lower()
+
+
+def _user_payload(user: User) -> AuthUserOut:
+    return {"id": str(user.id), "email": user.email, "name": user.name}
+
+
+@api.post("/auth/register", response={201: AuthResponse})
+def auth_register(request, payload: RegisterIn):
+    name = (payload.name or "").strip()
+    email = _normalize_email(payload.email)
+    password = payload.password or ""
+    if not name or not email or not password:
+        raise HttpError(400, "name, email and password are required")
+    if User.objects.filter(email=email).exists():
+        raise HttpError(400, "Email already registered")
+    with transaction.atomic():
+        code_base = email.split("@")[0][:32] or "tenant"
+        tenant_code = f"{code_base}-{uuid.uuid4().hex[:8]}"
+        tenant = Tenant.objects.create(
+            name=f"{name}'s School",
+            code=tenant_code,
+        )
+        user = User.objects.create(
+            email=email,
+            name=name,
+            password_hash=hash_password(password),
+            tenant=tenant,
+        )
+        seed_demo_data(tenant)
+    token = mint_token(user)
+    return {"token": token, "user": _user_payload(user), "tenant_id": tenant.id}
+
+
+@api.post("/auth/login", response=AuthResponse)
+def auth_login(request, payload: LoginIn):
+    email = _normalize_email(payload.email)
+    password = payload.password or ""
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        raise HttpError(401, "Invalid credentials")
+    if not verify_password(password, user.password_hash):
+        raise HttpError(401, "Invalid credentials")
+    token = mint_token(user)
+    return {
+        "token": token,
+        "user": _user_payload(user),
+        "tenant_id": user.tenant_id,
+    }
+
+
+@api.get("/auth/me", auth=tenant_auth)
+def auth_me(request):
+    auth_payload = request.auth
+    claims = auth_payload.get("claims", {})
+    return {
+        "tenant_id": auth_payload["tenant_id"],
+        "deployment_id": auth_payload.get("deployment_id"),
+        "email": claims.get("email"),
+        "name": claims.get("name"),
+        "claims": claims,
+    }
 
 
 class MeResponse(Schema):
