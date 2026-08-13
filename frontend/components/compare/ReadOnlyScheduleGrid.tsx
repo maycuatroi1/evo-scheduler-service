@@ -1,4 +1,10 @@
-import { days, periods, type Session } from "@/lib/mock/schedule";
+import {
+  deriveDayAxis,
+  derivePeriodAxis,
+  type DayAxis,
+  type PeriodAxis,
+} from "@/lib/grid";
+import type { Session } from "@/lib/mock/schedule";
 
 type Props = {
   variantLabel: string;
@@ -7,7 +13,7 @@ type Props = {
 };
 
 function cellId(day: number, period: number) {
-  return `${day}-${period}`;
+  return day + "-" + period;
 }
 
 export function ReadOnlyScheduleGrid({ variantLabel, sessions, highlightIds }: Props) {
@@ -19,6 +25,9 @@ export function ReadOnlyScheduleGrid({ variantLabel, sessions, highlightIds }: P
     cellMap.set(key, arr);
   }
 
+  const days: DayAxis[] = deriveDayAxis(sessions);
+  const periods: PeriodAxis[] = derivePeriodAxis(sessions);
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
@@ -29,7 +38,7 @@ export function ReadOnlyScheduleGrid({ variantLabel, sessions, highlightIds }: P
         <div
           className="grid min-w-[640px]"
           style={{
-            gridTemplateColumns: `70px repeat(${days.length}, minmax(110px, 1fr))`,
+            gridTemplateColumns: "70px repeat(" + days.length + ", minmax(110px, 1fr))",
           }}
         >
           <div className="sticky left-0 top-0 z-30 border-b border-r border-border bg-sidebar px-2 py-2 text-[11px] font-semibold uppercase text-foreground/60">
@@ -47,6 +56,7 @@ export function ReadOnlyScheduleGrid({ variantLabel, sessions, highlightIds }: P
           {periods.map((p) => (
             <Row
               key={p.index}
+              days={days}
               period={p.index}
               periodLabel={p.label}
               cellMap={cellMap}
@@ -60,11 +70,13 @@ export function ReadOnlyScheduleGrid({ variantLabel, sessions, highlightIds }: P
 }
 
 function Row({
+  days,
   period,
   periodLabel,
   cellMap,
   highlightIds,
 }: {
+  days: DayAxis[];
   period: number;
   periodLabel: string;
   cellMap: Map<string, Session[]>;

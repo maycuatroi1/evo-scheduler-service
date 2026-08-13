@@ -6,7 +6,7 @@ export default function ImportPage() {
       <div>
         <h2 className="text-2xl font-bold text-foreground">Import</h2>
         <p className="text-sm text-foreground/60">
-          Upload an Excel workbook, map columns, preview validation, and commit.
+          Tải lên workbook Excel, kiểm tra, và commit vào backend.
         </p>
       </div>
       <ImportWizard />

@@ -2,10 +2,15 @@
 NinjaAPI instance and project-level endpoints.
 """
 
+import io
+
 from django.db import transaction
 from django.http import HttpResponse, JsonResponse
 from ninja import File, NinjaAPI, Schema, UploadedFile
 from ninja.errors import HttpError
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
 
 from scheduler import excel_parser, templates, validator
 from scheduler.auth import tenant_auth
@@ -79,6 +84,347 @@ def _get_tenant_schedule(request, schedule_id):
     if schedule.tenant_id != request.auth["tenant_id"]:
         raise HttpError(404, "schedule not found")
     return schedule
+
+
+class ScheduleOut(Schema):
+    id: int
+    name: str
+    status: str
+    tier: str | None = None
+    objective_value: float | None = None
+
+
+class ScheduleCreateIn(Schema):
+    name: str
+    tier: str | None = None
+
+
+@api.get("/schedule", auth=tenant_auth, response=list[ScheduleOut])
+def list_schedules(request):
+    qs = scoped_queryset(Schedule)
+    return [
+        {
+            "id": s.id,
+            "name": s.name,
+            "status": s.status,
+            "tier": s.tier,
+            "objective_value": s.objective_value,
+        }
+        for s in qs
+    ]
+
+
+@api.post("/schedule", auth=tenant_auth, response=ScheduleOut)
+def create_schedule(request, payload: ScheduleCreateIn):
+    tenant = request.auth["tenant"]
+    if payload.tier and payload.tier not in dict(Schedule.Tier.choices):
+        raise HttpError(400, "invalid tier")
+    schedule = Schedule.objects.create(
+        tenant=tenant,
+        name=payload.name,
+        tier=payload.tier,
+        status=Schedule.Status.DRAFT,
+    )
+    return {
+        "id": schedule.id,
+        "name": schedule.name,
+        "status": schedule.status,
+        "tier": schedule.tier,
+        "objective_value": schedule.objective_value,
+    }
+
+
+@api.get("/schedule/{schedule_id}/sessions", auth=tenant_auth)
+def list_schedule_sessions(request, schedule_id):
+    schedule = _get_tenant_schedule(request, schedule_id)
+    tenant = request.auth["tenant"]
+    qs = (
+        tenant.sessions.select_related(
+            "module", "student_group", "assigned_resource"
+        )
+        .prefetch_related("assigned_teachers")
+    )
+    rows = []
+    for s in qs:
+        ts = s.assigned_timeslot or {}
+        rows.append(
+            {
+                "id": s.id,
+                "module_code": s.module.code,
+                "module_name": s.module.name,
+                "student_group_code": s.student_group.code,
+                "student_group_name": s.student_group.name,
+                "session_type": s.session_type,
+                "tier": s.tier,
+                "duration_slots": s.duration_slots,
+                "is_locked": s.is_locked,
+                "day": ts.get("day"),
+                "period": ts.get("period"),
+                "day_name": ts.get("day_name"),
+                "resource_code": (
+                    s.assigned_resource.code if s.assigned_resource else None
+                ),
+                "teachers": [
+                    {"code": t.code, "name": t.name}
+                    for t in s.assigned_teachers.all()
+                ],
+            }
+        )
+    return {"schedule_id": schedule.id, "sessions": rows}
+
+
+DAY_NAME_VI = {
+    0: "Thứ 2",
+    1: "Thứ 3",
+    2: "Thứ 4",
+    3: "Thứ 5",
+    4: "Thứ 6",
+    5: "Thứ 7",
+    6: "Chủ nhật",
+}
+
+
+@api.get("/schedule/{schedule_id}/conflicts", auth=tenant_auth)
+def list_schedule_conflicts(request, schedule_id):
+    schedule = _get_tenant_schedule(request, schedule_id)
+    tenant = request.auth["tenant"]
+    qs = (
+        tenant.sessions.select_related("module", "student_group", "assigned_resource")
+        .prefetch_related("assigned_teachers")
+    )
+    buckets = {}
+    for s in qs:
+        ts = s.assigned_timeslot
+        if not ts:
+            continue
+        day = ts.get("day")
+        period = ts.get("period")
+        if day is None or period is None:
+            continue
+        buckets.setdefault((day, period), []).append(s)
+
+    conflicts = []
+    for (day, period), group in buckets.items():
+        n = len(group)
+        for i in range(n):
+            for j in range(i + 1, n):
+                a = group[i]
+                b = group[j]
+                a_teachers = {t.code for t in a.assigned_teachers.all()}
+                b_teachers = {t.code for t in b.assigned_teachers.all()}
+                shared_teachers = a_teachers & b_teachers
+                a_room = a.assigned_resource_id
+                b_room = b.assigned_resource_id
+                room_clash = (
+                    a_room is not None and a_room == b_room
+                )
+                group_clash = a.student_group_id == b.student_group_id
+                for kind, hit in (
+                    ("teacher", bool(shared_teachers)),
+                    ("room", room_clash),
+                    ("student_group", group_clash),
+                ):
+                    if not hit:
+                        continue
+                    detail = None
+                    if kind == "teacher":
+                        detail = ", ".join(sorted(shared_teachers))
+                    elif kind == "room":
+                        detail = (
+                            a.assigned_resource.code if a.assigned_resource else ""
+                        )
+                    elif kind == "student_group":
+                        detail = a.student_group.code
+                    conflicts.append(
+                        {
+                            "type": kind,
+                            "session_ids": [a.id, b.id],
+                            "day": day,
+                            "period": period,
+                            "day_name": DAY_NAME_VI.get(day, ts.get("day_name", "")),
+                            "detail": detail,
+                        }
+                    )
+    return {"schedule_id": schedule.id, "conflicts": conflicts}
+
+
+EXPORT_HEADER_FILL = PatternFill(
+    start_color="FF1F4E78", end_color="FF1F4E78", fill_type="solid"
+)
+EXPORT_HEADER_FONT = Font(color="FFFFFFFF", bold=True)
+EXPORT_WRAP = Alignment(wrap_text=True, vertical="top")
+
+
+def _build_export_xlsx(tenant, schedule):
+    qs = (
+        tenant.sessions.select_related(
+            "module", "student_group", "assigned_resource"
+        )
+        .prefetch_related("assigned_teachers")
+    )
+    assigned = []
+    days_seen = set()
+    periods_seen = set()
+    for s in qs:
+        ts = s.assigned_timeslot
+        if not ts or ts.get("day") is None or ts.get("period") is None:
+            continue
+        days_seen.add(ts["day"])
+        periods_seen.add(ts["period"])
+        teacher_names = ", ".join(t.name for t in s.assigned_teachers.all())
+        assigned.append(
+            {
+                "day": ts["day"],
+                "period": ts["period"],
+                "module_code": s.module.code,
+                "module_name": s.module.name,
+                "group": s.student_group.code,
+                "teachers": teacher_names,
+                "room": s.assigned_resource.code if s.assigned_resource else "",
+                "session_type": s.session_type,
+            }
+        )
+
+    day_list = sorted(days_seen) if days_seen else list(range(0, 6))
+    period_list = sorted(periods_seen) if periods_seen else list(range(0, 5))
+
+    cell_map = {}
+    for a in assigned:
+        cell_map.setdefault((a["day"], a["period"]), []).append(a)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Lich"
+    ws.cell(row=1, column=1, value="Tiết / Ngày")
+    for col_idx, d in enumerate(day_list, start=2):
+        ws.cell(row=1, column=col_idx, value=DAY_NAME_VI.get(d, "Ngày %s" % d))
+    for r_idx, p in enumerate(period_list, start=2):
+        ws.cell(row=r_idx, column=1, value="Tiết %s" % (p + 1))
+        for c_idx, d in enumerate(day_list, start=2):
+            items = cell_map.get((d, p), [])
+            if not items:
+                continue
+            lines = []
+            for it in items:
+                lines.append(
+                    "%s - %s\n%s | %s | %s"
+                    % (
+                        it["module_code"],
+                        it["group"],
+                        it["teachers"] or "(chưa phân GV)",
+                        it["room"] or "(chưa phân phòng)",
+                        it["session_type"],
+                    )
+                )
+            cell = ws.cell(row=r_idx, column=c_idx, value="\n".join(lines))
+            cell.alignment = EXPORT_WRAP
+
+    for col_idx in range(1, len(day_list) + 2):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.fill = EXPORT_HEADER_FILL
+        cell.font = EXPORT_HEADER_FONT
+        cell.alignment = EXPORT_WRAP
+        width = 16 if col_idx > 1 else 12
+        ws.column_dimensions[get_column_letter(col_idx)].width = width
+    ws.column_dimensions["A"].width = 12
+
+    ws_detail = wb.create_sheet(title="Chi tiet")
+    detail_headers = [
+        "Ngày",
+        "Tiết",
+        "Mã môn",
+        "Tên môn",
+        "Lớp",
+        "Giáo viên",
+        "Phòng",
+        "Loại",
+    ]
+    for col_idx, h in enumerate(detail_headers, start=1):
+        cell = ws_detail.cell(row=1, column=col_idx, value=h)
+        cell.fill = EXPORT_HEADER_FILL
+        cell.font = EXPORT_HEADER_FONT
+    for r_idx, a in enumerate(
+        sorted(assigned, key=lambda x: (x["day"], x["period"])), start=2
+    ):
+        ws_detail.cell(row=r_idx, column=1, value=DAY_NAME_VI.get(a["day"], a["day"]))
+        ws_detail.cell(row=r_idx, column=2, value=a["period"] + 1)
+        ws_detail.cell(row=r_idx, column=3, value=a["module_code"])
+        ws_detail.cell(row=r_idx, column=4, value=a["module_name"])
+        ws_detail.cell(row=r_idx, column=5, value=a["group"])
+        ws_detail.cell(row=r_idx, column=6, value=a["teachers"])
+        ws_detail.cell(row=r_idx, column=7, value=a["room"])
+        ws_detail.cell(row=r_idx, column=8, value=a["session_type"])
+    for col_idx in range(1, len(detail_headers) + 1):
+        ws_detail.column_dimensions[get_column_letter(col_idx)].width = 18
+
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    return buffer.getvalue()
+
+
+@api.get("/schedule/{schedule_id}/export", auth=tenant_auth)
+def export_schedule(request, schedule_id, format: str = "xlsx"):
+    schedule = _get_tenant_schedule(request, schedule_id)
+    if format != "xlsx":
+        raise HttpError(400, "only format=xlsx is supported")
+    tenant = request.auth["tenant"]
+    payload = _build_export_xlsx(tenant, schedule)
+    response = HttpResponse(payload, content_type=XLSX_CONTENT_TYPE)
+    response["Content-Disposition"] = (
+        'attachment; filename="schedule_%s.xlsx"' % schedule_id
+    )
+    response["Content-Length"] = str(len(payload))
+    return response
+
+
+@api.get("/stats", auth=tenant_auth)
+def tenant_stats(request):
+    tenant = request.auth["tenant"]
+    teachers = tenant.teachers.count()
+    student_groups = tenant.student_groups.count()
+    resources = tenant.resources.count()
+    modules = tenant.modules.count()
+    sessions_total = tenant.sessions.count()
+    sessions_assigned = tenant.sessions.exclude(
+        assigned_timeslot__isnull=True
+    ).count()
+    loads = {}
+    for s in tenant.sessions.exclude(assigned_timeslot__isnull=True):
+        ts = s.assigned_timeslot or {}
+        d = ts.get("day")
+        if d is None:
+            continue
+        loads[d] = loads.get(d, 0) + 1
+    weekly = [
+        {"day": DAY_NAME_VI.get(d, str(d)), "load": loads.get(d, 0)}
+        for d in sorted(loads)
+    ]
+    schedules = [
+        {
+            "id": s.id,
+            "name": s.name,
+            "status": s.status,
+            "objective_value": s.objective_value,
+        }
+        for s in tenant.schedules.order_by("-id")[:5]
+    ]
+    completion = 0
+    if sessions_total:
+        completion = round(sessions_assigned * 100 / sessions_total)
+    return {
+        "tenant_code": tenant.code,
+        "counts": {
+            "teachers": teachers,
+            "student_groups": student_groups,
+            "resources": resources,
+            "modules": modules,
+            "sessions": sessions_total,
+            "sessions_assigned": sessions_assigned,
+        },
+        "completion": completion,
+        "weekly_load": weekly,
+        "schedules": schedules,
+    }
 
 
 @api.get("/schedule/{schedule_id}/weights", auth=tenant_auth, response=WeightsOut)

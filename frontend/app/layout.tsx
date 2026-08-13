@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { Sidebar } from "@/components/Sidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { TokenInput } from "@/components/TokenInput";
 
 const firaSans = Fira_Sans({
   variable: "--font-fira-sans",
@@ -40,7 +41,8 @@ export default function RootLayout({
             <div className="flex min-h-screen">
               <Sidebar />
               <div className="flex flex-1 flex-col">
-                <header className="flex items-center justify-end border-b border-border px-6 py-3">
+                <header className="flex items-center justify-end gap-3 border-b border-border px-6 py-3">
+                  <TokenInput />
                   <ThemeToggle />
                 </header>
                 <main className="flex-1 p-6">{children}</main>
