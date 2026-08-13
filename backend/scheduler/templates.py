@@ -15,18 +15,27 @@ SHEET_HEADERS = {
     "FixedSessions": ["Mã MH", "Mã LH", "Loại", "Số tiết", "Cấp", "Mã TB", "Mã GV"],
 }
 
+SHEET_LABELS = {
+    "Teachers": "Giáo viên",
+    "StudentGroups": "Lớp học",
+    "Resources": "Thiết bị",
+    "Modules": "Môn học",
+    "TeacherModule": "GV - Môn học",
+    "FixedSessions": "Tiết cố định",
+}
+
 EXAMPLE_ROWS = {
     "Teachers": [
-        ["GV001", "Nguyễn Văn An", "culture", 14],
-        ["GV002", "Trần Thị Bình", "vocational", 16],
+        ["GV001", "Nguyễn Văn An", "Văn hóa", 14],
+        ["GV002", "Trần Thị Bình", "Nghề", 16],
     ],
     "StudentGroups": [
-        ["LH001", "Lớp 10A1", "dual_degree", 30],
-        ["LH002", "Lớp 11B2", "college", 25],
+        ["LH001", "Lớp 10A1", "Song bằng", 30],
+        ["LH002", "Lớp 11B2", "Cao đẳng", 25],
     ],
     "Resources": [
-        ["P101", "Phòng Lý thuyết 101", "theory_room", 40, 1, 1],
-        ["TS01", "Bộ dụng cụ thực hành", "tool_set", 0, 10, 10],
+        ["P101", "Phòng Lý thuyết 101", "Phòng lý thuyết", 40, 1, 1],
+        ["TS01", "Bộ dụng cụ thực hành", "Bộ dụng cụ", 0, 10, 10],
     ],
     "Modules": [
         ["MH001", "Toán học", 60, 0, "LH001"],
@@ -37,8 +46,8 @@ EXAMPLE_ROWS = {
         ["GV002", "MH002"],
     ],
     "FixedSessions": [
-        ["MH001", "LH001", "theory", 3, "culture", "P101", "GV001"],
-        ["MH002", "LH002", "practice", 4, "vocational", "TS01", "GV002"],
+        ["MH001", "LH001", "Lý thuyết", 3, "Văn hóa", "P101", "GV001"],
+        ["MH002", "LH002", "Thực hành", 4, "Nghề", "TS01", "GV002"],
     ],
 }
 
@@ -72,7 +81,7 @@ def generate_template():
     for sheet_name in SHEET_NAMES:
         _write_sheet(
             wb,
-            sheet_name,
+            SHEET_LABELS[sheet_name],
             SHEET_HEADERS[sheet_name],
             EXAMPLE_ROWS[sheet_name],
         )

@@ -13,12 +13,12 @@ SHEET_NAMES = [
 ]
 
 SHEET_ALIASES = {
-    "Teachers": ["Teachers", "GiaoVien", "GiangVien", "Teacher"],
-    "StudentGroups": ["StudentGroups", "LopHoc", "NhomHocSinh", "StudentGroup"],
-    "Resources": ["Resources", "ThietBi", "PhongHoc", "Resource"],
-    "Modules": ["Modules", "MonHoc", "Module"],
-    "TeacherModule": ["TeacherModule", "GVMH", "GV-MH"],
-    "FixedSessions": ["FixedSessions", "TietCoDinh", "Sessions", "BuoiHoc", "Session"],
+    "Teachers": ["Teachers", "GiaoVien", "Giáo viên", "Giao vien", "GiangVien", "Teacher"],
+    "StudentGroups": ["StudentGroups", "LopHoc", "Lớp học", "Lop hoc", "NhomHocSinh", "StudentGroup"],
+    "Resources": ["Resources", "ThietBi", "Thiết bị", "Thiet bi", "PhongHoc", "Resource"],
+    "Modules": ["Modules", "MonHoc", "Môn học", "Mon hoc", "Module"],
+    "TeacherModule": ["TeacherModule", "GVMH", "GV-MH", "GV - Môn học", "GV - Mon hoc", "GV - Môn"],
+    "FixedSessions": ["FixedSessions", "TietCoDinh", "Tiết cố định", "Tiet co dinh", "Sessions", "BuoiHoc", "Session"],
 }
 
 FIELD_ALIASES = {
@@ -249,6 +249,34 @@ def to_list(value):
     return [to_str(value)]
 
 
+ENUM_LABELS = {
+    "culture": ["Văn hóa", "Khối văn hóa"],
+    "vocational": ["Nghề", "Khối nghề"],
+    "both": ["Cả hai"],
+    "dual_degree": ["Song bằng"],
+    "college": ["Cao đẳng"],
+    "theory_room": ["Phòng lý thuyết", "Phòng học lý thuyết"],
+    "tool_set": ["Bộ dụng cụ", "Dụng cụ thực hành"],
+    "workshop": ["Xưởng"],
+    "theory": ["Lý thuyết"],
+    "practice": ["Thực hành"],
+}
+
+ENUM_NORMALIZED = {}
+for _code, _labels in ENUM_LABELS.items():
+    for _lbl in [_code, _code.replace("_", ""), _code.replace("_", " ")] + _labels:
+        ENUM_NORMALIZED[normalize(_lbl)] = _code
+
+ENUM_FIELDS = ("blocks", "enrollment_type", "type", "session_type", "tier")
+
+
+def _canonical_enum(raw):
+    text = to_str(raw)
+    if not text:
+        return raw
+    return ENUM_NORMALIZED.get(normalize(text), text)
+
+
 def _match_sheets(workbook):
     canonical_by_norm = {}
     for canonical, aliases in SHEET_ALIASES.items():
@@ -290,7 +318,12 @@ def _read_rows(ws, field_to_col):
             continue
         record = {"row": row_idx}
         for field, col_idx in field_to_col.items():
-            record[field] = ws.cell(row=row_idx, column=col_idx).value
+            val = ws.cell(row=row_idx, column=col_idx).value
+            if field == "blocks":
+                val = [_canonical_enum(v) for v in to_list(val)]
+            elif field in ENUM_FIELDS:
+                val = _canonical_enum(val)
+            record[field] = val
         rows.append(record)
     return rows
 
