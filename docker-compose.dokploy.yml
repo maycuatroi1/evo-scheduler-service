@@ -13,14 +13,10 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
-    networks:
-      - sched-net
 
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    networks:
-      - sched-net
 
   backend:
     build:
@@ -44,8 +40,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-    networks:
-      - sched-net
+
 
   worker:
     build:
@@ -66,8 +61,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
-    networks:
-      - sched-net
+
 
   frontend:
     build:
@@ -80,12 +74,7 @@ services:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://scheduler-api.evobright.edu.vn/api}
     depends_on:
       - backend
-    networks:
-      - sched-net
+
 
 volumes:
   postgres_data:
-
-networks:
-  sched-net:
-    driver: bridge
