@@ -27,7 +27,9 @@ import {
   type PeriodAxis,
 } from "@/lib/grid";
 import { isConflict, type Session } from "@/lib/mock/schedule";
+import { tierColor, tierLabel } from "@/lib/labels";
 import { SessionCard, SessionCardPreview } from "./SessionCard";
+import { SessionDetailModal } from "./SessionDetailModal";
 
 type ViewMode = "teacher" | "class" | "room";
 
@@ -72,6 +74,7 @@ export function ScheduleGrid({
   const [localOverride, setLocalOverride] = useState<Session[] | null>(null);
   const [moveError, setMoveError] = useState<string | null>(null);
   const [moving, setMoving] = useState(false);
+  const [detailSession, setDetailSession] = useState<Session | null>(null);
   const [filters, setFilters] = useState<Filters>({
     teacher: NONE,
     classCode: NONE,
@@ -130,6 +133,19 @@ export function ScheduleGrid({
     filters.classCode !== NONE ||
     filters.room !== NONE;
 
+  const stats = useMemo(() => {
+    const assigned = effectiveSessions.filter((s) => s.day >= 0 && s.period >= 0);
+    const culture = assigned.filter((s) => s.tier === "culture");
+    const vocational = assigned.filter((s) => s.tier === "vocational");
+    return {
+      total: effectiveSessions.length,
+      assigned: assigned.length,
+      culture: culture.length,
+      vocational: vocational.length,
+      conflicts: conflicts.length,
+    };
+  }, [effectiveSessions, conflicts]);
+
   const onDragStart = (e: DragStartEvent) => setActiveId(String(e.active.id));
 
   const applyDiff = (
@@ -187,11 +203,7 @@ export function ScheduleGrid({
 
   const onDragCancel = (_e: DragCancelEvent) => setActiveId(null);
 
-  const onCardClick = (s: Session) =>
-    setFilters((prev) => ({
-      ...prev,
-      teacher: prev.teacher === s.teacherCode ? NONE : s.teacherCode,
-    }));
+  const onCardClick = (s: Session) => setDetailSession(s);
 
   if (loading) {
     return (
@@ -248,6 +260,15 @@ export function ScheduleGrid({
           </button>
         </div>
       )}
+
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        <StatCard label="Tổng số tiết" value={stats.total} />
+        <StatCard label="Đã xếp" value={stats.assigned} tone="primary" />
+        <StatCard label="Văn hóa" value={stats.culture} tone="culture" />
+        <StatCard label="Nghề" value={stats.vocational} tone="vocational" />
+        <StatCard label="Xung đột" value={stats.conflicts} tone={stats.conflicts > 0 ? "danger" : "neutral"} />
+      </div>
+
       <div className="flex flex-wrap items-end gap-4 rounded-lg border border-border bg-sidebar p-3 text-sidebar-foreground">
         <FilterSelect
           label="Giáo viên"
@@ -323,6 +344,27 @@ export function ScheduleGrid({
         </div>
       </div>
 
+      <div className="flex flex-wrap items-center gap-4 px-1 text-xs text-foreground/60">
+        <span className="font-semibold uppercase tracking-wide">Chú thích:</span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-4 rounded-full bg-primary" />
+          Văn hóa
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-4 rounded-full bg-accent" />
+          Nghề
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="rounded bg-primary/10 px-1 text-[10px] font-bold text-primary">LT</span>
+          Lý thuyết
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="rounded bg-accent/10 px-1 text-[10px] font-bold text-accent">TH</span>
+          Thực hành
+        </span>
+        <span className="ml-auto">Bấm thẻ để xem chi tiết. Kéo thẻ giữa các ô để dời tiết.</span>
+      </div>
+
       <DndContext
         sensors={sensors}
         onDragStart={onDragStart}
@@ -376,9 +418,11 @@ export function ScheduleGrid({
         </DragOverlay>
       </DndContext>
 
-      <p className="text-xs text-foreground/60">
-        Kéo thẻ giữa các ô. Buổi học liên quan sẽ tự xếp lại; viền đỏ = trùng giáo viên, phòng hoặc lớp. Bấm thẻ để lọc theo giáo viên.
-      </p>
+      <SessionDetailModal
+        session={detailSession}
+        onClose={() => setDetailSession(null)}
+        onFilterTeacher={(code) => setFilters((p) => ({ ...p, teacher: code }))}
+      />
     </div>
   );
 }
@@ -548,6 +592,34 @@ function FilterSelect({
           </option>
         ))}
       </select>
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  tone = "neutral",
+}: {
+  label: string;
+  value: number;
+  tone?: "neutral" | "primary" | "culture" | "vocational" | "danger";
+}) {
+  const tones: Record<string, string> = {
+    neutral: "text-foreground",
+    primary: "text-primary",
+    culture: "text-primary",
+    vocational: "text-accent",
+    danger: "text-destructive",
+  };
+  return (
+    <div className="rounded-lg border border-border bg-sidebar px-3 py-2 shadow-sm">
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-foreground/50">
+        {label}
+      </div>
+      <div className={`mt-0.5 font-mono text-2xl font-bold ${tones[tone]}`}>
+        {value}
+      </div>
     </div>
   );
 }

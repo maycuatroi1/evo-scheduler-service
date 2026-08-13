@@ -11,6 +11,12 @@ export type Session = {
   type: SessionType;
   day: number;
   period: number;
+  tier?: string | null;
+  teachers?: { code: string; name: string }[];
+  className?: string;
+  duration?: number;
+  locked?: boolean;
+  dayName?: string | null;
 };
 
 export function isConflict(list: Session[], extra?: Session): boolean {

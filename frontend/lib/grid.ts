@@ -47,10 +47,11 @@ export function deriveDayAxis(rows: SessionRow[] | Session[]): DayAxis[] {
       .filter((d) => d >= 0);
   }
   if (days.length === 0) return DEFAULT_DAYS;
-  const min = Math.min(...days);
-  const max = Math.max(...days);
+  const dataMax = Math.max(...days);
+  const start = 0;
+  const end = Math.max(5, dataMax);
   const out: DayAxis[] = [];
-  for (let d = min; d <= max; d++) {
+  for (let d = start; d <= end; d++) {
     out.push({ index: d, code: DAY_CODES[d] ?? "D" + d, label: DAY_LABELS_VI[d] ?? "Ngày " + d });
   }
   return out;

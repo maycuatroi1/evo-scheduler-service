@@ -1,6 +1,7 @@
 import { CSS } from "@dnd-kit/utilities";
 import { useDraggable } from "@dnd-kit/core";
 import type { Session } from "@/lib/mock/schedule";
+import { tierColor } from "@/lib/labels";
 
 type ViewMode = "teacher" | "class" | "room";
 
@@ -12,14 +13,9 @@ type Props = {
   dragging?: boolean;
 };
 
-const typeStyles: Record<Session["type"], string> = {
-  LT: "bg-primary/10 text-primary border-primary/30",
-  TH: "bg-accent/10 text-accent border-accent/30",
-};
-
-const cardTone: Record<Session["type"], string> = {
-  LT: "border-l-primary",
-  TH: "border-l-accent",
+const typeBadge: Record<Session["type"], string> = {
+  LT: "bg-primary/10 text-primary",
+  TH: "bg-accent/10 text-accent",
 };
 
 export function SessionCard({
@@ -51,6 +47,8 @@ export function SessionCard({
         ? `${session.teacherName} - ${session.room}`
         : `${session.teacherName} - ${session.classCode}`;
 
+  const tc = tierColor(session.tier);
+
   return (
     <div
       ref={setNodeRef}
@@ -58,20 +56,20 @@ export function SessionCard({
       {...listeners}
       {...attributes}
       className={[
-        "select-none rounded-md border border-border border-l-4 bg-white px-2 py-1.5 text-left shadow-sm transition-opacity",
-        cardTone[session.type],
+        "select-none rounded-md border border-border bg-white px-2 py-1.5 text-left shadow-sm transition-opacity",
         highlighted ? "ring-2 ring-accent ring-offset-1" : "",
         dimmed || isDragging ? "opacity-40" : "hover:shadow-md",
         dragging ? "cursor-grabbing" : "cursor-grab",
       ].join(" ")}
       data-session-id={session.id}
     >
+      <div className={`mb-1 h-0.5 w-full rounded-full ${tc.bar}`} />
       <div className="flex items-center justify-between gap-1">
         <span className="truncate text-xs font-bold text-foreground">
           {session.moduleCode}
         </span>
         <span
-          className={`rounded border px-1 text-[10px] font-semibold ${typeStyles[session.type]}`}
+          className={`shrink-0 rounded px-1 text-[10px] font-bold ${typeBadge[session.type]}`}
         >
           {session.type}
         </span>
@@ -85,14 +83,16 @@ export function SessionCard({
 }
 
 export function SessionCardPreview({ session }: { session: Session }) {
+  const tc = tierColor(session.tier);
   return (
-    <div className="w-44 rounded-md border border-border border-l-4 border-l-primary bg-white px-2 py-1.5 shadow-lg">
+    <div className="w-44 rounded-md border border-border bg-white px-2 py-1.5 shadow-lg">
+      <div className={`mb-1 h-0.5 w-full rounded-full ${tc.bar}`} />
       <div className="flex items-center justify-between gap-1">
         <span className="truncate text-xs font-bold text-foreground">
           {session.moduleCode}
         </span>
         <span
-          className={`rounded border px-1 text-[10px] font-semibold ${typeStyles[session.type]}`}
+          className={`shrink-0 rounded px-1 text-[10px] font-bold ${typeBadge[session.type]}`}
         >
           {session.type}
         </span>

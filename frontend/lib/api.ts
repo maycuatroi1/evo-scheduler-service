@@ -343,6 +343,12 @@ export function toGridSession(row: SessionRow): GridSession {
     type: row.session_type === "practice" ? "TH" : "LT",
     day: row.day ?? -1,
     period: row.period ?? -1,
+    tier: row.tier,
+    teachers: row.teachers,
+    className: row.student_group_name,
+    duration: row.duration_slots,
+    locked: row.is_locked,
+    dayName: row.day_name,
   };
 }
 
