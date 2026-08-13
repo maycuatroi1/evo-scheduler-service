@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "evo-scheduler-backend"
+version = "0.1.0"
+description = "EVO Scheduler Service backend - Django + django-ninja + OR-Tools"
+requires-python = ">=3.12"
+dependencies = [
+    "Django>=5.0,<6.0",
+    "django-ninja",
+    "ortools",
+    "openpyxl",
+    "celery",
+    "redis",
+    "psycopg2-binary",
+    "python-dotenv",
+    "dj-database-url",
+    "gunicorn",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-django",
+    "ruff",
+]
+
+[tool.setuptools]
+packages = ["config"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
