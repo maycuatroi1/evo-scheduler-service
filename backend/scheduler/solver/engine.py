@@ -80,6 +80,10 @@ def extract(schedule, constraint_rules, data=None):
     data["teachers"] = teachers
     data["rules"] = rules
     data["tenant_code"] = tenant.code
+    tm_map = {}
+    for tm in tenant.teacher_modules.select_related("teacher", "module"):
+        tm_map.setdefault(tm.module.code, []).append(tm.teacher.code)
+    data["teacher_module_map"] = tm_map
     return data
 
 
@@ -220,6 +224,21 @@ def _build_variables(ctx):
                 model.Add(occ_var == 0)
             ctx.occ[(sid, p)] = occ_var
 
+    model = ctx.model
+    for s in ctx.sessions:
+        sid = s["id"]
+        pre_assigned = s.get("teacher_codes", [])
+        if pre_assigned:
+            ctx.eligible_teachers[sid] = []
+            continue
+        module_code = s.get("module_code")
+        eligible = list(ctx.teacher_module_map.get(module_code, []))
+        ctx.eligible_teachers[sid] = eligible
+        for tc in eligible:
+            ctx.Y[(sid, tc)] = model.NewBoolVar(f"y_{sid}_{tc}")
+        if eligible:
+            model.Add(sum(ctx.Y[(sid, tc)] for tc in eligible) == 1)
+
 
 def _apply_locked(ctx):
     for s in ctx.sessions:
@@ -324,6 +343,15 @@ def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAUL
         if chosen_t is None:
             continue
         ts = ctx.horizon[chosen_t]
+        teacher_codes = list(s.get("teacher_codes", []))
+        auto_assigned = False
+        if not teacher_codes:
+            for tc in ctx.eligible_teachers.get(sid, []):
+                y = ctx.Y.get((sid, tc))
+                if y is not None and solver.Value(y) == 1:
+                    teacher_codes = [tc]
+                    auto_assigned = True
+                    break
         result.assignments.append(Assignment(
             session_id=sid,
             session_code=s["code"],
@@ -332,7 +360,8 @@ def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAUL
             period=ts["period"],
             day_name=ts.get("day_name", ""),
             resource_code=chosen_r,
-            teacher_codes=list(s.get("teacher_codes", [])),
+            teacher_codes=teacher_codes,
+            auto_assigned_teachers=auto_assigned,
         ))
     for rule, var, detail in ctx.soft_records:
         value = int(solver.Value(var))
@@ -357,10 +386,11 @@ def solve(schedule, constraint_rules, data=None, max_time_seconds=DEFAULT_MAX_TI
     data = extract(schedule, constraint_rules, data)
     persist_cb = None
     if persist:
-        from scheduler.models import Resource
+        from scheduler.models import Resource, Teacher
 
         def persist_cb(result):
             res_by_code = {r.code: r for r in Resource.objects.filter(tenant=schedule.tenant)}
+            teacher_by_code = {t.code: t for t in Teacher.objects.filter(tenant=schedule.tenant)}
             sessions = {s.id: s for s in _sessions_for(schedule, schedule.tenant)}
             for a in result.assignments:
                 sess = sessions.get(a.session_id)
@@ -375,4 +405,8 @@ def solve(schedule, constraint_rules, data=None, max_time_seconds=DEFAULT_MAX_TI
                 }
                 sess.assigned_resource = res_by_code.get(a.resource_code)
                 sess.save(update_fields=["assigned_timeslot", "assigned_resource"])
+                if getattr(a, "auto_assigned_teachers", False) and a.teacher_codes:
+                    teachers = [teacher_by_code[tc] for tc in a.teacher_codes if tc in teacher_by_code]
+                    if teachers:
+                        sess.assigned_teachers.set(teachers)
     return build_and_solve(data, max_time_seconds=max_time_seconds, seed=seed, verbose=verbose, persist_callback=persist_cb, weights=weights)

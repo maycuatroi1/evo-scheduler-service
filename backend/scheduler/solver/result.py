@@ -11,6 +11,7 @@ class Assignment:
     day_name: str
     resource_code: str
     teacher_codes: list
+    auto_assigned_teachers: bool = False
 
 
 @dataclass

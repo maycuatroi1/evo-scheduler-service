@@ -247,6 +247,9 @@ def _locked_phantom(session, target_horizon) -> Optional[dict]:
 
 
 def _build_data(tenant, session_dicts, horizon, rules, weights) -> dict:
+    tm_map = {}
+    for tm in tenant.teacher_modules.select_related("teacher", "module"):
+        tm_map.setdefault(tm.module.code, []).append(tm.teacher.code)
     return {
         "tenant_code": tenant.code,
         "horizon": horizon,
@@ -255,6 +258,7 @@ def _build_data(tenant, session_dicts, horizon, rules, weights) -> dict:
         "teachers": [_teacher_to_dict(t) for t in tenant.teachers.all()],
         "rules": list(rules),
         "hours_per_slot": 1.0,
+        "teacher_module_map": tm_map,
     }
 
 
@@ -270,6 +274,7 @@ def _persist_assignments(
     schedule, sessions_by_id, assignments, horizon, lock=False
 ) -> None:
     res_by_code = {r.code: r for r in schedule.tenant.resources.all()}
+    teacher_by_code = {t.code: t for t in schedule.tenant.teachers.all()}
     fields = ["assigned_timeslot", "assigned_resource"]
     if lock:
         fields.append("is_locked")
@@ -289,6 +294,14 @@ def _persist_assignments(
         if lock:
             sess.is_locked = True
         sess.save(update_fields=fields)
+        if getattr(a, "auto_assigned_teachers", False) and a.teacher_codes:
+            teachers = [
+                teacher_by_code[tc]
+                for tc in a.teacher_codes
+                if tc in teacher_by_code
+            ]
+            if teachers:
+                sess.assigned_teachers.set(teachers)
 
 
 def _solve_tier(

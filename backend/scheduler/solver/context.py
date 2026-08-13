@@ -21,7 +21,10 @@ class BuildContext:
             if grp is not None:
                 self.sessions_by_group.setdefault(grp, []).append(s)
         self.day_names = [ts.get("day_name", "") for ts in self.horizon]
+        self.teacher_module_map = data.get("teacher_module_map", {})
         self.X = {}
+        self.Y = {}
+        self.eligible_teachers = {}
         self.occ = {}
         self.start_timeslot = {}
         self.start_period = {}
