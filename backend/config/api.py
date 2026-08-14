@@ -743,34 +743,37 @@ def _persist(parsed, tenant):
     }
 
     with transaction.atomic():
+        Session.objects.filter(tenant=tenant).delete()
+        TeacherModule.objects.filter(tenant=tenant).delete()
+        Module.objects.filter(tenant=tenant).delete()
+        Resource.objects.filter(tenant=tenant).delete()
+        StudentGroup.objects.filter(tenant=tenant).delete()
+        Teacher.objects.filter(tenant=tenant).delete()
+
         for r in parsed["Teachers"]:
             code = to_str(r.get("code"))
             blocks = [b.lower() for b in to_list(r.get("blocks"))]
             quota = None
             if r.get("quota_standard_hours") not in (None, ""):
                 quota = to_int(r.get("quota_standard_hours"))
-            teacher, _ = Teacher.objects.update_or_create(
+            teacher = Teacher.objects.create(
                 tenant=tenant,
                 code=code,
-                defaults={
-                    "name": to_str(r.get("name")),
-                    "blocks": blocks,
-                    "quota_standard_hours": quota,
-                },
+                name=to_str(r.get("name")),
+                blocks=blocks,
+                quota_standard_hours=quota,
             )
             teachers[code] = teacher
             created["teachers"] += 1
 
         for r in parsed["StudentGroups"]:
             code = to_str(r.get("code"))
-            sg, _ = StudentGroup.objects.update_or_create(
+            sg = StudentGroup.objects.create(
                 tenant=tenant,
                 code=code,
-                defaults={
-                    "name": to_str(r.get("name")),
-                    "enrollment_type": to_str(r.get("enrollment_type")).lower(),
-                    "size": to_int(r.get("size")) or 0,
-                },
+                name=to_str(r.get("name")),
+                enrollment_type=to_str(r.get("enrollment_type")).lower(),
+                size=to_int(r.get("size")) or 0,
             )
             student_groups[code] = sg
             created["student_groups"] += 1
@@ -781,16 +784,14 @@ def _persist(parsed, tenant):
             available = to_int(r.get("available_quantity"))
             if available is None:
                 available = quantity
-            resource, _ = Resource.objects.update_or_create(
+            resource = Resource.objects.create(
                 tenant=tenant,
                 code=code,
-                defaults={
-                    "name": to_str(r.get("name")),
-                    "type": to_str(r.get("type")).lower(),
-                    "capacity": to_int(r.get("capacity")) or 0,
-                    "quantity": quantity,
-                    "available_quantity": available,
-                },
+                name=to_str(r.get("name")),
+                type=to_str(r.get("type")).lower(),
+                capacity=to_int(r.get("capacity")) or 0,
+                quantity=quantity,
+                available_quantity=available,
             )
             resources[code] = resource
             created["resources"] += 1
@@ -798,15 +799,13 @@ def _persist(parsed, tenant):
         for r in parsed["Modules"]:
             code = to_str(r.get("code"))
             sg_code = to_str(r.get("student_group"))
-            module, _ = Module.objects.update_or_create(
+            module = Module.objects.create(
                 tenant=tenant,
                 code=code,
-                defaults={
-                    "name": to_str(r.get("name")),
-                    "theory_hours": to_int(r.get("theory_hours")) or 0,
-                    "practice_hours": to_int(r.get("practice_hours")) or 0,
-                    "student_group": student_groups.get(sg_code) if sg_code else None,
-                },
+                name=to_str(r.get("name")),
+                theory_hours=to_int(r.get("theory_hours")) or 0,
+                practice_hours=to_int(r.get("practice_hours")) or 0,
+                student_group=student_groups.get(sg_code) if sg_code else None,
             )
             modules[code] = module
             created["modules"] += 1
@@ -815,7 +814,7 @@ def _persist(parsed, tenant):
             teacher = teachers.get(to_str(r.get("teacher_code")))
             module = modules.get(to_str(r.get("module_code")))
             if teacher and module:
-                TeacherModule.objects.update_or_create(
+                TeacherModule.objects.create(
                     tenant=tenant, teacher=teacher, module=module
                 )
                 created["teacher_modules"] += 1
