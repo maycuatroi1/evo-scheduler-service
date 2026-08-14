@@ -5,7 +5,7 @@ from scheduler.solver.constraints import apply_rule
 from scheduler.solver.result import SolveResult, Assignment, RulePenalty
 from scheduler.solver import objectives
 
-DEFAULT_MAX_TIME_SECONDS = 10.0
+DEFAULT_MAX_TIME_SECONDS = 120.0
 DEFAULT_SEED = 42
 
 

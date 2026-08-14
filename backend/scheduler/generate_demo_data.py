@@ -1,10 +1,19 @@
 """
-Generate a large realistic Excel file for evo-scheduler-service demo.
-~1500 students, 50 teachers, 35 resources, 40 modules, ~500 sessions.
-Two-tier: culture (semester-locked) + vocational (weekly).
+Generate a large realistic + FEASIBLE weekly Excel for evo-scheduler-service demo.
+
+Feasibility budget (weekly horizon = 6 days x 5 periods = 30 slots):
+- Culture tier: 25 classes x 10 sessions/week (avg 2.4 slots) ~ 600 room-slots
+  vs 30 theory rooms x 30 slots = 900 capacity (67% util) - OK
+  Class load: ~24/30 slots (80%) - OK
+  Teachers: 250 sessions, 40 culture teachers (~6.3 sessions each) - OK
+- Vocational tier: 30 classes x 3 sessions/week (2 practice in workshop
+  + 1 theory in room). Practice demand 60 x 3.5 = 210 workshop-slots
+  vs 14 workshops x 30 = 420 (50% util) - OK
+- Students ~1450.
 """
-import io
 import random
+import sys
+
 import openpyxl
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -18,299 +27,222 @@ LAST_NAMES = [
 MALE_NAMES = [
     "Văn An", "Văn Bình", "Văn Cường", "Văn Đức", "Văn Đông", "Văn Hà",
     "Văn Hùng", "Văn Khánh", "Văn Long", "Văn Minh", "Văn Nam", "Văn Phong",
-    "Văn Quân", "Văn Sơn", "Văn Thành", "Văn Trung", "Văn Tú", "Văn Dương",
-    "Hoàng Nam", "Hoàng Long", "Hoàng Phong", "Hoàng Hải", "Đức Anh", "Minh Tuấn",
-    "Quang Huy", "Thanh Hải", "Công Minh", "Tiến Dũng", "Bảo Khánh", "Trọng Nhân",
+    "Văn Quân", "Văn Sơn", "Văn Thành", "Văn Trung", "Hoàng Nam", "Hoàng Long",
+    "Đức Anh", "Minh Tuấn", "Quang Huy", "Thanh Hải", "Công Minh",
+    "Tiến Dũng", "Bảo Khánh", "Trọng Nhân",
 ]
 FEMALE_NAMES = [
     "Thị Bình", "Thị Châu", "Thị Dung", "Thị Hà", "Thị Hằng", "Thị Hồng",
     "Thị Lan", "Thị Liễu", "Thị Mai", "Thị Ngọc", "Thị Phương", "Thị Quỳnh",
     "Thị Sen", "Thị Thanh", "Thị Thu", "Thị Trâm", "Thị Vân", "Thị Xuân",
     "Thị Yến", "Thị Hoa", "Thị Hương", "Thị Loan", "Thị Mỹ", "Thị Nga",
-    "Thị Oanh", "Thị Phúc", "Thị Tâm", "Thị Uyên", "Thị Vy", "Thị Diệu",
+    "Thị Oanh", "Thị Uyên",
 ]
 DEPARTMENTS = ["Điện", "Cơ khí", "Xây dựng", "Điện tử", "Công nghệ ô tô"]
-TRADE_MODULES_CULTURE = [
-    ("MH_TOAN", "Toán học", 60, 0),
-    ("MH_LY", "Vật lý", 45, 0),
-    ("MH_HOA", "Hóa học", 45, 0),
-    ("MH_VAN", "Ngữ văn", 60, 0),
-    ("MH_SU", "Lịch sử", 30, 0),
-    ("MH_ANH", "Tiếng Anh", 60, 0),
-    ("MH_CT", "Chính trị", 30, 0),
-    ("MH_GDCD", "Giáo dục công dân", 30, 0),
+
+CULTURE_SUBJECTS = [
+    ("MH_TOAN", "Toán học", 2),
+    ("MH_VAN", "Ngữ văn", 2),
+    ("MH_LY", "Vật lý", 1),
+    ("MH_ANH", "Tiếng Anh", 1),
+    ("MH_SU", "Lịch sử", 1),
 ]
-TRADE_MODULES_VOCATIONAL = [
-    ("MH_DIENCOBAN", "Kỹ thuật điện cơ bản", 30, 60),
-    ("MH_DIENCONGNGHIEP", "Lắp đặt điện công nghiệp", 15, 90),
-    ("MH_VDK", "Lập trình vi điều khiển", 30, 70),
-    ("MH_COKHI", "Kỹ thuật cơ khí", 20, 80),
-    ("MH_HAN", "Kỹ thuật hàn", 15, 85),
-    ("MH_XAYDUNG", "Kỹ thuật xây dựng", 30, 60),
-    ("NH_THO", "Thợ xây cơ bản", 20, 80),
-    ("NH_QUYHOACH", "Quy hoạch và thiết kế", 30, 30),
-    ("MH_OTO", "Kỹ thuật sửa chữa ô tô", 20, 80),
-    ("MH_DIENTU", "Kỹ thuật điện tử", 25, 65),
-    ("MH_CAD", "CAD/CAM cơ khí", 15, 45),
-    ("NH_NGUONDEN", "Nguồn điện và chiếu sáng", 20, 40),
-    ("MH_BAO_TRI", "Bảo trì thiết bị điện", 15, 75),
-    ("NH_LAP_DAT", "Lắp đặt thiết bị công nghiệp", 10, 90),
-    ("MH_ATLD", "An toàn lao động", 15, 15),
-    ("MH_DO_LUONG", "Đo lường và điều khiển", 20, 50),
-    ("NH_MAY_DIEU_KHIEN", "Máy điều khiển số CNC", 15, 60),
-    ("MH_HE_THONG_DIEN", "Hệ thống điện thông minh", 20, 55),
-]
-WORKSHOPS_BY_DEPT = {
+
+CULTURE_TEACHERS_PER_SUBJECT = {
+    "MH_TOAN": 12,
+    "MH_VAN": 12,
+    "MH_LY": 6,
+    "MH_ANH": 6,
+    "MH_SU": 6,
+}
+
+VOC_MODULES_BY_DEPT = {
     "Điện": [
-        ("XN_DIEN1", "Xưởng điện công nghiệp 1", "Xưởng", 20),
-        ("XN_DIEN2", "Xưởng điện công nghiệp 2", "Xưởng", 15),
-        ("XN_VDK", "Xưởng vi điều khiển", "Xưởng", 12),
+        ("ĐIỆN1", "Kỹ thuật điện cơ bản"),
+        ("ĐIỆN2", "Lắp đặt điện công nghiệp"),
+        ("VDK", "Lập trình vi điều khiển"),
+        ("ATLD", "An toàn lao động"),
     ],
     "Cơ khí": [
-        ("XN_COKHI1", "Xưởng cơ khí 1", "Xưởng", 20),
-        ("XN_COKHI2", "Xưởng hàn - gò", "Xưởng", 15),
-        ("XN_CNC", "Xưởng CNC", "Xưởng", 8),
+        ("CƠKHÍ", "Kỹ thuật cơ khí"),
+        ("HÀN", "Kỹ thuật hàn"),
+        ("CAD", "CAD/CAM cơ khí"),
+        ("ATLD2", "An toàn lao động"),
     ],
     "Xây dựng": [
-        ("XN_XD1", "Xưởng thí nghiệm vật liệu", "Xưởng", 20),
-        ("XN_XD2", "Xưởng thực hành thợ xây", "Xưởng", 15),
+        ("XD1", "Kỹ thuật xây dựng"),
+        ("THỢXÂY", "Thợ xây cơ bản"),
+        ("VẬTLIỆU", "Thí nghiệm vật liệu"),
     ],
     "Điện tử": [
-        ("XN_DT1", "Xưởng điện tử 1", "Xưởng", 20),
-        ("XN_DT2", "Xưởng điện tử 2", "Xưởng", 12),
+        ("ĐT1", "Kỹ thuật điện tử"),
+        ("ĐT2", "Đo lường điện tử"),
+        ("ATLD3", "An toàn lao động"),
     ],
     "Công nghệ ô tô": [
-        ("XN_OTO1", "Xưởng sửa chữa ô tô", "Xưởng", 10),
-        ("XN_OTO2", "Xưởng động cơ", "Xưởng", 8),
+        ("ÔTÔ1", "Kỹ thuật sửa chữa ô tô"),
+        ("ÔTÔ2", "Động cơ ô tô"),
+        ("ATLD4", "An toàn lao động"),
     ],
 }
+
+WORKSHOPS_BY_DEPT = {
+    "Điện": [
+        ("XN_DIEN1", "Xưởng điện công nghiệp 1", 20),
+        ("XN_DIEN2", "Xưởng điện công nghiệp 2", 15),
+        ("XN_VDK", "Xưởng vi điều khiển", 12),
+    ],
+    "Cơ khí": [
+        ("XN_COKHI1", "Xưởng cơ khí 1", 20),
+        ("XN_COKHI2", "Xưởng hàn - gò", 15),
+    ],
+    "Xây dựng": [
+        ("XN_XD1", "Xưởng thí nghiệm vật liệu", 20),
+        ("XN_XD2", "Xưởng thực hành thợ xây", 15),
+    ],
+    "Điện tử": [
+        ("XN_DT1", "Xưởng điện tử 1", 20),
+        ("XN_DT2", "Xưởng điện tử 2", 12),
+    ],
+    "Công nghệ ô tô": [
+        ("XN_OTO1", "Xưởng sửa chữa ô tô", 10),
+        ("XN_OTO2", "Xưởng động cơ", 8),
+    ],
+}
+
 TOOL_SETS = [
-    ("TS_DIEN_01", "Bộ dụng cụ điện A", "Bộ dụng cụ", 5),
-    ("TS_DIEN_02", "Bộ dụng cụ điện B", "Bộ dụng cụ", 5),
-    ("TS_DIEN_03", "Bộ đo điện đa năng", "Bộ dụng cụ", 8),
-    ("TS_COKHI_01", "Bộ dụng cụ cơ khí A", "Bộ dụng cụ", 6),
-    ("TS_COKHI_02", "Bộ dụng cụ cơ khí B", "Bộ dụng cụ", 6),
-    ("TS_HAN_01", "Bộ dụng cụ hàn", "Bộ dụng cụ", 4),
-    ("TS_HAN_02", "Máy hàn hồ quang", "Bộ dụng cụ", 3),
-    ("TS_XD_01", "Bộ dụng cụ xây dựng A", "Bộ dụng cụ", 8),
-    ("TS_XD_02", "Bộ dụng cụ xây dựng B", "Bộ dụng cụ", 8),
-    ("TS_OTO_01", "Bộ dụng cụ ô tô", "Bộ dụng cụ", 5),
-    ("TS_VDK_01", "Board Arduino + linh kiện", "Bộ dụng cụ", 10),
-    ("TS_VDK_02", "Board mô phỏng PLC", "Bộ dụng cụ", 6),
-    ("TS_DT_01", "Bộ dụng cụ điện tử A", "Bộ dụng cụ", 8),
-    ("TS_DT_02", "Máy hiện sóng", "Bộ dụng cụ", 4),
+    ("TS_DIEN_01", "Bộ dụng cụ điện A", 5),
+    ("TS_DIEN_02", "Bộ dụng cụ điện B", 5),
+    ("TS_DIEN_03", "Bộ đo điện đa năng", 8),
+    ("TS_COKHI_01", "Bộ dụng cụ cơ khí A", 6),
+    ("TS_COKHI_02", "Bộ dụng cụ cơ khí B", 6),
+    ("TS_HAN_01", "Bộ dụng cụ hàn", 4),
+    ("TS_XD_01", "Bộ dụng cụ xây dựng A", 8),
+    ("TS_XD_02", "Bộ dụng cụ xây dựng B", 8),
+    ("TS_OTO_01", "Bộ dụng cụ ô tô", 5),
+    ("TS_VDK_01", "Board Arduino + linh kiện", 10),
+    ("TS_VDK_02", "Board mô phỏng PLC", 6),
+    ("TS_DT_01", "Bộ dụng cụ điện tử A", 8),
+    ("TS_DT_02", "Máy hiện sóng", 4),
+    ("TS_VTL_01", "Bộ thí nghiệm vật liệu", 6),
 ]
 
 HEADER_FILL = PatternFill(start_color="FF1F4E78", end_color="FF1F4E78", fill_type="solid")
 HEADER_FONT = Font(color="FFFFFFFF", bold=True)
 HEADER_ALIGN = Alignment(horizontal="center", vertical="center")
 
+NUM_CULTURE_TEACHERS_PER_SUBJECT = 5
+NUM_CULTURE_TEACHERS_OVERRIDES = CULTURE_TEACHERS_PER_SUBJECT
+NUM_VOC_TEACHERS_PER_DEPT = 8
+NUM_THEORY_ROOMS = 30
+NUM_CULTURE_CLASSES = 15
+NUM_DUAL_CLASSES = 10
+NUM_VOC_CLASSES_PER_DEPT = 6
 
-def make_name(gender=None):
+
+def make_name():
     ln = random.choice(LAST_NAMES)
-    if gender is None:
-        gender = random.choice(["M", "F"])
-    fn = random.choice(MALE_NAMES if gender == "M" else FEMALE_NAMES)
+    fn = random.choice(MALE_NAMES if random.random() < 0.5 else FEMALE_NAMES)
     return f"{ln} {fn}"
 
 
 def build_data():
-    teachers = []
-    student_groups = []
-    resources = []
-    modules = []
-    teacher_modules = []
-    sessions = []
-    teacher_map = {}
+    teachers = []          # (code, name, block_label, quota)
+    student_groups = []    # (code, name, enrollment, size)
+    resources = []         # (code, name, type_label, capacity, qty, avail)
+    modules = []           # (code, name, theory_h, practice_h, group_code)
+    teacher_modules = []   # (teacher_code, module_code)
+    sessions = []          # (module_code, group_code, type_label, slots, tier_label, resource, teachers)
 
-    gv_counter = 0
+    gv = 0
+
+    culture_teachers = {}
+    for mcode, mname, _ in CULTURE_SUBJECTS:
+        pool = []
+        n = CULTURE_TEACHERS_PER_SUBJECT.get(mcode, NUM_CULTURE_TEACHERS_PER_SUBJECT)
+        for _ in range(n):
+            gv += 1
+            code = f"GV{gv:03d}"
+            teachers.append((code, make_name(), "Văn hóa", random.choice([16, 18, 20])))
+            pool.append(code)
+        culture_teachers[mcode] = pool
+
+    voc_teachers = {}
     for dept in DEPARTMENTS:
-        for _ in range(8):
-            gv_counter += 1
-            code = f"GV{gv_counter:03d}"
-            name = make_name()
-            dept_lower = dept.lower()
-            blocks = ["Nghề"]
-            t = (code, name, "Nghề", None, dept)
-            teachers.append(t)
-            teacher_map[code] = dept
+        pool = []
+        for _ in range(NUM_VOC_TEACHERS_PER_DEPT):
+            gv += 1
+            code = f"GV{gv:03d}"
+            teachers.append((code, make_name(), "Nghề", random.choice([14, 16, 18])))
+            pool.append(code)
+        voc_teachers[dept] = pool
 
-    culture_subject_teachers = {}
-    for i, (mcode, mname, _, _) in enumerate(TRADE_MODULES_CULTURE):
-        for j in range(2):
-            gv_counter += 1
-            code = f"GV{gv_counter:03d}"
-            name = make_name()
-            teachers.append((code, name, "Văn hóa", None, "__culture__"))
-            teacher_map[code] = "__culture__"
-            culture_subject_teachers.setdefault(mcode, []).append(code)
-
-    for i in range(5):
-        gv_counter += 1
-        code = f"GV{gv_counter:03d}"
-        name = make_name()
-        teachers.append((code, name, "Cả hai", None, "Cả hai"))
-        teacher_map[code] = "Cả hai"
-
-    theory_rooms = []
-    for i in range(1, 16):
-        code = f"P{i:03d}"
-        cap = random.choice([30, 35, 40, 45, 50])
-        theory_rooms.append(code)
-        resources.append((code, f"Phòng lý thuyết {i:03d}", "Phòng lý thuyết", cap, 1, 1))
+    for i in range(NUM_THEORY_ROOMS):
+        code = f"P{i + 1:03d}"
+        cap = random.choice([40, 45, 50])
+        resources.append((code, f"Phòng lý thuyết {i + 1:03d}", "Phòng lý thuyết", cap, 1, 1))
+    theory_rooms = [r[0] for r in resources]
 
     for dept, ws_list in WORKSHOPS_BY_DEPT.items():
-        for code, name, rtype, cap in ws_list:
-            resources.append((code, name, rtype, cap, 1, 1))
+        for code, name, cap in ws_list:
+            resources.append((code, name, "Xưởng", cap, 1, 1))
+    workshop_by_dept = {
+        dept: [c for c, _, _ in ws]
+        for dept, ws in WORKSHOPS_BY_DEPT.items()
+    }
 
-    for code, name, rtype, qty in TOOL_SETS:
+    for code, name, qty in TOOL_SETS:
         resources.append((code, name, "Bộ dụng cụ", 0, qty, qty))
 
-    resource_codes = {r[0] for r in resources}
-    tool_by_keyword = {}
-    for code, name, _, _, _, _ in resources:
-        for kw in ["điện", "cơ khí", "hàn", "xây", "ô tô", "arduino", "plc", "điện tử", "hiện sóng"]:
-            if kw in name.lower():
-                tool_by_keyword.setdefault(kw, []).append(code)
-
-    workshop_by_dept = {}
-    for code, name, rtype, _, _, _ in resources:
-        if rtype == "Xưởng":
-            for dept in DEPARTMENTS:
-                dept_kw = dept.lower()
-                if dept_kw in name.lower() or (
-                    dept == "Điện" and "điện" in name.lower() and "tử" not in name.lower()
-                ) or (dept == "Điện tử" and "điện tử" in name.lower()):
-                    workshop_by_dept.setdefault(dept, []).append(code)
-
     culture_classes = []
-    for i in range(15):
-        code = f"VH{i+1:02d}"
-        size = random.randint(38, 48)
-        name = f"Lớp Văn hóa {i+1:02d}"
-        student_groups.append((code, name, "Cao đẳng", size))
+    for i in range(NUM_CULTURE_CLASSES):
+        code = f"VH{i + 1:02d}"
+        student_groups.append((code, f"Lớp Văn hóa {i + 1:02d}", "Cao đẳng", random.randint(38, 48)))
+        culture_classes.append(code)
+    for i in range(NUM_DUAL_CLASSES):
+        code = f"SB{i + 1:02d}"
+        student_groups.append((code, f"Lớp Song bằng {i + 1:02d}", "Song bằng", random.randint(35, 42)))
         culture_classes.append(code)
 
-    vocational_classes = []
+    voc_classes = []
     for dept in DEPARTMENTS:
-        n = random.randint(5, 7)
-        for i in range(n):
-            idx = len(vocational_classes) + 1
+        for i in range(NUM_VOC_CLASSES_PER_DEPT):
+            idx = len(voc_classes) + 1
             code = f"NG{idx:02d}"
-            size = random.choice([4, 5, 6, 8, 10, 12, 15, 18, 20, 22, 25])
-            name = f"Lớp Nghề {dept} {i+1}"
-            student_groups.append((code, name, "Cao đẳng", size))
-            vocational_classes.append((code, dept))
-
-    dual_degree_classes = []
-    for i in range(10):
-        code = f"SB{i+1:02d}"
-        size = random.randint(35, 42)
-        name = f"Lớp Song bằng {i+1:02d}"
-        student_groups.append((code, name, "Song bằng", size))
-        dual_degree_classes.append(code)
+            size = random.choice([12, 15, 18, 20])
+            student_groups.append((code, f"Lớp Nghề {dept} {i + 1}", "Cao đẳng", size))
+            voc_classes.append((code, dept, size))
 
     total_students = sum(r[3] for r in student_groups)
 
-    all_modules = []
-    for mcode, mname, lt, th in TRADE_MODULES_CULTURE:
-        for cls in culture_classes + dual_degree_classes:
-            cm = (f"{mcode}_{cls}", f"{mname} - {cls}", lt, th, cls, "Văn hóa")
-            modules.append(cm)
-            all_modules.append(cm)
-    for mcode, mname, lt, th in TRADE_MODULES_VOCATIONAL:
-        for cls, dept in vocational_classes:
-            dept_kw = dept.lower()
-            skip = False
-            if dept_kw not in mcode.lower() and dept_kw not in mname.lower():
-                generic = ["ATLD", "CAD"]
-                if not any(g in mcode for g in generic):
-                    skip = True
-            if skip:
-                continue
-            vm = (f"{mcode}_{cls}", f"{mname} - {cls}", lt, th, cls, "Nghề")
-            modules.append(vm)
-            all_modules.append(vm)
-
-    for m in all_modules:
-        mcode_full, mname, _, _, cls, tier = m
-        if tier == "Văn hóa":
-            base_code = mcode_full.rsplit("_", 1)[0]
-            candidates = culture_subject_teachers.get(base_code, [])
-            if candidates:
-                tc = random.choice(candidates)
-                teacher_modules.append((tc, mcode_full))
-        else:
-            base_code = mcode_full.rsplit("_", 1)[0]
-            dept_of_class = None
-            for cc, cd in vocational_classes:
-                if cc == cls:
-                    dept_of_class = cd
-                    break
-            dept_teachers = [
-                t[0] for t in teachers if t[4] == dept_of_class
-            ] if dept_of_class else []
-            if dept_teachers:
-                tc = random.choice(dept_teachers)
-                teacher_modules.append((tc, mcode_full))
-                if random.random() < 0.25:
-                    tc2 = random.choice(dept_teachers)
-                    if tc2 != tc:
-                        teacher_modules.append((tc2, mcode_full))
-
-    session_id = 0
-    for m in all_modules:
-        mcode_full, mname, lt_hours, th_hours, cls, tier = m
-        if lt_hours > 0:
-            n_theory = max(1, lt_hours // 25)
-            for _ in range(n_theory):
-                session_id += 1
+    for cls in culture_classes:
+        for mcode, mname, weekly in CULTURE_SUBJECTS:
+            full = f"{mcode}_{cls}"
+            theory_h = weekly * 30
+            modules.append((full, f"{mname} - {cls}", theory_h, 0, cls))
+            pool = culture_teachers[mcode]
+            for tcode in random.sample(pool, k=min(2, len(pool))):
+                teacher_modules.append((tcode, full))
+            for _ in range(weekly):
                 room = random.choice(theory_rooms)
-                base_code = mcode_full.rsplit("_", 1)[0]
-                tc = None
-                for tcode, tmcode in teacher_modules:
-                    if tmcode == mcode_full:
-                        tc = tcode
-                        break
-                sessions.append((
-                    mcode_full, cls, "Lý thuyết", random.choice([2, 3]),
-                    tier, room, tc or "",
-                ))
-        if th_hours > 0:
-            n_practice = max(1, th_hours // 35)
-            dept_of_class = None
-            for cc, cd in vocational_classes:
-                if cc == cls:
-                    dept_of_class = cd
-                    break
-            ws_candidates = workshop_by_dept.get(dept_of_class, [])
-            if not ws_candidates:
-                ws_candidates = [r[0] for r in resources if r[2] == "Xưởng"]
-            tool_candidates = []
-            for kw, codes in tool_by_keyword.items():
-                if dept_of_class and kw in dept_of_class.lower():
-                    tool_candidates.extend(codes)
-            if not tool_candidates:
-                tool_candidates = [r[0] for r in resources if "Bộ dụng cụ" in r[2]]
-            for _ in range(n_practice):
-                session_id += 1
-                ws = random.choice(ws_candidates) if ws_candidates else ""
-                tc = None
-                for tcode, tmcode in teacher_modules:
-                    if tmcode == mcode_full:
-                        tc = tcode
-                        break
-                tc2 = None
-                matching = [t for t in teacher_modules if t[1] == mcode_full]
-                if len(matching) > 1:
-                    tc2 = matching[1][0]
-                teacher_str = tc or ""
-                if tc2:
-                    teacher_str = f"{tc},{tc2}"
-                sessions.append((
-                    mcode_full, cls, "Thực hành", random.choice([3, 4]),
-                    tier, ws, teacher_str,
-                ))
+                tc = random.choice(pool)
+                sessions.append((full, cls, "Lý thuyết", random.choice([2, 3]), "Văn hóa", room, tc))
+
+    for code, dept, size in voc_classes:
+        dept_modules = VOC_MODULES_BY_DEPT[dept]
+        chosen = random.sample(dept_modules, k=2)
+        for mcode, mname in chosen:
+            full = f"{mcode}_{code}"
+            modules.append((full, f"{mname} - {code}", 15, 60, code))
+            pool = voc_teachers[dept]
+            for tcode in random.sample(pool, k=min(3, len(pool))):
+                teacher_modules.append((tcode, full))
+            room = random.choice(theory_rooms)
+            tc = random.choice(pool)
+            sessions.append((full, code, "Lý thuyết", 2, "Nghề", room, tc))
+            ws = random.choice(workshop_by_dept[dept])
+            tc2 = random.choice(pool)
+            sessions.append((full, code, "Thực hành", random.choice([3, 4]), "Nghề", ws, tc2))
 
     return teachers, student_groups, resources, modules, teacher_modules, sessions, total_students
 
@@ -325,51 +257,52 @@ def write_sheet(ws, headers, rows):
         for col_idx, value in enumerate(row_data, start=1):
             ws.cell(row=row_idx, column=col_idx, value=value)
     for col_idx in range(1, len(headers) + 1):
-        ws.column_dimensions[get_column_letter(col_idx)].width = 22
+        ws.column_dimensions[get_column_letter(col_idx)].width = 24
 
 
 def generate(filepath):
     teachers, groups, resources, modules, tm, sessions, total_students = build_data()
 
+    culture_sessions = [s for s in sessions if s[4] == "Văn hóa"]
+    voc_sessions = [s for s in sessions if s[4] == "Nghề"]
+
     wb = openpyxl.Workbook()
     wb.remove(wb.active)
 
-    ws1 = wb.create_sheet("Giáo viên")
-    write_sheet(ws1, ["Mã GV", "Họ tên", "Khối", "Định mức"],
-                [(t[0], t[1], t[2], t[3] if t[3] else random.choice([12, 14, 16, 18, 20]))
-                 for t in teachers])
-
-    ws2 = wb.create_sheet("Lớp học")
-    write_sheet(ws2, ["Mã LH", "Tên LH", "Loại hình", "Sĩ số"], groups)
-
-    ws3 = wb.create_sheet("Thiết bị")
-    write_sheet(ws3, ["Mã TB", "Tên TB", "Loại", "Sức chứa", "Số lượng", "Còn lại"],
-                [(r[0], r[1], r[2], r[3], r[4], r[5]) for r in resources])
-
-    ws4 = wb.create_sheet("Môn học")
-    write_sheet(ws4, ["Mã MH", "Tên MH", "Lý thuyết", "Thực hành", "Mã LH"],
-                [(m[0], m[1], m[2], m[3], m[4]) for m in modules])
-
-    ws5 = wb.create_sheet("GV - Môn học")
-    write_sheet(ws5, ["Mã GV", "Mã MH"], tm)
-
-    ws6 = wb.create_sheet("Tiết cố định")
-    write_sheet(ws6, ["Mã MH", "Mã LH", "Loại", "Số tiết", "Cấp", "Mã TB", "Mã GV"], sessions)
+    write_sheet(wb.create_sheet("Giáo viên"), ["Mã GV", "Họ tên", "Khối", "Định mức"], teachers)
+    write_sheet(wb.create_sheet("Lớp học"), ["Mã LH", "Tên LH", "Loại hình", "Sĩ số"], groups)
+    write_sheet(wb.create_sheet("Thiết bị"),
+                ["Mã TB", "Tên TB", "Loại", "Sức chứa", "Số lượng", "Còn lại"], resources)
+    write_sheet(wb.create_sheet("Môn học"),
+                ["Mã MH", "Tên MH", "Lý thuyết", "Thực hành", "Mã LH"], modules)
+    write_sheet(wb.create_sheet("GV - Môn học"), ["Mã GV", "Mã MH"], tm)
+    write_sheet(wb.create_sheet("Tiết cố định"),
+                ["Mã MH", "Mã LH", "Loại", "Số tiết", "Cấp", "Mã TB", "Mã GV"], sessions)
 
     wb.save(filepath)
+
+    culture_slot_demand = sum(s[3] for s in culture_sessions)
+    voc_practice_demand = sum(s[3] for s in voc_sessions if s[2] == "Thực hành")
     return {
         "teachers": len(teachers),
         "student_groups": len(groups),
         "total_students": total_students,
-        "resources": len(resources),
+        "theory_rooms": NUM_THEORY_ROOMS,
+        "workshops": sum(len(v) for v in WORKSHOPS_BY_DEPT.values()),
+        "tool_sets": len(TOOL_SETS),
         "modules": len(modules),
         "teacher_modules": len(tm),
         "sessions": len(sessions),
+        "culture_sessions": len(culture_sessions),
+        "vocational_sessions": len(voc_sessions),
+        "culture_room_slot_demand": culture_slot_demand,
+        "culture_room_capacity": NUM_THEORY_ROOMS * 30,
+        "voc_workshop_slot_demand": voc_practice_demand,
+        "voc_workshop_capacity": sum(len(v) for v in WORKSHOPS_BY_DEPT.values()) * 30,
     }
 
 
 if __name__ == "__main__":
-    import sys
     out = sys.argv[1] if len(sys.argv) > 1 else "demo_large.xlsx"
     stats = generate(out)
     print(f"Generated: {out}")
