@@ -1,10 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { createApiClient, exportBlob, type SolveResponse } from "@/lib/api";
+import {
+  createApiClient,
+  exportBlob,
+  type SolveJobStatus,
+} from "@/lib/api";
 
 type Phase = "idle" | "running" | "done" | "error";
+
+const POLL_INTERVAL_MS = 2000;
+const POLL_TIMEOUT_MS = 10 * 60 * 1000;
+
+const PHASE_LABELS: Record<string, string> = {
+  building_model: "Đang dựng mô hình",
+  solving: "Đang giải",
+  post_processing: "Đang xử lý kết quả",
+};
 
 type Props = {
   scheduleId: number | null;
@@ -15,20 +28,79 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
   const { token } = useAuth();
   const api = createApiClient(token);
   const [phase, setPhase] = useState<Phase>("idle");
-  const [result, setResult] = useState<SolveResponse | null>(null);
+  const [job, setJob] = useState<SolveJobStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startedAtRef = useRef<number>(0);
+  const onSolvedRef = useRef(onSolved);
+  onSolvedRef.current = onSolved;
+
+  const stopTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => stopTimer, [stopTimer]);
+
+  const poll = useCallback(
+    (jobId: string) => {
+      const elapsed = Date.now() - startedAtRef.current;
+      if (elapsed > POLL_TIMEOUT_MS) {
+        stopTimer();
+        setPhase("error");
+        setError("Quá thời gian chờ bộ giải (10 phút).");
+        return;
+      }
+      timerRef.current = setTimeout(async () => {
+        try {
+          const st = await api.solveJobStatus(jobId);
+          setJob(st);
+          if (st.status === "solved") {
+            stopTimer();
+            setPhase("done");
+            onSolvedRef.current?.();
+            return;
+          }
+          if (st.status === "failed") {
+            stopTimer();
+            setPhase("error");
+            setError(st.error || "Bộ giải không tìm được phương án.");
+            return;
+          }
+          poll(jobId);
+        } catch {
+          poll(jobId);
+        }
+      }, POLL_INTERVAL_MS);
+    },
+    [api, stopTimer],
+  );
 
   async function start() {
     if (phase === "running" || scheduleId === null) return;
+    stopTimer();
     setPhase("running");
     setError(null);
-    setResult(null);
+    setJob(null);
+    startedAtRef.current = Date.now();
     try {
       const res = await api.solve(scheduleId);
-      setResult(res);
-      setPhase(res.status === "failed" ? "error" : "done");
-      if (res.status !== "failed") onSolved?.();
+      const st = await api.solveJobStatus(res.solve_job_id);
+      setJob(st);
+      if (st.status === "solved") {
+        setPhase("done");
+        onSolved?.();
+        return;
+      }
+      if (st.status === "failed") {
+        setPhase("error");
+        setError(st.error || "Bộ giải không tìm được phương án.");
+        return;
+      }
+      poll(res.solve_job_id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Lỗi chạy bộ giải");
       setPhase("error");
@@ -36,8 +108,9 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
   }
 
   function reset() {
+    stopTimer();
     setPhase("idle");
-    setResult(null);
+    setJob(null);
     setError(null);
   }
 
@@ -53,11 +126,15 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
     }
   }
 
-  const placed =
-    result?.tier_results.reduce((a, t) => a + t.num_assignments, 0) ?? 0;
-  const totalSessions =
-    result?.tier_results.reduce((a, t) => a + t.num_sessions, 0) ?? 0;
-  const violations = result?.violations.length ?? 0;
+  const tierResults = job?.metrics?.tier_results ?? [];
+  const placed = tierResults.reduce((a, t) => a + t.num_assignments, 0);
+  const totalSessions = tierResults.reduce((a, t) => a + t.num_sessions, 0);
+  const violations = job?.metrics?.violations ?? [];
+  const progress = phase === "running" ? (job?.progress ?? 5) : phase === "done" ? 100 : 0;
+  const phaseLabel =
+    phase === "running" && job?.phase
+      ? (PHASE_LABELS[job.phase] ?? job.phase)
+      : null;
 
   return (
     <section className="rounded-lg border border-border bg-sidebar p-5 shadow-sm">
@@ -111,30 +188,24 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
         <div className="mb-1 flex items-center justify-between text-xs text-foreground/60">
           <span>
             {phase === "idle" && "Sẵn sàng"}
-            {phase === "running" && "Đang chạy bộ giải..."}
+            {phase === "running" && (phaseLabel ?? "Đang chờ bộ giải...")}
             {phase === "done" && "Hoàn tất"}
             {phase === "error" && "Lỗi"}
           </span>
+          {phase === "running" && <span>{progress}%</span>}
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-border">
           <div
             className={
-              "h-full rounded-full transition-[width] duration-150 " +
+              "h-full rounded-full transition-[width] duration-300 " +
               (phase === "error" ? "bg-destructive" : "bg-primary")
             }
-            style={{
-              width:
-                phase === "idle"
-                  ? "0%"
-                  : phase === "running"
-                    ? "100%"
-                    : "100%",
-            }}
+            style={{ width: progress + "%" }}
           />
         </div>
       </div>
 
-      {phase === "done" && result && (
+      {phase === "done" && job && (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <MetricCard
             label="Số buổi đã xếp"
@@ -143,18 +214,34 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
           />
           <MetricCard
             label="Vi phạm"
-            value={String(violations)}
-            tone={violations === 0 ? "accent" : "warning"}
+            value={String(violations.length)}
+            tone={violations.length === 0 ? "accent" : "warning"}
           />
           <MetricCard
             label="Giá trị mục tiêu"
             value={
-              result.objective_value != null
-                ? result.objective_value.toLocaleString("vi-VN")
+              job.objective_value != null
+                ? job.objective_value.toLocaleString("vi-VN")
                 : "-"
             }
             tone="accent"
           />
+        </div>
+      )}
+
+      {phase === "done" && tierResults.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          {tierResults.map((t) => (
+            <span
+              key={t.tier}
+              className="rounded-full border border-border bg-background px-3 py-1 text-foreground/70"
+            >
+              {t.tier === "culture" ? "Văn hóa" : "Nghề"}:{" "}
+              {t.num_assignments}/{t.num_sessions} buổi
+              {t.objective_value != null &&
+                " (mục tiêu " + t.objective_value.toLocaleString("vi-VN") + ")"}
+            </span>
+          ))}
         </div>
       )}
 
@@ -163,9 +250,9 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
           {error && (
             <p className="text-xs font-medium text-destructive">{error}</p>
           )}
-          {result && result.violations.length > 0 && (
+          {violations.length > 0 && (
             <ul className="list-inside list-disc text-xs text-destructive">
-              {result.violations.slice(0, 8).map((v, i) => (
+              {violations.slice(0, 8).map((v, i) => (
                 <li key={i}>{v}</li>
               ))}
             </ul>

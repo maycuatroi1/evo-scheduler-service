@@ -64,16 +64,30 @@ export type SolveTierResult = {
   objective_value: number;
   num_sessions: number;
   num_assignments: number;
-  violations: string[];
+  violations?: string[];
 };
 
 export type SolveResponse = {
   solve_job_id: string;
+  schedule_id: number;
   status: string;
-  tier_mode: string;
+};
+
+export type SolveJobStatus = {
+  job_id: string;
+  schedule_id: number;
+  status: string;
+  phase: string | null;
+  progress: number;
   objective_value: number | null;
-  tier_results: SolveTierResult[];
-  violations: string[];
+  error: string;
+  metrics: {
+    tier_mode?: string;
+    conflicts?: number;
+    violations?: string[];
+    num_assignments?: number;
+    tier_results?: SolveTierResult[];
+  };
 };
 
 export type Weights = {
@@ -149,6 +163,7 @@ export type ApiClient = {
   getSessions: (scheduleId: number) => Promise<SessionRow[]>;
   getConflicts: (scheduleId: number) => Promise<Conflict[]>;
   solve: (scheduleId: number) => Promise<SolveResponse>;
+  solveJobStatus: (jobId: string) => Promise<SolveJobStatus>;
   getWeights: (scheduleId: number) => Promise<Weights>;
   putWeights: (scheduleId: number, weights: Weights) => Promise<Weights>;
   uploadFile: (file: File) => Promise<UploadSummary>;
@@ -265,6 +280,9 @@ export function createApiClient(token: string | null): ApiClient {
         "/schedule/" + scheduleId + "/solve",
         { method: "POST" },
       );
+    },
+    async solveJobStatus(jobId) {
+      return request<SolveJobStatus>("/solve/" + jobId + "/status");
     },
     async getWeights(scheduleId) {
       const data = await request<WeightsResponse>(
