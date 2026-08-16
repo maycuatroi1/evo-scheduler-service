@@ -545,3 +545,79 @@ class FeasibilityEndpointTests(TestCase):
             headers={"Authorization": f"Bearer {mint_token(other.id)}"},
         )
         self.assertEqual(resp.status_code, 404, resp.content)
+
+
+class TeacherPoolTests(TestCase):
+    def test_two_teachers_sharing_more_slots_than_they_can_teach(self):
+        from scheduler.solver import feasibility
+
+        # 7 lớp x 5 tiết = 35 tiết, hai giáo viên chỉ gánh nổi 2 x 30 = 60...
+        # nhưng đủ, nên tăng lên 13 lớp = 65 tiết để vượt năng lực.
+        sessions = [
+            _session(i, group="LH%d" % i, duration=5, module="MH_VAN")
+            for i in range(1, 14)
+        ]
+        data = _data(
+            sessions,
+            resources=[_resource("P%d" % i) for i in range(20)],
+            teacher_module_map={"MH_VAN": ["GV1", "GV2"]},
+        )
+        codes = [i["code"] for i in feasibility.blocking(feasibility.check(data))]
+        self.assertIn("teacher_pool_overloaded", codes)
+
+    def test_pool_with_enough_teachers_is_accepted(self):
+        from scheduler.solver import feasibility
+
+        sessions = [
+            _session(i, group="LH%d" % i, duration=5, module="MH_VAN")
+            for i in range(1, 14)
+        ]
+        data = _data(
+            sessions,
+            resources=[_resource("P%d" % i) for i in range(20)],
+            teacher_module_map={"MH_VAN": ["GV1", "GV2", "GV3"]},
+        )
+        self.assertEqual(feasibility.blocking(feasibility.check(data)), [])
+
+    def test_fixed_load_counts_against_the_pool(self):
+        from scheduler.solver import feasibility
+
+        # GV1 đã bị gán cứng 28 tiết ở môn khác, nên nhóm hai người chỉ còn
+        # 32 tiết trống mà phải gánh 36 tiết môn Văn.
+        sessions = [
+            _session(
+                100 + i,
+                group="LHX%d" % i,
+                duration=4,
+                module="MH_KHAC",
+                teachers=("GV1",),
+            )
+            for i in range(7)
+        ]
+        sessions += [
+            _session(i, group="LH%d" % i, duration=4, module="MH_VAN")
+            for i in range(1, 10)
+        ]
+        data = _data(
+            sessions,
+            resources=[_resource("P%d" % i) for i in range(20)],
+            teacher_module_map={"MH_VAN": ["GV1", "GV2"]},
+        )
+        codes = [i["code"] for i in feasibility.blocking(feasibility.check(data))]
+        self.assertIn("teacher_pool_overloaded", codes)
+
+    def test_single_teacher_pool_is_left_to_the_per_teacher_check(self):
+        from scheduler.solver import feasibility
+
+        sessions = [
+            _session(i, group="LH%d" % i, duration=5, module="MH_VAN")
+            for i in range(1, 9)
+        ]
+        data = _data(
+            sessions,
+            resources=[_resource("P%d" % i) for i in range(20)],
+            teacher_module_map={"MH_VAN": ["GV1"]},
+        )
+        codes = [i["code"] for i in feasibility.blocking(feasibility.check(data))]
+        self.assertIn("teacher_overloaded", codes)
+        self.assertNotIn("teacher_pool_overloaded", codes)

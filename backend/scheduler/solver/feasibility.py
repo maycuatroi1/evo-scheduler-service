@@ -214,6 +214,88 @@ def _check_teacher_load(sessions, teacher_module_map, num_timeslots):
     )
 
 
+def _teacher_groups(sessions, teacher_module_map):
+    """Gom giáo viên thành nhóm khi họ dùng chung một rổ buổi học.
+
+    Buổi chưa gán giáo viên được solver phân cho một người trong nhóm đủ điều
+    kiện, nên năng lực phải tính theo cả nhóm chứ không theo từng người.
+    """
+    parent = {}
+
+    def find(code):
+        parent.setdefault(code, code)
+        while parent[code] != code:
+            parent[code] = parent[parent[code]]
+            code = parent[code]
+        return code
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[ra] = rb
+
+    free = []
+    for s in sessions:
+        if s.get("teacher_codes"):
+            continue
+        eligible = teacher_module_map.get(s.get("module_code")) or []
+        if not eligible:
+            continue
+        free.append((s, eligible))
+        for code in eligible[1:]:
+            union(eligible[0], code)
+
+    groups = {}
+    for s, eligible in free:
+        root = find(eligible[0])
+        group = groups.setdefault(root, {"teachers": set(), "demand": 0})
+        group["teachers"].update(eligible)
+        group["demand"] += int(s.get("duration_slots", 1) or 1)
+    return groups
+
+
+def _check_teacher_pool(sessions, teacher_module_map, num_timeslots):
+    """Năng lực của cả nhóm giáo viên so với số tiết nhóm đó phải gánh."""
+    fixed_load = {}
+    for s in sessions:
+        duration = int(s.get("duration_slots", 1) or 1)
+        for code in s.get("teacher_codes") or []:
+            fixed_load[code] = fixed_load.get(code, 0) + duration
+
+    issues = []
+    for group in _teacher_groups(sessions, teacher_module_map).values():
+        teachers = sorted(group["teachers"])
+        if len(teachers) < 2:
+            # Một người là trường hợp đã được báo chi tiết ở _check_teacher_load.
+            continue
+        demand = group["demand"] + sum(fixed_load.get(c, 0) for c in teachers)
+        capacity = len(teachers) * num_timeslots
+        if demand <= capacity:
+            continue
+        listed = ", ".join(teachers[:5])
+        if len(teachers) > 5:
+            listed += " và %d người nữa" % (len(teachers) - 5)
+        issues.append(
+            _issue(
+                "teacher_pool_overloaded",
+                "Nhóm %d giáo viên (%s) phải dạy %d tiết mỗi tuần nhưng tối đa "
+                "chỉ được %d tiết (%d giáo viên x %d tiết)."
+                % (
+                    len(teachers),
+                    listed,
+                    demand,
+                    capacity,
+                    len(teachers),
+                    num_timeslots,
+                ),
+                teachers=teachers,
+                required=demand,
+                available=capacity,
+            )
+        )
+    return issues
+
+
 def _check_teacher_coverage(sessions, teacher_module_map):
     uncovered = {}
     for s in sessions:
@@ -382,6 +464,9 @@ def check(data):
     issues.extend(_check_group_load(sessions, num_timeslots))
     issues.extend(
         _check_teacher_load(sessions, teacher_module_map, num_timeslots)
+    )
+    issues.extend(
+        _check_teacher_pool(sessions, teacher_module_map, num_timeslots)
     )
     issues.extend(_check_resource_pool(sessions, resources, num_timeslots))
     if resources:
