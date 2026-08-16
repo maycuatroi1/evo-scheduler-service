@@ -39,10 +39,9 @@ def apply(ctx: BuildContext, rule):
         for t in ctx.valid_starts.get(sid, []):
             run = ctx.covers(t, dur)
             if all(p in preferred for p in run):
-                for rcode in ctx.candidate_resources.get(sid, []):
-                    x = ctx.X.get((sid, t, rcode))
-                    if x is not None:
-                        preferred_sum_terms.append(x)
+                lit = ctx.start_lit.get((sid, t))
+                if lit is not None:
+                    preferred_sum_terms.append(lit)
         pref_sum = sum(preferred_sum_terms) if preferred_sum_terms else 0
         v = ctx.model.NewBoolVar(f"pref_viol_{sid}")
         ctx.model.Add(v + pref_sum == 1)

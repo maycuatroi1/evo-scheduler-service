@@ -27,12 +27,13 @@ def apply(ctx: BuildContext, rule):
         total = []
         for s in sessions:
             slot_weight = int(s["duration_slots"]) * per_slot_decis
-            chosen = []
-            for t in ctx.valid_starts.get(s["id"], []):
-                for rcode in ctx.candidate_resources.get(s["id"], []):
-                    x = ctx.X.get((s["id"], t, rcode))
-                    if x is not None:
-                        chosen.append(x)
+            # Buổi luôn được xếp đúng một tiết bắt đầu, nên tổng này bằng 1.
+            # Giữ dạng biểu thức để ràng buộc vẫn nằm trong mô hình.
+            chosen = [
+                ctx.start_lit[(s["id"], t)]
+                for t in ctx.valid_starts.get(s["id"], [])
+                if (s["id"], t) in ctx.start_lit
+            ]
             if chosen:
                 total.append((slot_weight, chosen))
         if not total:

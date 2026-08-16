@@ -110,15 +110,9 @@ def _room_change(ctx):
             continue
         sids = [s["id"] for s in sessions]
         for d, globals_in_day in days.items():
-            day_starts = set(globals_in_day)
-            on_day_terms = []
-            for sid in sids:
-                for t in ctx.valid_starts.get(sid, []):
-                    if t in day_starts:
-                        for rcode in ctx.candidate_resources.get(sid, []):
-                            x = ctx.X.get((sid, t, rcode))
-                            if x is not None:
-                                on_day_terms.append(x)
+            on_day_terms = [
+                ctx.on_day(sid, d) for sid in sids if sid in ctx.start_timeslot
+            ]
             if not on_day_terms:
                 continue
             has_day = model.NewBoolVar("rc_any_%s_%s" % (grp, d))
@@ -126,17 +120,19 @@ def _room_change(ctx):
             room_used = []
             for r in ctx.resources:
                 rcode = r["code"]
-                terms = []
-                for sid in sids:
-                    for t in ctx.valid_starts.get(sid, []):
-                        if t in day_starts:
-                            x = ctx.X.get((sid, t, rcode))
-                            if x is not None:
-                                terms.append(x)
-                if not terms:
+                users = [
+                    sid for sid in sids if (sid, rcode) in ctx.assign
+                ]
+                if not users:
                     continue
                 b = model.NewBoolVar("rc_room_%s_%s_%s" % (grp, d, rcode))
-                model.AddMaxEquality(b, terms)
+                # Phòng bị tính là đã dùng khi có buổi của lớp vừa rơi vào ngày
+                # này vừa chọn nó. Chỉ cần chặn dưới vì hàm mục tiêu đang
+                # cực tiểu hoá số phòng.
+                for sid in users:
+                    model.Add(
+                        b >= ctx.on_day(sid, d) + ctx.assign[(sid, rcode)] - 1
+                    )
                 room_used.append(b)
             if not room_used:
                 continue
@@ -163,15 +159,9 @@ def _compact_schedule(ctx):
         sids = [s["id"] for s in sessions]
         day_used = []
         for d, globals_in_day in days.items():
-            day_starts = set(globals_in_day)
-            terms = []
-            for sid in sids:
-                for t in ctx.valid_starts.get(sid, []):
-                    if t in day_starts:
-                        for rcode in ctx.candidate_resources.get(sid, []):
-                            x = ctx.X.get((sid, t, rcode))
-                            if x is not None:
-                                terms.append(x)
+            terms = [
+                ctx.on_day(sid, d) for sid in sids if sid in ctx.start_timeslot
+            ]
             if not terms:
                 continue
             b = model.NewBoolVar("cmp_day_%s_%s" % (grp, d))

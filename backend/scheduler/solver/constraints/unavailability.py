@@ -27,12 +27,18 @@ def apply(ctx: BuildContext, rule):
     if etype == "resource":
         rcode = param(rule, "entity_code", "resource_code", "entity", default=None)
         for s in ctx.sessions:
-            for t in ctx.valid_starts.get(s["id"], []):
-                for p in ctx.covers(t, s["duration_slots"]):
-                    if p in blocked:
-                        x = ctx.X.get((s["id"], t, rcode))
-                        if x is not None:
-                            ctx.model.Add(x == 0)
+            sid = s["id"]
+            res_lit = ctx.assign.get((sid, rcode))
+            if res_lit is None:
+                continue
+            duration = int(s["duration_slots"])
+            for t in ctx.valid_starts.get(sid, []):
+                if not any(p in blocked for p in ctx.covers(t, duration)):
+                    continue
+                start_lit = ctx.start_lit.get((sid, t))
+                if start_lit is not None:
+                    # Không được vừa bắt đầu ở tiết này vừa dùng tài nguyên đó.
+                    ctx.model.AddBoolOr([start_lit.Not(), res_lit.Not()])
         return None
     for s in affected_sessions(ctx, rule):
         for p in blocked:

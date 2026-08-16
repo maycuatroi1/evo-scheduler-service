@@ -53,6 +53,29 @@ dài hơn một ngày học, thiếu phòng theo loại, buổi bị khoá vào 
 `build_and_solve` cũng chạy đúng bộ kiểm tra này và dừng ngay với trạng thái
 `DATA_INFEASIBLE` thay vì đốt hết thời gian giải rồi báo `INFEASIBLE` chung chung.
 
+## Mô hình bộ giải
+
+Mỗi buổi có đúng hai nhóm biến: tiết bắt đầu và tài nguyên được chọn. Xung đột
+chỗ, xung đột lớp và xung đột giáo viên đều diễn đạt bằng khoảng thời gian
+(`IntervalVar`) với `AddNoOverlap` / `AddCumulative`, chứ không phải một biến
+bool cho mỗi bộ ba buổi x tiết x phòng. Cách cũ sinh hơn 190 nghìn biến trên dữ
+liệu một trường thật và bộ giải chạy 600 giây vẫn không kết luận được gì.
+
+Hai điểm cần biết khi sửa phần này:
+
+- **Giải hai pha.** Pha một dựng mô hình không có hàm mục tiêu nên bộ giải dừng
+  ngay khi tìm được phương án đầu tiên. Pha hai dựng lại mô hình đầy đủ, lấy
+  nghiệm pha một làm gợi ý rồi mới tối ưu. Hết giờ ở pha hai thì phương án pha
+  một vẫn được giữ, nên có thời khoá biểu vẫn hơn không có gì.
+- **Ràng buộc dư thừa theo nhóm tài nguyên.** `_redundant_pool_capacity` chặn
+  trước số buổi diễn ra cùng lúc trên từng nhóm phòng dùng chung. Ràng buộc này
+  suy ra được từ những ràng buộc khác nên không đổi tập nghiệm, nhưng thiếu nó
+  thì trường hợp thiếu phòng mất hàng chục giây mới kết luận được, có nó thì
+  xong trong chưa tới một giây.
+
+Biến `occ` (buổi có chiếm tiết p không) và `on_day` được dựng lười, chỉ khi một
+luật hay hàm mục tiêu thật sự hỏi tới.
+
 ## Trang thai
 
 Prototype - dang xay dung nen tang. Xem `plans/active/` (o harness repo) de biet thu tu cac buoc.
