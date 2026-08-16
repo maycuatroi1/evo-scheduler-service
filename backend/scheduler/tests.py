@@ -621,3 +621,68 @@ class TeacherPoolTests(TestCase):
         codes = [i["code"] for i in feasibility.blocking(feasibility.check(data))]
         self.assertIn("teacher_overloaded", codes)
         self.assertNotIn("teacher_pool_overloaded", codes)
+
+
+class CapacityLevelTests(TestCase):
+    def test_shortage_of_large_rooms_is_reported(self):
+        from scheduler.solver import feasibility
+
+        # Hai phòng lớn chỉ gánh nổi 60 tiết, các lớp đông cần 80 tiết.
+        sessions = [
+            _session(i, group="LH%d" % i, duration=4, size=45)
+            for i in range(1, 21)
+        ]
+        data = _data(
+            sessions,
+            resources=[
+                _resource("BIG1", capacity=50),
+                _resource("BIG2", capacity=50),
+            ]
+            + [_resource("SMALL%d" % i, capacity=30) for i in range(10)],
+        )
+        issues = feasibility.blocking(feasibility.check(data))
+        codes = [i["code"] for i in issues]
+        self.assertIn("resource_capacity_shortage", codes)
+        message = next(
+            i["message"] for i in issues if i["code"] == "resource_capacity_shortage"
+        )
+        self.assertIn("trên 30 học sinh", message)
+
+    def test_total_capacity_alone_does_not_hide_the_shortage(self):
+        from scheduler.solver import feasibility
+
+        sessions = [
+            _session(i, group="LH%d" % i, duration=4, size=45)
+            for i in range(1, 21)
+        ]
+        data = _data(
+            sessions,
+            resources=[
+                _resource("BIG1", capacity=50),
+                _resource("BIG2", capacity=50),
+            ]
+            + [_resource("SMALL%d" % i, capacity=30) for i in range(10)],
+        )
+        codes = [i["code"] for i in feasibility.check(data)]
+        # Tổng 12 phòng x 30 tiết = 360 chỗ cho 80 tiết nên phép cộng thô
+        # không thấy vấn đề; chỉ phép kiểm theo ngưỡng mới thấy.
+        self.assertNotIn("resource_pool_overloaded", codes)
+        self.assertIn("resource_capacity_shortage", codes)
+
+    def test_tool_set_without_capacity_never_triggers_the_check(self):
+        from scheduler.solver import feasibility
+
+        sessions = [
+            _session(
+                i, group="LH%d" % i, duration=4, session_type="practice", size=48
+            )
+            for i in range(1, 11)
+        ]
+        data = _data(
+            sessions,
+            resources=[
+                _resource("T1", rtype="tool_set", capacity=0, quantity=10)
+            ],
+        )
+        codes = [i["code"] for i in feasibility.blocking(feasibility.check(data))]
+        self.assertNotIn("resource_capacity_shortage", codes)

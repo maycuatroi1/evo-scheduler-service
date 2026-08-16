@@ -401,6 +401,74 @@ def _check_resource_pool(sessions, resources, num_timeslots):
     return issues
 
 
+def _check_capacity_levels(sessions, resources, num_timeslots):
+    """Sức chứa phải đủ ở từng ngưỡng sĩ số, không chỉ đủ tổng.
+
+    Lớp đông chỉ vào được phòng lớn, nên tổng số chỗ đủ vẫn có thể vô nghiệm
+    khi phòng lớn quá ít. Đây là điều kiện Hall áp cho từng ngưỡng sĩ số.
+    """
+    demand = {}
+    for s in sessions:
+        allowed = allowed_resource_types(s)
+        if not allowed:
+            continue
+        demand.setdefault(allowed, []).append(s)
+
+    issues = []
+    for allowed, group_sessions in demand.items():
+        pool = [
+            r for r in resources if str(r.get("type", "")).lower() in allowed
+        ]
+        thresholds = sorted(
+            {int(r.get("capacity", 0) or 0) for r in pool if int(r.get("capacity", 0) or 0) > 0}
+        )
+        worst = None
+        for threshold in thresholds:
+            needed = sum(
+                int(s.get("duration_slots", 1) or 1)
+                for s in group_sessions
+                if int(s.get("group_size", 0) or 0) > threshold
+            )
+            if not needed:
+                continue
+            supply = sum(
+                int(r.get("available_quantity", 1) or 1)
+                for r in pool
+                if int(r.get("capacity", 0) or 0) == 0
+                or int(r.get("capacity", 0) or 0) > threshold
+            )
+            capacity = supply * num_timeslots
+            if needed <= capacity:
+                continue
+            gap = needed - capacity
+            if worst is None or gap > worst[3]:
+                worst = (threshold, needed, capacity, gap, supply)
+        if worst is None:
+            continue
+        threshold, needed, capacity, gap, supply = worst
+        issues.append(
+            _issue(
+                "resource_capacity_shortage",
+                "Các lớp trên %d học sinh cần %d tiết %s mỗi tuần nhưng chỉ có "
+                "%d chỗ đủ sức chứa (%d đơn vị x %d tiết), thiếu %d tiết."
+                % (
+                    threshold,
+                    needed,
+                    _resource_label(allowed),
+                    capacity,
+                    supply,
+                    num_timeslots,
+                    gap,
+                ),
+                resource_types=list(allowed),
+                threshold=threshold,
+                required=needed,
+                available=capacity,
+            )
+        )
+    return issues
+
+
 def _check_locked(sessions, horizon, resources):
     """Buổi đã khoá phải trỏ vào một tiết và một tài nguyên có thật."""
     num_timeslots = len(horizon)
@@ -470,6 +538,9 @@ def check(data):
     )
     issues.extend(_check_resource_pool(sessions, resources, num_timeslots))
     if resources:
+        issues.extend(
+            _check_capacity_levels(sessions, resources, num_timeslots)
+        )
         issues.extend(_check_resource_match(sessions, resources))
         issues.extend(_check_locked(sessions, horizon, resources))
     issues.extend(_check_teacher_coverage(sessions, teacher_module_map))
