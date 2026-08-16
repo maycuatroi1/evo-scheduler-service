@@ -19,6 +19,7 @@ def _metrics(result) -> dict:
         "tier_mode": result.tier_mode,
         "conflicts": len(result.violations),
         "violations": [str(v) for v in result.violations],
+        "diagnostics": list(getattr(result, "diagnostics", []) or []),
         "num_assignments": len(result.assignments),
         "tier_results": [
             {

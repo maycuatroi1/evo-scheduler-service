@@ -145,7 +145,20 @@ def validate(parsed):
         teacher_codes,
         issues,
     )
+    _validate_config(parsed, issues)
     return issues
+
+
+def _validate_config(parsed, issues):
+    from scheduler import horizon
+    from scheduler.excel_parser import horizon_config
+
+    cfg = horizon_config(parsed)
+    if not cfg:
+        return
+    row = (parsed.get("Config") or [{}])[0].get("row", 2)
+    for error in horizon.validate(cfg):
+        issues.append(_issue(row, "Config", "horizon", error))
 
 
 def _validate_teachers(rows, issues):

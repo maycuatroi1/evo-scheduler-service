@@ -252,10 +252,15 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
           )}
           {violations.length > 0 && (
             <ul className="list-inside list-disc text-xs text-destructive">
-              {violations.slice(0, 8).map((v, i) => (
+              {violations.slice(0, 12).map((v, i) => (
                 <li key={i}>{v}</li>
               ))}
             </ul>
+          )}
+          {violations.length > 12 && (
+            <p className="text-xs text-foreground/60">
+              Còn {violations.length - 12} vấn đề nữa.
+            </p>
           )}
         </div>
       )}

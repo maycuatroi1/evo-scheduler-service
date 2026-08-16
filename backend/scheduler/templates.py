@@ -4,7 +4,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-from scheduler.excel_parser import SHEET_NAMES
+from scheduler.excel_parser import ALL_SHEET_NAMES
 
 SHEET_HEADERS = {
     "Teachers": ["Mã GV", "Họ tên", "Khối", "Định mức"],
@@ -13,6 +13,12 @@ SHEET_HEADERS = {
     "Modules": ["Mã MH", "Tên MH", "Lý thuyết", "Thực hành", "Mã LH"],
     "TeacherModule": ["Mã GV", "Mã MH"],
     "FixedSessions": ["Mã MH", "Mã LH", "Loại", "Số tiết", "Cấp", "Mã TB", "Mã GV"],
+    "Config": [
+        "Số tuần",
+        "Số ngày học",
+        "Số tiết mỗi ngày",
+        "Số tiết buổi sáng",
+    ],
 }
 
 SHEET_LABELS = {
@@ -22,6 +28,7 @@ SHEET_LABELS = {
     "Modules": "Môn học",
     "TeacherModule": "GV - Môn học",
     "FixedSessions": "Tiết cố định",
+    "Config": "Cấu hình",
 }
 
 EXAMPLE_ROWS = {
@@ -49,6 +56,7 @@ EXAMPLE_ROWS = {
         ["MH001", "LH001", "Lý thuyết", 3, "Văn hóa", "P101", "GV001"],
         ["MH002", "LH002", "Thực hành", 4, "Nghề", "TS01", "GV002"],
     ],
+    "Config": [[1, 6, 5, 2]],
 }
 
 HEADER_FILL = PatternFill(start_color="FF1F4E78", end_color="FF1F4E78", fill_type="solid")
@@ -78,7 +86,7 @@ def _write_sheet(wb, sheet_name, headers, examples):
 def generate_template():
     wb = Workbook()
     wb.remove(wb.active)
-    for sheet_name in SHEET_NAMES:
+    for sheet_name in ALL_SHEET_NAMES:
         _write_sheet(
             wb,
             SHEET_LABELS[sheet_name],

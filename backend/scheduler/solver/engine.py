@@ -1,12 +1,35 @@
 from ortools.sat.python import cp_model
 
+from scheduler import horizon as horizon_config
 from scheduler.solver.context import BuildContext
 from scheduler.solver.constraints import apply_rule
 from scheduler.solver.result import SolveResult, Assignment, RulePenalty
-from scheduler.solver import objectives
+from scheduler.solver import feasibility, objectives
 
 DEFAULT_MAX_TIME_SECONDS = 120.0
 DEFAULT_SEED = 42
+
+# Dữ liệu tự mâu thuẫn: không gọi solver vì không có lời giải nào tồn tại.
+STATUS_DATA_INFEASIBLE = "DATA_INFEASIBLE"
+
+
+def _failure_message(status_name, hard_count, soft_count):
+    if status_name == "INFEASIBLE":
+        return (
+            "Không có phương án nào thoả mãn hết ràng buộc cứng "
+            "(%d ràng buộc cứng, %d ràng buộc mềm). Hãy giảm tải cho lớp và "
+            "giáo viên, hoặc mở rộng số tiết của thời khoá biểu." % (hard_count, soft_count)
+        )
+    if status_name == "UNKNOWN":
+        return (
+            "Bộ giải hết thời gian trước khi tìm được phương án nào. Hãy tăng "
+            "thời gian giải hoặc giảm quy mô dữ liệu."
+        )
+    return "Bộ giải dừng với trạng thái %s (%d ràng buộc cứng, %d ràng buộc mềm)." % (
+        status_name,
+        hard_count,
+        soft_count,
+    )
 
 
 def _rule_to_dict(rule):
@@ -96,32 +119,10 @@ def _sessions_for(schedule, tenant):
 
 
 def _default_horizon(tenant):
-    cfg = (tenant.config_json or {}).get("horizon")
-    if cfg:
+    cfg = (getattr(tenant, "config_json", None) or {}).get("horizon")
+    if isinstance(cfg, list) and cfg:
         return _normalize_horizon(cfg)
-    days = [
-        ("monday", 0),
-        ("tuesday", 1),
-        ("wednesday", 2),
-        ("thursday", 3),
-        ("friday", 4),
-        ("saturday", 5),
-    ]
-    periods_per_day = 5
-    morning_count = 2
-    horizon = []
-    idx = 0
-    for name, d in days:
-        for p in range(periods_per_day):
-            horizon.append({
-                "index": idx,
-                "day": d,
-                "period": p,
-                "day_name": name,
-                "is_morning": p < morning_count,
-            })
-            idx += 1
-    return horizon
+    return horizon_config.build(cfg)
 
 
 def _normalize_horizon(cfg):
@@ -162,7 +163,15 @@ def _build_variables(ctx):
         dur = s["duration_slots"]
         valid = [t for t in range(ctx.num_timeslots) if ctx.same_day_run(t, dur)]
         ctx.valid_starts[sid] = valid
-        candidates = [r["code"] for r in ctx.resources]
+        candidates = feasibility.candidate_resources(ctx.resources, s)
+        if not candidates:
+            # Không có tài nguyên đúng loại: giữ lại toàn bộ để mô hình không
+            # vô nghiệm câm lặng. Bản kiểm tra khả thi đã báo trường hợp này.
+            candidates = [r["code"] for r in ctx.resources]
+        locked_code = s.get("assigned_resource_code")
+        if s.get("is_locked") and locked_code in ctx.resources_by_code:
+            if locked_code not in candidates:
+                candidates = candidates + [locked_code]
         ctx.candidate_resources[sid] = candidates
         for t in valid:
             for rcode in candidates:
@@ -174,6 +183,10 @@ def _build_variables(ctx):
         if all_vars:
             model.Add(sum(all_vars) == 1)
         else:
+            ctx.blockers.append(
+                "Buổi %s không có tiết hay tài nguyên nào hợp lệ."
+                % (s.get("code") or sid)
+            )
             model.Add(sum([]) == 1)
         st_var = model.NewIntVar(0, max(ctx.num_timeslots - 1, 0), f"st_{sid}")
         if valid:
@@ -253,6 +266,15 @@ def _apply_locked(ctx):
         rcode = s.get("assigned_resource_code")
         if rcode is None:
             continue
+        if (sid, t_idx, rcode) not in ctx.X:
+            # Khoá trỏ vào tiết hoặc tài nguyên không dựng được biến. Ép hết
+            # về 0 sẽ làm mô hình vô nghiệm mà không nói lý do, nên bỏ khoá và
+            # để buổi này được xếp tự do.
+            ctx.warnings.append(
+                "Buổi %s bị khoá vào vị trí không hợp lệ nên khoá đã bị bỏ qua."
+                % (s.get("code") or sid)
+            )
+            continue
         for (sid2, t, rcode2), x in ctx.X.items():
             if sid2 != sid:
                 continue
@@ -279,13 +301,31 @@ def _resource_overlap(ctx):
                 ctx.model.Add(sum(terms) <= cap)
 
 
-def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAULT_SEED, verbose=False, persist_callback=None, weights=None):
+def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAULT_SEED, verbose=False, persist_callback=None, weights=None, skip_preflight=False):
     model = cp_model.CpModel()
     ctx = BuildContext(model, data)
     if not ctx.sessions:
         return SolveResult(status="UNKNOWN", objective_value=0.0, solver_log="no sessions")
+    issues = [] if skip_preflight else feasibility.check(data)
+    blocking = feasibility.blocking(issues)
+    if blocking:
+        return SolveResult(
+            status=STATUS_DATA_INFEASIBLE,
+            objective_value=0.0,
+            violations=feasibility.messages(blocking),
+            diagnostics=issues,
+            solver_log="preflight",
+        )
     _build_variables(ctx)
     _apply_locked(ctx)
+    if ctx.blockers:
+        return SolveResult(
+            status=STATUS_DATA_INFEASIBLE,
+            objective_value=0.0,
+            violations=list(ctx.blockers),
+            diagnostics=issues,
+            solver_log="preflight",
+        )
     _resource_overlap(ctx)
     objective_terms = []
     hard_count = 0
@@ -321,9 +361,12 @@ def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAUL
         num_constraints=num_constraints,
         num_booleans=solver.NumBooleans(),
         wall_time=float(solver.WallTime()),
+        diagnostics=issues,
     )
+    result.violations.extend(ctx.warnings)
     if status_name not in ("OPTIMAL", "FEASIBLE"):
-        result.violations = [f"model is {status_name}; check hard rules (hard={hard_count}, soft={soft_count})"]
+        result.violations.insert(0, _failure_message(status_name, hard_count, soft_count))
+        result.violations.extend(feasibility.messages(issues))
         if skipped:
             result.violations.extend(skipped)
         return result

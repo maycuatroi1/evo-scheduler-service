@@ -33,6 +33,26 @@ evo-scheduler-service/
 - Next.js (App Router) + TypeScript + TailwindCSS.
 - Man hinh chinh: keo - tha file Excel de import, xem truoc du lieu, bam "Giai" roi xem lich kieu lưới (grid).
 
+## Khung thời khoá biểu
+
+Số tiết khả dụng mỗi tuần là trần cứng của mọi lời giải: một lớp hay một giáo
+viên cần nhiều tiết hơn con số này thì không có lịch nào tồn tại. Mặc định là
+6 ngày x 5 tiết = 30 tiết; trường học hai buổi phải khai lại.
+
+- Qua giao diện: trang **Ràng buộc**, khối "Khung thời khoá biểu".
+- Qua API: `GET/PUT /api/tenant/horizon` với `days_per_week`, `periods_per_day`,
+  `morning_count`, `weeks`.
+- Qua Excel: sheet **Cấu hình** trong file nhập liệu (không bắt buộc; bỏ trống
+  thì giữ nguyên cấu hình đang có).
+
+## Kiểm tra khả thi
+
+`GET /api/schedule/{id}/feasibility` chạy các phép kiểm tra số học trước khi
+gọi CP-SAT và chỉ đúng thực thể gây mâu thuẫn: lớp hoặc giáo viên quá tải, buổi
+dài hơn một ngày học, thiếu phòng theo loại, buổi bị khoá vào tiết không hợp lệ.
+`build_and_solve` cũng chạy đúng bộ kiểm tra này và dừng ngay với trạng thái
+`DATA_INFEASIBLE` thay vì đốt hết thời gian giải rồi báo `INFEASIBLE` chung chung.
+
 ## Trang thai
 
 Prototype - dang xay dung nen tang. Xem `plans/active/` (o harness repo) de biet thu tu cac buoc.

@@ -13,7 +13,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
-from scheduler import excel_parser, templates, validator
+from scheduler import excel_parser, horizon, templates, validator
 from scheduler.accounts import hash_password, mint_token, verify_password
 from scheduler.auth import tenant_auth
 from scheduler.models import (
@@ -584,6 +584,59 @@ def move_session(request, session_id, payload: MoveSessionIn):
     return diff.to_dict()
 
 
+class HorizonIn(Schema):
+    weeks: int | None = None
+    days: list[str] | None = None
+    days_per_week: int | None = None
+    periods_per_day: int | None = None
+    morning_count: int | None = None
+
+
+@api.get("/tenant/horizon", auth=tenant_auth, url_name="tenant_horizon_get")
+def get_tenant_horizon(request):
+    tenant = request.auth["tenant"]
+    config = (tenant.config_json or {}).get("horizon")
+    return JsonResponse(
+        {
+            "horizon": horizon.summary(config),
+            "is_default": not config,
+            "day_options": [
+                {"value": name, "label": horizon.DAY_LABELS[name]}
+                for name in horizon.DAY_NAMES
+            ],
+        }
+    )
+
+
+@api.put("/tenant/horizon", auth=tenant_auth, url_name="tenant_horizon_put")
+def put_tenant_horizon(request, payload: HorizonIn):
+    raw = {k: v for k, v in payload.dict().items() if v is not None}
+    errors = horizon.validate(raw)
+    if errors:
+        return JsonResponse({"detail": "invalid horizon", "errors": errors}, status=400)
+
+    tenant = request.auth["tenant"]
+    config = dict(tenant.config_json or {})
+    config["horizon"] = horizon.normalize(raw)
+    tenant.config_json = config
+    tenant.save(update_fields=["config_json"])
+    return JsonResponse({"horizon": horizon.summary(config["horizon"])})
+
+
+@api.get(
+    "/schedule/{schedule_id}/feasibility",
+    auth=tenant_auth,
+    url_name="schedule_feasibility",
+)
+def schedule_feasibility(request, schedule_id):
+    from scheduler.solver.orchestrator import preflight
+
+    schedule = _get_tenant_schedule(request, schedule_id)
+    report = preflight(schedule)
+    report["schedule_id"] = schedule.id
+    return JsonResponse(report)
+
+
 @api.post(
     "/schedule/{schedule_id}/solve",
     auth=tenant_auth,
@@ -743,6 +796,14 @@ def _persist(parsed, tenant):
     }
 
     with transaction.atomic():
+        horizon_cfg = excel_parser.horizon_config(parsed)
+        if horizon_cfg:
+            config = dict(tenant.config_json or {})
+            config["horizon"] = horizon.normalize(horizon_cfg)
+            tenant.config_json = config
+            tenant.save(update_fields=["config_json"])
+            created["horizon"] = horizon.total_slots(config["horizon"])
+
         Session.objects.filter(tenant=tenant).delete()
         TeacherModule.objects.filter(tenant=tenant).delete()
         Module.objects.filter(tenant=tenant).delete()

@@ -32,6 +32,10 @@ class BuildContext:
         self.valid_starts = {}
         self.candidate_resources = {}
         self.soft_records = []
+        # Lý do khiến mô hình chắc chắn vô nghiệm, phát hiện lúc dựng biến.
+        self.blockers = []
+        # Chỗ dữ liệu đã được nới để giải tiếp, cần báo lại cho người dùng.
+        self.warnings = []
 
     def record_soft(self, rule, violation_var, detail=""):
         self.soft_records.append((rule, violation_var, detail))

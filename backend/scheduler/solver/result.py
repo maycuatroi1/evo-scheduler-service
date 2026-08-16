@@ -35,6 +35,7 @@ class SolveResult:
     num_constraints: int = 0
     num_booleans: int = 0
     wall_time: float = 0.0
+    diagnostics: list = field(default_factory=list)
 
     @property
     def is_feasible(self) -> bool:

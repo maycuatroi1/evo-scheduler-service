@@ -2,6 +2,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
+from scheduler import horizon as horizon_config
 from scheduler.models import Schedule
 from scheduler.solver.engine import (
     DEFAULT_MAX_TIME_SECONDS,
@@ -12,6 +13,7 @@ from scheduler.solver.engine import (
     _teacher_to_dict,
     build_and_solve,
 )
+from scheduler.solver import feasibility
 from scheduler.solver.objectives import merge_weights
 from scheduler.solver.result import Assignment, SolveResult
 
@@ -46,18 +48,6 @@ CROSS_TIER_RULES = [
     },
 ]
 
-DEFAULT_DAYS = [
-    ("monday", 0),
-    ("tuesday", 1),
-    ("wednesday", 2),
-    ("thursday", 3),
-    ("friday", 4),
-    ("saturday", 5),
-]
-DEFAULT_PERIODS_PER_DAY = 5
-DEFAULT_MORNING_COUNT = 2
-
-
 @dataclass
 class TierResult:
     tier: str
@@ -66,6 +56,7 @@ class TierResult:
     assignments: list = field(default_factory=list)
     violations: list = field(default_factory=list)
     num_sessions: int = 0
+    diagnostics: list = field(default_factory=list)
 
 
 @dataclass
@@ -77,6 +68,7 @@ class OrchestratorResult:
     tier_results: list = field(default_factory=list)
     assignments: list = field(default_factory=list)
     violations: list = field(default_factory=list)
+    diagnostics: list = field(default_factory=list)
 
 
 def _tenant_tier_mode(tenant) -> str:
@@ -93,65 +85,23 @@ def _tenant_tier_mode(tenant) -> str:
     return SINGLE_TIER
 
 
+HORIZON_KEYS = (
+    "weeks",
+    "days",
+    "days_per_week",
+    "periods_per_day",
+    "morning_count",
+)
+
+
 def _build_horizon(cfg) -> list:
     if not cfg:
-        horizon = []
-        idx = 0
-        for name, d in DEFAULT_DAYS:
-            for p in range(DEFAULT_PERIODS_PER_DAY):
-                horizon.append(
-                    {
-                        "index": idx,
-                        "week": 0,
-                        "day": d,
-                        "period": p,
-                        "day_name": name,
-                        "is_morning": p < DEFAULT_MORNING_COUNT,
-                    }
-                )
-                idx += 1
-        return horizon
+        return horizon_config.build(None)
     if isinstance(cfg, list):
         return _normalize_horizon(cfg)
     if isinstance(cfg, dict):
-        if "weeks" in cfg or "days" in cfg or "periods_per_day" in cfg:
-            weeks = int(cfg.get("weeks") or 1)
-            days_cfg = cfg.get("days")
-            periods = int(cfg.get("periods_per_day") or DEFAULT_PERIODS_PER_DAY)
-            morning = int(cfg.get("morning_count") or DEFAULT_MORNING_COUNT)
-            if days_cfg:
-                day_names = []
-                day_nums = []
-                for i, d in enumerate(days_cfg):
-                    if isinstance(d, dict):
-                        nm = d.get("name", "day%d" % i)
-                        dn = d.get("day", i)
-                    else:
-                        nm = d
-                        dn = i
-                    day_names.append(nm)
-                    day_nums.append(dn)
-            else:
-                day_names = [n for n, _ in DEFAULT_DAYS]
-                day_nums = [d for _, d in DEFAULT_DAYS]
-            horizon = []
-            idx = 0
-            for w in range(weeks):
-                for di, name in enumerate(day_names):
-                    dnum = day_nums[di]
-                    for p in range(periods):
-                        horizon.append(
-                            {
-                                "index": idx,
-                                "week": w,
-                                "day": dnum,
-                                "period": p,
-                                "day_name": name,
-                                "is_morning": p < morning,
-                            }
-                        )
-                        idx += 1
-            return horizon
+        if any(key in cfg for key in HORIZON_KEYS):
+            return horizon_config.build(cfg)
         return _normalize_horizon(cfg)
     return _default_horizon(None)
 
@@ -326,6 +276,52 @@ def _solve_tier(
     )
 
 
+def preflight(schedule: Schedule, tenant: Any = None) -> dict:
+    """Kiểm tra khả thi từng tier mà không chạy bộ giải.
+
+    Dùng đúng dữ liệu và khung giờ mà `orchestrate` sẽ dùng, nên kết quả ở đây
+    dự báo được lần chạy thật.
+    """
+    tenant = tenant or schedule.tenant
+    tier_mode = _tenant_tier_mode(tenant)
+    rules = _rule_dicts_for(tenant) + CROSS_TIER_RULES
+    tiers = []
+
+    if tier_mode == TWO_TIER:
+        plan = ((CULTURE, "culture_horizon"), (VOCATIONAL, "vocational_horizon"))
+    else:
+        plan = ((None, "horizon"),)
+
+    for tier, horizon_key in plan:
+        horizon = _tenant_horizon(tenant, horizon_key)
+        sessions = _fetch_sessions(tenant, tier=tier)
+        session_dicts = [_session_dict(s) for s in sessions]
+        if tier == VOCATIONAL:
+            for cs in _fetch_sessions(tenant, tier=CULTURE):
+                phantom = _locked_phantom(cs, horizon)
+                if phantom is not None:
+                    session_dicts.append(phantom)
+        data = _build_data(tenant, session_dicts, horizon, rules, None)
+        issues = feasibility.check(data)
+        tiers.append(
+            {
+                "tier": tier or "all",
+                "num_sessions": len(sessions),
+                "total_slots": len(horizon),
+                "issues": issues,
+                "blocking_count": len(feasibility.blocking(issues)),
+            }
+        )
+
+    blocking_total = sum(t["blocking_count"] for t in tiers)
+    return {
+        "tier_mode": tier_mode,
+        "feasible": blocking_total == 0,
+        "blocking_count": blocking_total,
+        "tiers": tiers,
+    }
+
+
 def orchestrate(
     schedule: Schedule,
     tenant: Any = None,
@@ -339,6 +335,9 @@ def orchestrate(
     tier_mode = _tenant_tier_mode(tenant)
     solve_job_id = uuid.uuid4().hex
 
+    def _tag(tier, issues):
+        return [dict(issue, tier=tier) for issue in issues or []]
+
     if weights is None:
         weights = merge_weights(schedule.weights_json)
     rules = _rule_dicts_for(tenant) + CROSS_TIER_RULES
@@ -350,6 +349,7 @@ def orchestrate(
     tier_results: list = []
     all_assignments: list = []
     all_violations: list = []
+    all_diagnostics: list = []
     objective_total = 0.0
     overall_status = Schedule.Status.SOLVED
 
@@ -386,10 +386,12 @@ def orchestrate(
                     assignments=list(culture_result.assignments),
                     violations=list(culture_result.violations),
                     num_sessions=len(culture_sessions),
+                    diagnostics=_tag(CULTURE, culture_result.diagnostics),
                 )
             )
             all_assignments.extend(culture_result.assignments)
             all_violations.extend(culture_result.violations)
+            all_diagnostics.extend(_tag(CULTURE, culture_result.diagnostics))
             objective_total += float(culture_result.objective_value or 0.0)
             if not culture_result.is_feasible:
                 overall_status = Schedule.Status.FAILED
@@ -430,10 +432,12 @@ def orchestrate(
                     assignments=voc_assignments,
                     violations=list(voc_result.violations),
                     num_sessions=len(vocational_sessions),
+                    diagnostics=_tag(VOCATIONAL, voc_result.diagnostics),
                 )
             )
             all_assignments.extend(voc_assignments)
             all_violations.extend(voc_result.violations)
+            all_diagnostics.extend(_tag(VOCATIONAL, voc_result.diagnostics))
             objective_total += float(voc_result.objective_value or 0.0)
             if not voc_result.is_feasible:
                 overall_status = Schedule.Status.FAILED
@@ -467,10 +471,12 @@ def orchestrate(
                     assignments=list(result.assignments),
                     violations=list(result.violations),
                     num_sessions=len(all_sessions),
+                    diagnostics=_tag("all", result.diagnostics),
                 )
             )
             all_assignments.extend(result.assignments)
             all_violations.extend(result.violations)
+            all_diagnostics.extend(_tag("all", result.diagnostics))
             objective_total += float(result.objective_value or 0.0)
             if not result.is_feasible:
                 overall_status = Schedule.Status.FAILED
@@ -491,6 +497,7 @@ def orchestrate(
             tier_results=tier_results,
             assignments=all_assignments,
             violations=all_violations,
+            diagnostics=all_diagnostics,
         )
 
     return OrchestratorResult(
@@ -501,4 +508,5 @@ def orchestrate(
         tier_results=tier_results,
         assignments=all_assignments,
         violations=all_violations,
+        diagnostics=all_diagnostics,
     )

@@ -12,6 +12,11 @@ SHEET_NAMES = [
     "FixedSessions",
 ]
 
+# Sheet không bắt buộc: thiếu thì giữ nguyên cấu hình đang có, không cảnh báo.
+OPTIONAL_SHEET_NAMES = ["Config"]
+
+ALL_SHEET_NAMES = SHEET_NAMES + OPTIONAL_SHEET_NAMES
+
 SHEET_ALIASES = {
     "Teachers": ["Teachers", "GiaoVien", "Giáo viên", "Giao vien", "GiangVien", "Teacher"],
     "StudentGroups": ["StudentGroups", "LopHoc", "Lớp học", "Lop hoc", "NhomHocSinh", "StudentGroup"],
@@ -19,6 +24,7 @@ SHEET_ALIASES = {
     "Modules": ["Modules", "MonHoc", "Môn học", "Mon hoc", "Module"],
     "TeacherModule": ["TeacherModule", "GVMH", "GV-MH", "GV - Môn học", "GV - Mon hoc", "GV - Môn"],
     "FixedSessions": ["FixedSessions", "TietCoDinh", "Tiết cố định", "Tiet co dinh", "Sessions", "BuoiHoc", "Session"],
+    "Config": ["Config", "CauHinh", "Cấu hình", "Cau hinh", "ThoiKhoaBieu", "Thời khoá biểu", "Khung giờ"],
 }
 
 FIELD_ALIASES = {
@@ -190,6 +196,31 @@ FIELD_ALIASES = {
             "magv",
         ],
     },
+    "Config": {
+        "weeks": ["So tuan", "Số tuần", "weeks", "sotuan"],
+        "days_per_week": [
+            "So ngay hoc",
+            "Số ngày học",
+            "So ngay",
+            "Số ngày",
+            "days_per_week",
+            "songay",
+        ],
+        "periods_per_day": [
+            "So tiet moi ngay",
+            "Số tiết mỗi ngày",
+            "So tiet/ngay",
+            "Số tiết/ngày",
+            "periods_per_day",
+            "sotietngay",
+        ],
+        "morning_count": [
+            "So tiet buoi sang",
+            "Số tiết buổi sáng",
+            "morning_count",
+            "sotietsang",
+        ],
+    },
 }
 
 
@@ -337,10 +368,11 @@ def parse_workbook(file_obj_or_path):
     sheet_map = _match_sheets(wb)
     result = {}
     missing = []
-    for canonical in SHEET_NAMES:
+    for canonical in ALL_SHEET_NAMES:
         if canonical not in sheet_map:
             result[canonical] = []
-            missing.append(canonical)
+            if canonical not in OPTIONAL_SHEET_NAMES:
+                missing.append(canonical)
             continue
         ws = wb[sheet_map[canonical]]
         field_to_col = {}
@@ -357,3 +389,24 @@ def parse_workbook(file_obj_or_path):
 
 def parse_bytes(data):
     return parse_workbook(io.BytesIO(data))
+
+
+CONFIG_FIELDS = ("weeks", "days_per_week", "periods_per_day", "morning_count")
+
+
+def horizon_config(parsed):
+    """Cấu hình khung giờ khai trong sheet Config, hoặc None nếu bỏ trống.
+
+    Chỉ đọc dòng đầu tiên: khung giờ là thiết lập của cả trường, không phải
+    danh sách.
+    """
+    rows = parsed.get("Config") or []
+    for row in rows:
+        cfg = {}
+        for field in CONFIG_FIELDS:
+            value = to_int(row.get(field))
+            if value is not None:
+                cfg[field] = value
+        if cfg:
+            return cfg
+    return None

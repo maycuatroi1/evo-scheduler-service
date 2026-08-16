@@ -9,7 +9,10 @@ def apply(ctx: BuildContext, rule):
         for r in ctx.resources:
             if rcode and r["code"] != rcode:
                 continue
-            if int(r.get("capacity", 0)) >= group_size:
+            capacity = int(r.get("capacity", 0) or 0)
+            # Sức chứa 0 nghĩa là không khai báo giới hạn (bộ dụng cụ), loại
+            # bỏ chúng sẽ khiến mọi buổi thực hành mất chỗ.
+            if capacity == 0 or capacity >= group_size:
                 continue
             for t in ctx.valid_starts.get(s["id"], []):
                 x = ctx.X.get((s["id"], t, r["code"]))

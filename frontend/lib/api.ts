@@ -67,6 +67,55 @@ export type SolveTierResult = {
   violations?: string[];
 };
 
+export type Diagnostic = {
+  code: string;
+  severity: "error" | "warning";
+  message: string;
+  tier?: string;
+  entity?: string;
+  required?: number;
+  available?: number;
+};
+
+export type HorizonConfig = {
+  weeks: number;
+  days: string[];
+  day_labels: string[];
+  days_per_week: number;
+  periods_per_day: number;
+  morning_count: number;
+  total_slots: number;
+};
+
+export type HorizonResponse = {
+  horizon: HorizonConfig;
+  is_default: boolean;
+  day_options: { value: string; label: string }[];
+};
+
+export type HorizonInput = {
+  weeks?: number;
+  days_per_week?: number;
+  periods_per_day?: number;
+  morning_count?: number;
+};
+
+export type FeasibilityTier = {
+  tier: string;
+  num_sessions: number;
+  total_slots: number;
+  issues: Diagnostic[];
+  blocking_count: number;
+};
+
+export type FeasibilityReport = {
+  schedule_id: number;
+  tier_mode: string;
+  feasible: boolean;
+  blocking_count: number;
+  tiers: FeasibilityTier[];
+};
+
 export type SolveResponse = {
   solve_job_id: string;
   schedule_id: number;
@@ -85,6 +134,7 @@ export type SolveJobStatus = {
     tier_mode?: string;
     conflicts?: number;
     violations?: string[];
+    diagnostics?: Diagnostic[];
     num_assignments?: number;
     tier_results?: SolveTierResult[];
   };
@@ -164,6 +214,9 @@ export type ApiClient = {
   getConflicts: (scheduleId: number) => Promise<Conflict[]>;
   solve: (scheduleId: number) => Promise<SolveResponse>;
   solveJobStatus: (jobId: string) => Promise<SolveJobStatus>;
+  getFeasibility: (scheduleId: number) => Promise<FeasibilityReport>;
+  getHorizon: () => Promise<HorizonResponse>;
+  putHorizon: (input: HorizonInput) => Promise<HorizonConfig>;
   getWeights: (scheduleId: number) => Promise<Weights>;
   putWeights: (scheduleId: number, weights: Weights) => Promise<Weights>;
   uploadFile: (file: File) => Promise<UploadSummary>;
@@ -219,7 +272,9 @@ async function parseError(res: Response): Promise<ApiError> {
   let message = "Lỗi %s".replace("%s", String(res.status));
   try {
     const data = await res.json();
-    if (data?.detail) message = String(data.detail);
+    if (Array.isArray(data?.errors) && data.errors.length > 0) {
+      message = data.errors.map(String).join(" ");
+    } else if (data?.detail) message = String(data.detail);
     else if (data?.message) message = String(data.message);
     else if (typeof data === "string") message = data;
   } catch {
@@ -283,6 +338,25 @@ export function createApiClient(token: string | null): ApiClient {
     },
     async solveJobStatus(jobId) {
       return request<SolveJobStatus>("/solve/" + jobId + "/status");
+    },
+    async getFeasibility(scheduleId) {
+      return request<FeasibilityReport>(
+        "/schedule/" + scheduleId + "/feasibility",
+      );
+    },
+    async getHorizon() {
+      return request<HorizonResponse>("/tenant/horizon");
+    },
+    async putHorizon(input) {
+      const data = await request<{ horizon: HorizonConfig }>(
+        "/tenant/horizon",
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(input),
+        },
+      );
+      return data.horizon;
     },
     async getWeights(scheduleId) {
       const data = await request<WeightsResponse>(
