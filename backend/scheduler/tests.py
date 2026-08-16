@@ -910,3 +910,75 @@ class IntervalModelTests(TestCase):
         self.assertEqual(
             len({a.timeslot_index for a in result.assignments}), len(sessions)
         )
+
+
+class TwoTierPreflightTests(TestCase):
+    """Khối giải sau phải thấy chỗ mà khối giải trước sẽ chiếm."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from scheduler.models import (
+            Module,
+            Resource,
+            Schedule,
+            Session,
+            StudentGroup,
+        )
+
+        cls.tenant = Tenant.objects.create(
+            name="Tenant TT",
+            code="TT",
+            config_json={
+                "tier_mode": "two_tier",
+                "horizon": {"days_per_week": 2, "periods_per_day": 5},
+            },
+        )
+        group = StudentGroup.objects.create(
+            tenant=cls.tenant,
+            code="LH1",
+            name="Lớp 1",
+            enrollment_type=StudentGroup.EnrollmentType.COLLEGE,
+            size=20,
+        )
+        module = Module.objects.create(
+            tenant=cls.tenant, code="MH1", name="Môn 1", student_group=group
+        )
+        Resource.objects.create(
+            tenant=cls.tenant,
+            code="P1",
+            name="Phòng 1",
+            type=Resource.ResourceType.THEORY_ROOM,
+            capacity=40,
+            quantity=1,
+            available_quantity=1,
+        )
+        # Một phòng x 10 tiết = 10 chỗ. Mỗi khối 6 tiết, riêng lẻ thì vừa,
+        # cộng lại thành 12 tiết nên chắc chắn thiếu.
+        for tier in (Session.Tier.CULTURE, Session.Tier.VOCATIONAL):
+            for _ in range(6):
+                Session.objects.create(
+                    tenant=cls.tenant,
+                    module=module,
+                    student_group=group,
+                    session_type=Session.SessionType.THEORY,
+                    duration_slots=1,
+                    tier=tier,
+                )
+        cls.schedule = Schedule.objects.create(tenant=cls.tenant, name="TKB")
+
+    def test_unplaced_sessions_of_the_first_tier_still_count(self):
+        from scheduler.solver import orchestrator
+
+        report = orchestrator.preflight(self.schedule, tenant=self.tenant)
+        self.assertEqual(report["tier_mode"], "two_tier")
+        self.assertFalse(report["feasible"])
+        voc = next(t for t in report["tiers"] if t["tier"] == "vocational")
+        codes = [i["code"] for i in voc["issues"] if i["severity"] == "error"]
+        self.assertIn("resource_pool_overloaded", codes)
+
+    def test_first_tier_alone_stays_feasible(self):
+        from scheduler.solver import orchestrator
+
+        report = orchestrator.preflight(self.schedule, tenant=self.tenant)
+        culture = next(t for t in report["tiers"] if t["tier"] == "culture")
+        self.assertEqual(culture["blocking_count"], 0)

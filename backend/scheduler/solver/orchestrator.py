@@ -196,6 +196,21 @@ def _locked_phantom(session, target_horizon) -> Optional[dict]:
     }
 
 
+def _pending_phantom(session) -> dict:
+    """Buổi của khối giải trước, khi nó chưa được xếp vào đâu cả.
+
+    Chỉ dùng cho bản kiểm tra khả thi: nó không nói được buổi sẽ nằm ở đâu,
+    nhưng vẫn phải đếm vào nhu cầu phòng và nhu cầu tiết của lớp.
+    """
+    data = _session_dict(session)
+    data["id"] = -(int(session.id))
+    data["code"] = "pending/%s/%s" % (getattr(session, "tier", "x"), session.id)
+    data["is_locked"] = False
+    data["assigned_timeslot"] = None
+    data["assigned_resource_code"] = None
+    return data
+
+
 def _build_data(tenant, session_dicts, horizon, rules, weights) -> dict:
     tm_map = {}
     for tm in tenant.teacher_modules.select_related("teacher", "module"):
@@ -299,8 +314,12 @@ def preflight(schedule: Schedule, tenant: Any = None) -> dict:
         if tier == VOCATIONAL:
             for cs in _fetch_sessions(tenant, tier=CULTURE):
                 phantom = _locked_phantom(cs, horizon)
-                if phantom is not None:
-                    session_dicts.append(phantom)
+                if phantom is None:
+                    # Buổi khối trước chưa được xếp vẫn sẽ chiếm phòng và chiếm
+                    # tiết của lớp khi giải thật. Bỏ qua chúng thì bản kiểm tra
+                    # báo khả thi rồi lần giải mới lộ ra thiếu chỗ.
+                    phantom = _pending_phantom(cs)
+                session_dicts.append(phantom)
         data = _build_data(tenant, session_dicts, horizon, rules, None)
         issues = feasibility.check(data)
         tiers.append(
