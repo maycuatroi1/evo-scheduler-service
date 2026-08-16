@@ -686,3 +686,227 @@ class CapacityLevelTests(TestCase):
         )
         codes = [i["code"] for i in feasibility.blocking(feasibility.check(data))]
         self.assertNotIn("resource_capacity_shortage", codes)
+
+
+CROSS_TIER_RULES_FOR_TEST = [
+    {"id": -100, "type": "teacher_no_overlap", "hardness": "hard", "weight": 1, "active": True},
+    {"id": -101, "type": "student_no_overlap", "hardness": "hard", "weight": 1, "active": True},
+    {"id": -102, "type": "shared_resource_pool", "hardness": "hard", "weight": 1, "active": True},
+]
+
+
+def _solve(data, seconds=10.0):
+    from scheduler.solver import engine
+
+    data = dict(data)
+    data.setdefault("hours_per_slot", 1.0)
+    return engine.build_and_solve(data, max_time_seconds=seconds, skip_preflight=True)
+
+
+def _slots_of(assignment, sessions):
+    session = next(s for s in sessions if s["id"] == assignment.session_id)
+    duration = int(session["duration_slots"])
+    return list(range(assignment.timeslot_index, assignment.timeslot_index + duration))
+
+
+class IntervalModelTests(TestCase):
+    """Mô hình khoảng thời gian phải giữ đúng mọi ràng buộc cứng cũ."""
+
+    def test_every_session_gets_exactly_one_slot_and_resource(self):
+        sessions = [_session(i, group="LH%d" % i) for i in range(1, 6)]
+        data = _data(sessions, resources=[_resource("P1"), _resource("P2")])
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST
+        result = _solve(data)
+        self.assertTrue(result.is_feasible, result.violations)
+        self.assertEqual(len(result.assignments), len(sessions))
+        self.assertEqual(
+            len({a.session_id for a in result.assignments}), len(sessions)
+        )
+        for a in result.assignments:
+            self.assertIn(a.resource_code, ("P1", "P2"))
+
+    def test_one_room_forces_sessions_apart(self):
+        sessions = [_session(i, group="LH%d" % i) for i in range(1, 4)]
+        data = _data(sessions, resources=[_resource("P1")])
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST
+        result = _solve(data)
+        self.assertTrue(result.is_feasible, result.violations)
+        used = [a.timeslot_index for a in result.assignments]
+        self.assertEqual(len(set(used)), len(used))
+
+    def test_shared_room_quantity_allows_parallel_use(self):
+        sessions = [_session(i, group="LH%d" % i) for i in range(1, 4)]
+        data = _data(sessions, resources=[_resource("P1", quantity=3)])
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST
+        # Chỉ còn một tiết duy nhất: ba buổi phải cùng dùng ba suất của P1.
+        data["horizon"] = data["horizon"][:1]
+        result = _solve(data)
+        self.assertTrue(result.is_feasible, result.violations)
+        self.assertEqual({a.timeslot_index for a in result.assignments}, {0})
+
+    def test_group_cannot_attend_two_sessions_at_once(self):
+        sessions = [_session(i, group="LH1") for i in range(1, 4)]
+        data = _data(sessions, resources=[_resource("P1"), _resource("P2"), _resource("P3")])
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST
+        result = _solve(data)
+        self.assertTrue(result.is_feasible, result.violations)
+        occupied = []
+        for a in result.assignments:
+            occupied.extend(_slots_of(a, sessions))
+        self.assertEqual(len(set(occupied)), len(occupied))
+
+    def test_teacher_cannot_teach_two_sessions_at_once(self):
+        sessions = [
+            _session(i, group="LH%d" % i, teachers=("GV1",)) for i in range(1, 4)
+        ]
+        data = _data(
+            sessions, resources=[_resource("P1"), _resource("P2"), _resource("P3")]
+        )
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST
+        result = _solve(data)
+        self.assertTrue(result.is_feasible, result.violations)
+        occupied = []
+        for a in result.assignments:
+            occupied.extend(_slots_of(a, sessions))
+        self.assertEqual(len(set(occupied)), len(occupied))
+
+    def test_auto_assigned_teacher_is_eligible_and_not_double_booked(self):
+        sessions = [_session(i, group="LH%d" % i, module="MH1") for i in range(1, 3)]
+        data = _data(
+            sessions,
+            resources=[_resource("P1"), _resource("P2")],
+            teacher_module_map={"MH1": ["GV1", "GV2"]},
+        )
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST
+        result = _solve(data)
+        self.assertTrue(result.is_feasible, result.violations)
+        for a in result.assignments:
+            self.assertTrue(a.auto_assigned_teachers)
+            self.assertEqual(len(a.teacher_codes), 1)
+            self.assertIn(a.teacher_codes[0], ("GV1", "GV2"))
+
+    def test_multi_slot_session_never_spans_two_days(self):
+        from scheduler import horizon as horizon_config
+
+        sessions = [_session(1, duration=3)]
+        data = _data(sessions, resources=[_resource("P1")])
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST
+        result = _solve(data)
+        self.assertTrue(result.is_feasible, result.violations)
+        horizon = horizon_config.build(None)
+        days = {horizon[p]["day"] for p in _slots_of(result.assignments[0], sessions)}
+        self.assertEqual(len(days), 1)
+
+    def test_locked_session_keeps_its_slot_and_room(self):
+        sessions = [
+            _session(1, group="LH1", locked=True, timeslot=7, resource="P2"),
+            _session(2, group="LH1"),
+        ]
+        data = _data(sessions, resources=[_resource("P1"), _resource("P2")])
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST
+        result = _solve(data)
+        self.assertTrue(result.is_feasible, result.violations)
+        locked = next(a for a in result.assignments if a.session_id == 1)
+        self.assertEqual(locked.timeslot_index, 7)
+        self.assertEqual(locked.resource_code, "P2")
+
+    def test_capacity_rule_keeps_big_group_out_of_small_room(self):
+        sessions = [_session(1, size=40)]
+        data = _data(
+            sessions, resources=[_resource("NHO", capacity=20), _resource("TO", capacity=45)]
+        )
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST + [
+            {"id": 1, "type": "capacity_limit", "hardness": "hard", "weight": 1, "active": True}
+        ]
+        result = _solve(data)
+        self.assertTrue(result.is_feasible, result.violations)
+        self.assertEqual(result.assignments[0].resource_code, "TO")
+
+    def test_resource_unavailability_blocks_that_room_only(self):
+        sessions = [_session(1)]
+        data = _data(sessions, resources=[_resource("P1"), _resource("P2")])
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST + [
+            {
+                "id": 2,
+                "type": "unavailability",
+                "hardness": "hard",
+                "weight": 1,
+                "active": True,
+                "params_json": {
+                    "entity_type": "resource",
+                    "entity_code": "P1",
+                    "timeslots": list(range(30)),
+                },
+            }
+        ]
+        result = _solve(data)
+        self.assertTrue(result.is_feasible, result.violations)
+        self.assertEqual(result.assignments[0].resource_code, "P2")
+
+    def test_model_size_grows_without_the_session_slot_room_product(self):
+        sessions = [_session(i, group="LH%d" % i) for i in range(1, 21)]
+        resources = [_resource("P%d" % i) for i in range(1, 11)]
+        data = _data(sessions, resources=resources)
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST
+        result = _solve(data, seconds=5.0)
+        # Tích Descartes cũ sẽ là 20 x 30 x 10 = 6000 biến chỉ riêng phần chọn
+        # chỗ. Mô hình khoảng thời gian phải nhỏ hơn hẳn ngưỡng đó.
+        self.assertLess(result.num_booleans, 3000)
+
+    def test_incremental_hints_reuse_the_previous_placement(self):
+        from scheduler.solver.incremental import _solve_with_hints
+
+        sessions = [_session(i, group="LH%d" % i) for i in range(1, 4)]
+        data = _data(sessions, resources=[_resource("P1"), _resource("P2")])
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST
+        data["hours_per_slot"] = 1.0
+        old = {
+            1: {"timeslot_index": 3, "resource_code": "P1"},
+            2: {"timeslot_index": 4, "resource_code": "P2"},
+        }
+        result = _solve_with_hints(data, 10.0, None, old)
+        self.assertTrue(result.is_feasible, result.violations)
+        self.assertEqual(len(result.assignments), 3)
+
+    def test_two_phase_keeps_a_plan_when_the_objective_runs_out_of_time(self):
+        # Trọng số mặc định bật hết; lời giải vẫn phải đủ mọi buổi.
+        sessions = [_session(i, group="LH%d" % (i % 4), teachers=("GV%d" % (i % 3),))
+                    for i in range(1, 13)]
+        data = _data(sessions, resources=[_resource("P%d" % i) for i in range(1, 4)])
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST
+        result = _solve(data, seconds=10.0)
+        self.assertTrue(result.is_feasible, result.violations)
+        self.assertEqual(len(result.assignments), len(sessions))
+
+    def test_pool_capacity_rejects_more_sessions_than_matching_rooms(self):
+        # Bốn buổi thực hành nhưng chỉ một xưởng: không thể xếp trong một tiết.
+        sessions = [
+            _session(i, group="LH%d" % i, session_type="practice", size=20)
+            for i in range(1, 5)
+        ]
+        data = _data(
+            sessions,
+            resources=[_resource("X1", rtype="workshop"), _resource("P1")],
+        )
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST
+        data["horizon"] = data["horizon"][:3]
+        result = _solve(data, seconds=10.0)
+        self.assertFalse(result.is_feasible)
+        self.assertEqual(result.status, "INFEASIBLE")
+
+    def test_pool_capacity_does_not_reject_a_solvable_case(self):
+        sessions = [
+            _session(i, group="LH%d" % i, session_type="practice", size=20)
+            for i in range(1, 4)
+        ]
+        data = _data(
+            sessions,
+            resources=[_resource("X1", rtype="workshop"), _resource("P1")],
+        )
+        data["rules"] = CROSS_TIER_RULES_FOR_TEST
+        result = _solve(data, seconds=10.0)
+        self.assertTrue(result.is_feasible, result.violations)
+        self.assertEqual({a.resource_code for a in result.assignments}, {"X1"})
+        self.assertEqual(
+            len({a.timeslot_index for a in result.assignments}), len(sessions)
+        )

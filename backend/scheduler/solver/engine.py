@@ -157,10 +157,18 @@ def _normalize_horizon(cfg):
 
 
 def _build_variables(ctx):
+    """Dựng biến theo mô hình khoảng thời gian.
+
+    Mỗi buổi có một biến tiết bắt đầu và một biến chọn tài nguyên, thay cho
+    tích Descartes buổi x tiết x tài nguyên. Cách cũ sinh hàng trăm nghìn biến
+    bool trên dữ liệu thật và bộ giải không kết luận nổi.
+    """
     model = ctx.model
+    max_period = max((ts["period"] for ts in ctx.horizon), default=0)
+    max_day = max((ts["day"] for ts in ctx.horizon), default=0)
     for s in ctx.sessions:
         sid = s["id"]
-        dur = s["duration_slots"]
+        dur = int(s["duration_slots"])
         valid = [t for t in range(ctx.num_timeslots) if ctx.same_day_run(t, dur)]
         ctx.valid_starts[sid] = valid
         candidates = feasibility.candidate_resources(ctx.resources, s)
@@ -173,84 +181,79 @@ def _build_variables(ctx):
             if locked_code not in candidates:
                 candidates = candidates + [locked_code]
         ctx.candidate_resources[sid] = candidates
-        for t in valid:
-            for rcode in candidates:
-                ctx.X[(sid, t, rcode)] = model.NewBoolVar(f"x_{sid}_{t}_{rcode}")
-    for s in ctx.sessions:
-        sid = s["id"]
-        valid = ctx.valid_starts[sid]
-        all_vars = [ctx.X[(sid, t, r)] for t in valid for r in ctx.candidate_resources[sid] if (sid, t, r) in ctx.X]
-        if all_vars:
-            model.Add(sum(all_vars) == 1)
-        else:
+
+        if not valid or not candidates:
             ctx.blockers.append(
                 "Buổi %s không có tiết hay tài nguyên nào hợp lệ."
                 % (s.get("code") or sid)
             )
-            model.Add(sum([]) == 1)
-        st_var = model.NewIntVar(0, max(ctx.num_timeslots - 1, 0), f"st_{sid}")
-        if valid:
-            model.Add(st_var == sum(t * ctx.X[(sid, t, r)] for t in valid for r in ctx.candidate_resources[sid] if (sid, t, r) in ctx.X))
-        else:
-            model.Add(st_var == 0)
-        ctx.start_timeslot[sid] = st_var
-        period_terms = []
-        for t in valid:
-            ts = ctx.horizon[t]
-            for r in ctx.candidate_resources[sid]:
-                x = ctx.X.get((sid, t, r))
-                if x is not None:
-                    period_terms.append(ts["period"] * x)
-        max_period = max((ts["period"] for ts in ctx.horizon), default=0)
-        sp_var = model.NewIntVar(0, max_period, f"sp_{sid}")
-        if period_terms:
-            model.Add(sp_var == sum(period_terms))
-        else:
-            model.Add(sp_var == 0)
-        ctx.start_period[sid] = sp_var
-        day_terms = []
-        for t in valid:
-            ts = ctx.horizon[t]
-            for r in ctx.candidate_resources[sid]:
-                x = ctx.X.get((sid, t, r))
-                if x is not None:
-                    day_terms.append(ts["day"] * x)
-        max_day = max((ts["day"] for ts in ctx.horizon), default=0)
-        sd_var = model.NewIntVar(0, max_day, f"sd_{sid}")
-        if day_terms:
-            model.Add(sd_var == sum(day_terms))
-        else:
-            model.Add(sd_var == 0)
-        ctx.start_day[sid] = sd_var
-        for p in range(ctx.num_timeslots):
-            cover_terms = []
-            for t in valid:
-                if p in ctx.covers(t, s["duration_slots"]):
-                    for r in ctx.candidate_resources[sid]:
-                        x = ctx.X.get((sid, t, r))
-                        if x is not None:
-                            cover_terms.append(x)
-            occ_var = model.NewBoolVar(f"occ_{sid}_{p}")
-            if cover_terms:
-                model.Add(occ_var == sum(cover_terms))
-            else:
-                model.Add(occ_var == 0)
-            ctx.occ[(sid, p)] = occ_var
+            ctx.start_timeslot[sid] = model.NewIntVar(0, 0, f"st_{sid}")
+            ctx.start_period[sid] = model.NewIntVar(0, 0, f"sp_{sid}")
+            ctx.start_day[sid] = model.NewIntVar(0, 0, f"sd_{sid}")
+            continue
 
-    model = ctx.model
+        st_var = model.NewIntVarFromDomain(
+            cp_model.Domain.FromValues(valid), f"st_{sid}"
+        )
+        ctx.start_timeslot[sid] = st_var
+        ctx.interval[sid] = model.NewIntervalVar(
+            st_var, dur, st_var + dur, f"iv_{sid}"
+        )
+
+        start_lits = []
+        for t in valid:
+            lit = model.NewBoolVar(f"b_{sid}_{t}")
+            ctx.start_lit[(sid, t)] = lit
+            start_lits.append(lit)
+        model.AddExactlyOne(start_lits)
+        model.Add(st_var == sum(t * ctx.start_lit[(sid, t)] for t in valid))
+
+        sp_var = model.NewIntVar(0, max_period, f"sp_{sid}")
+        model.Add(
+            sp_var
+            == sum(ctx.horizon[t]["period"] * ctx.start_lit[(sid, t)] for t in valid)
+        )
+        ctx.start_period[sid] = sp_var
+        sd_var = model.NewIntVar(0, max_day, f"sd_{sid}")
+        model.Add(
+            sd_var
+            == sum(ctx.horizon[t]["day"] * ctx.start_lit[(sid, t)] for t in valid)
+        )
+        ctx.start_day[sid] = sd_var
+
+        res_lits = []
+        for rcode in candidates:
+            lit = model.NewBoolVar(f"r_{sid}_{rcode}")
+            ctx.assign[(sid, rcode)] = lit
+            ctx.res_interval[(sid, rcode)] = model.NewOptionalIntervalVar(
+                st_var, dur, st_var + dur, lit, f"riv_{sid}_{rcode}"
+            )
+            res_lits.append(lit)
+        model.AddExactlyOne(res_lits)
+
     for s in ctx.sessions:
         sid = s["id"]
+        dur = int(s["duration_slots"])
+        st_var = ctx.start_timeslot.get(sid)
         pre_assigned = s.get("teacher_codes", [])
         if pre_assigned:
             ctx.eligible_teachers[sid] = []
+            if sid in ctx.interval:
+                for tc in pre_assigned:
+                    ctx.teacher_interval[(sid, tc)] = ctx.interval[sid]
             continue
         module_code = s.get("module_code")
         eligible = list(ctx.teacher_module_map.get(module_code, []))
         ctx.eligible_teachers[sid] = eligible
         for tc in eligible:
-            ctx.Y[(sid, tc)] = model.NewBoolVar(f"y_{sid}_{tc}")
+            lit = model.NewBoolVar(f"y_{sid}_{tc}")
+            ctx.Y[(sid, tc)] = lit
+            if st_var is not None and sid in ctx.interval:
+                ctx.teacher_interval[(sid, tc)] = model.NewOptionalIntervalVar(
+                    st_var, dur, st_var + dur, lit, f"tiv_{sid}_{tc}"
+                )
         if eligible:
-            model.Add(sum(ctx.Y[(sid, tc)] for tc in eligible) == 1)
+            model.AddExactlyOne(ctx.Y[(sid, tc)] for tc in eligible)
 
 
 def _apply_locked(ctx):
@@ -266,7 +269,9 @@ def _apply_locked(ctx):
         rcode = s.get("assigned_resource_code")
         if rcode is None:
             continue
-        if (sid, t_idx, rcode) not in ctx.X:
+        start_lit = ctx.start_lit.get((sid, t_idx))
+        res_lit = ctx.assign.get((sid, rcode))
+        if start_lit is None or res_lit is None:
             # Khoá trỏ vào tiết hoặc tài nguyên không dựng được biến. Ép hết
             # về 0 sẽ làm mô hình vô nghiệm mà không nói lý do, nên bỏ khoá và
             # để buổi này được xếp tự do.
@@ -275,58 +280,58 @@ def _apply_locked(ctx):
                 % (s.get("code") or sid)
             )
             continue
-        for (sid2, t, rcode2), x in ctx.X.items():
-            if sid2 != sid:
-                continue
-            if t == t_idx and rcode2 == rcode:
-                ctx.model.Add(x == 1)
-            else:
-                ctx.model.Add(x == 0)
+        ctx.model.Add(start_lit == 1)
+        ctx.model.Add(res_lit == 1)
 
 
 def _resource_overlap(ctx):
-    for r in ctx.resources:
-        rcode = r["code"]
-        cap = int(r.get("available_quantity", 1) or 1)
-        for p in range(ctx.num_timeslots):
-            terms = []
-            for s in ctx.sessions:
-                sid = s["id"]
-                for t in ctx.valid_starts.get(sid, []):
-                    if p in ctx.covers(t, s["duration_slots"]):
-                        x = ctx.X.get((sid, t, rcode))
-                        if x is not None:
-                            terms.append(x)
-            if terms:
-                ctx.model.Add(sum(terms) <= cap)
+    ctx.enforce_resource_capacity()
 
 
-def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAULT_SEED, verbose=False, persist_callback=None, weights=None, skip_preflight=False):
-    model = cp_model.CpModel()
-    ctx = BuildContext(model, data)
-    if not ctx.sessions:
-        return SolveResult(status="UNKNOWN", objective_value=0.0, solver_log="no sessions")
-    issues = [] if skip_preflight else feasibility.check(data)
-    blocking = feasibility.blocking(issues)
-    if blocking:
-        return SolveResult(
-            status=STATUS_DATA_INFEASIBLE,
-            objective_value=0.0,
-            violations=feasibility.messages(blocking),
-            diagnostics=issues,
-            solver_log="preflight",
+# Trên bao nhiêu nhóm ứng viên phân biệt thì thôi thêm ràng buộc dư thừa.
+MAX_REDUNDANT_POOLS = 24
+
+
+def _redundant_pool_capacity(ctx):
+    """Chặn trước số buổi cùng lúc trên từng nhóm tài nguyên dùng chung.
+
+    Ràng buộc này suy ra được từ các ràng buộc đã có nên không đổi tập nghiệm,
+    nhưng nó nói thẳng cho bộ giải điều mà kiểm tra khả thi vẫn kiểm: các buổi
+    chỉ xếp được vào một nhóm phòng hẹp thì không thể đông hơn nhóm đó. Thiếu
+    nó, bộ giải phải mò ra cùng kết luận qua từng phòng một.
+    """
+    pools = {}
+    for s in ctx.sessions:
+        sid = s["id"]
+        if sid not in ctx.interval:
+            continue
+        candidates = frozenset(ctx.candidate_resources.get(sid, ()))
+        if not candidates or len(candidates) >= len(ctx.resources):
+            continue
+        pools.setdefault(candidates, []).append(sid)
+    if not pools or len(pools) > MAX_REDUNDANT_POOLS:
+        return
+    for pool, own_sids in pools.items():
+        capacity = sum(
+            int(ctx.resources_by_code[code].get("available_quantity", 1) or 1)
+            for code in pool
+            if code in ctx.resources_by_code
         )
-    _build_variables(ctx)
-    _apply_locked(ctx)
-    if ctx.blockers:
-        return SolveResult(
-            status=STATUS_DATA_INFEASIBLE,
-            objective_value=0.0,
-            violations=list(ctx.blockers),
-            diagnostics=issues,
-            solver_log="preflight",
-        )
-    _resource_overlap(ctx)
+        if capacity <= 0:
+            continue
+        sids = set(own_sids)
+        for other, other_sids in pools.items():
+            if other is not pool and other <= pool:
+                sids.update(other_sids)
+        intervals = [ctx.interval[sid] for sid in sorted(sids)]
+        if len(intervals) > capacity:
+            ctx.model.AddCumulative(intervals, [1] * len(intervals), capacity)
+
+
+ZERO_WEIGHTS = {"idle_teacher": 0, "room_change": 0, "compact_schedule": 0, "teacher_load_balance": 0}
+
+
+def _apply_rules(ctx, data):
     objective_terms = []
     hard_count = 0
     soft_count = 0
@@ -344,23 +349,119 @@ def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAUL
             soft_count += 1
         else:
             hard_count += 1
-    objective_terms = objectives.build_objective(ctx, weights, objective_terms)
-    if objective_terms:
-        model.Minimize(sum(objective_terms))
-    num_constraints = len(model.Proto().constraints)
+    return objective_terms, hard_count, soft_count, skipped
+
+
+def _assemble(data, weights, with_objective=True):
+    """Dựng một mô hình hoàn chỉnh và trả về mọi thứ cần để giải nó."""
+    model = cp_model.CpModel()
+    ctx = BuildContext(model, data)
+    _build_variables(ctx)
+    _apply_locked(ctx)
+    if ctx.blockers:
+        return model, ctx, [], 0, 0, []
+    _resource_overlap(ctx)
+    _redundant_pool_capacity(ctx)
+    objective_terms, hard_count, soft_count, skipped = _apply_rules(ctx, data)
+    if with_objective:
+        objective_terms = objectives.build_objective(ctx, weights, objective_terms)
+    else:
+        objective_terms = []
+    return model, ctx, objective_terms, hard_count, soft_count, skipped
+
+
+def _new_solver(limit, seed, verbose):
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = float(max_time_seconds)
+    solver.parameters.max_time_in_seconds = max(float(limit), 1.0)
     solver.parameters.num_search_workers = 8
     solver.parameters.random_seed = int(seed)
     solver.parameters.log_search_progress = bool(verbose)
-    status = solver.Solve(model)
-    status_name = solver.StatusName(status)
+    return solver
+
+
+def _hint_from(model, ctx, source_ctx, solver):
+    """Chép nghiệm của mô hình khả thi sang mô hình có hàm mục tiêu."""
+    pairs = (
+        (source_ctx.start_lit, ctx.start_lit),
+        (source_ctx.assign, ctx.assign),
+        (source_ctx.Y, ctx.Y),
+    )
+    for source_map, target_map in pairs:
+        for key, lit in source_map.items():
+            target = target_map.get(key)
+            if target is not None and solver.Value(lit) == 1:
+                model.AddHint(target, 1)
+
+
+def _solve_in_two_phases(data, model, ctx, objective_terms, max_time_seconds, seed, verbose):
+    """Tìm một phương án khả thi trước, rồi mới tối ưu từ chính phương án đó.
+
+    Trên dữ liệu thật, gắn hàm mục tiêu ngay từ đầu khiến bộ giải hết giờ mà
+    chưa có phương án nào. Mô hình không hàm mục tiêu nhỏ hơn hẳn và bộ giải
+    dừng ngay khi tìm được phương án đầu tiên, nên pha một về đích nhanh;
+    nghiệm của nó vừa làm gợi ý cho pha hai vừa là phương án dự phòng nếu pha
+    hai không kịp.
+    """
+    total = float(max_time_seconds)
+    if not objective_terms:
+        solver = _new_solver(total, seed, verbose)
+        status = solver.StatusName(solver.Solve(model))
+        return solver, ctx, status, float(solver.WallTime())
+
+    feas_model, feas_ctx, _, _, _, _ = _assemble(data, ZERO_WEIGHTS, with_objective=False)
+    first = _new_solver(total, seed, verbose)
+    first_status = first.StatusName(first.Solve(feas_model))
+    elapsed = float(first.WallTime())
+    if first_status not in ("OPTIMAL", "FEASIBLE"):
+        # Vô nghiệm hoặc hết giờ ở pha một thì hàm mục tiêu cũng không cứu được.
+        return first, feas_ctx, first_status, elapsed
+
+    _hint_from(model, ctx, feas_ctx, first)
+    model.Minimize(sum(objective_terms))
+    remaining = total - elapsed
+    if remaining < 1.0:
+        return first, feas_ctx, "FEASIBLE", elapsed
+    second = _new_solver(remaining, seed, verbose)
+    second_status = second.StatusName(second.Solve(model))
+    elapsed += float(second.WallTime())
+    if second_status in ("OPTIMAL", "FEASIBLE"):
+        return second, ctx, second_status, elapsed
+    # Pha hai không kịp cải thiện: giữ nguyên phương án của pha một.
+    return first, feas_ctx, "FEASIBLE", elapsed
+
+
+def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAULT_SEED, verbose=False, persist_callback=None, weights=None, skip_preflight=False):
+    if not data.get("sessions"):
+        return SolveResult(status="UNKNOWN", objective_value=0.0, solver_log="no sessions")
+    issues = [] if skip_preflight else feasibility.check(data)
+    blocking = feasibility.blocking(issues)
+    if blocking:
+        return SolveResult(
+            status=STATUS_DATA_INFEASIBLE,
+            objective_value=0.0,
+            violations=feasibility.messages(blocking),
+            diagnostics=issues,
+            solver_log="preflight",
+        )
+    model, ctx, objective_terms, hard_count, soft_count, skipped = _assemble(data, weights)
+    if ctx.blockers:
+        return SolveResult(
+            status=STATUS_DATA_INFEASIBLE,
+            objective_value=0.0,
+            violations=list(ctx.blockers),
+            diagnostics=issues,
+            solver_log="preflight",
+        )
+    num_constraints = len(model.Proto().constraints)
+    solver, ctx, status_name, wall_time = _solve_in_two_phases(
+        data, model, ctx, objective_terms, max_time_seconds, seed, verbose
+    )
     result = SolveResult(
         status=status_name,
         objective_value=float(solver.ObjectiveValue()) if status_name in ("OPTIMAL", "FEASIBLE") else 0.0,
         num_constraints=num_constraints,
         num_booleans=solver.NumBooleans(),
-        wall_time=float(solver.WallTime()),
+        wall_time=wall_time,
         diagnostics=issues,
     )
     result.violations.extend(ctx.warnings)
@@ -372,17 +473,7 @@ def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAUL
         return result
     for s in ctx.sessions:
         sid = s["id"]
-        chosen_t = None
-        chosen_r = None
-        for t in ctx.valid_starts.get(sid, []):
-            for rcode in ctx.candidate_resources.get(sid, []):
-                x = ctx.X.get((sid, t, rcode))
-                if x is not None and solver.Value(x) == 1:
-                    chosen_t = t
-                    chosen_r = rcode
-                    break
-            if chosen_t is not None:
-                break
+        chosen_t, chosen_r = ctx.solution_for(solver, sid)
         if chosen_t is None:
             continue
         ts = ctx.horizon[chosen_t]

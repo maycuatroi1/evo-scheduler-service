@@ -131,9 +131,12 @@ def _solve_with_hints(data, max_time_seconds, weights, old_assignments):
         r = info.get("resource_code")
         if t is None or r is None:
             continue
-        x = ctx.X.get((sid, t, r))
-        if x is not None:
-            model.AddHint(x, 1)
+        start_lit = ctx.start_lit.get((sid, t))
+        if start_lit is not None:
+            model.AddHint(start_lit, 1)
+        res_lit = ctx.assign.get((sid, r))
+        if res_lit is not None:
+            model.AddHint(res_lit, 1)
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = float(max_time_seconds)
@@ -155,17 +158,7 @@ def _solve_with_hints(data, max_time_seconds, weights, old_assignments):
 
     for s in ctx.sessions:
         sid = s["id"]
-        chosen_t = None
-        chosen_r = None
-        for t in ctx.valid_starts.get(sid, []):
-            for rcode in ctx.candidate_resources.get(sid, []):
-                x = ctx.X.get((sid, t, rcode))
-                if x is not None and solver.Value(x) == 1:
-                    chosen_t = t
-                    chosen_r = rcode
-                    break
-            if chosen_t is not None:
-                break
+        chosen_t, chosen_r = ctx.solution_for(solver, sid)
         if chosen_t is None:
             continue
         ts = ctx.horizon[chosen_t]

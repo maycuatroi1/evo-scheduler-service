@@ -29,8 +29,7 @@ def apply(ctx: BuildContext, rule):
         for r in ctx.resources:
             if r["type"].lower() in allowed_lower:
                 continue
-            for t in ctx.valid_starts.get(s["id"], []):
-                x = ctx.X.get((s["id"], t, r["code"]))
-                if x is not None:
-                    ctx.model.Add(x == 0)
+            lit = ctx.assign.get((s["id"], r["code"]))
+            if lit is not None:
+                ctx.model.Add(lit == 0)
     return None

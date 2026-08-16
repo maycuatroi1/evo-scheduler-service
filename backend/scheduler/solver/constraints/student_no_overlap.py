@@ -2,12 +2,11 @@ from scheduler.solver.context import BuildContext
 
 
 def apply(ctx: BuildContext, rule):
+    """Một lớp không học hai buổi cùng lúc."""
     for grp, sessions in ctx.sessions_by_group.items():
-        if len(sessions) < 2:
-            continue
-        sids = [s["id"] for s in sessions]
-        for p in range(ctx.num_timeslots):
-            terms = [ctx.occ[(sid, p)] for sid in sids if (sid, p) in ctx.occ]
-            if len(terms) >= 2:
-                ctx.model.Add(sum(terms) <= 1)
+        intervals = [
+            ctx.interval[s["id"]] for s in sessions if s["id"] in ctx.interval
+        ]
+        if len(intervals) >= 2:
+            ctx.model.AddNoOverlap(intervals)
     return None
