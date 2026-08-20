@@ -1,943 +1,793 @@
-<title>Xếp Thời Khoá Biểu CUWC</title>
+<title>Sáu Bài Toán Xếp Lịch CUWC</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;1,400&family=Roboto+Mono:wght@400;500;600&display=swap">
 
 <style>
 :root{
-  --paper:#f2f4f1;
-  --surface:#ffffff;
-  --surface-2:#e9ece8;
-  --ink:#14202e;
-  --ink-2:#42505f;
-  --ink-3:#6b7783;
-  --grid:#d3d9d5;
-  --grid-strong:#b4bdb8;
-  --blueprint:#2f6fb3;
-  --blueprint-soft:#e4eef8;
-  --safety:#c2691f;
-  --safety-soft:#fbeee0;
-  --alert:#b8362c;
-  --alert-soft:#fbe8e6;
-  --ok:#3c7a52;
-  --ok-soft:#e6f0e8;
-  --shadow:0 1px 2px rgba(20,32,46,.07),0 4px 14px rgba(20,32,46,.06);
+  --paper:#f4f5f2;
+  --card:#ffffff;
+  --card2:#eceee9;
+  --ink:#1a2129;
+  --ink2:#4a5561;
+  --ink3:#78838e;
+  --line:#d6dad4;
+  --line2:#b6bcb5;
+  --vh:#2b6ca3;        /* văn hoá */
+  --vh-bg:#e5eff7;
+  --ng:#b8641b;        /* nghề */
+  --ng-bg:#faeddf;
+  --err:#b03027;
+  --err-bg:#fae9e7;
+  --ok:#3a7550;
+  --ok-bg:#e6f0e9;
+  --warn:#9a7413;
+  --warn-bg:#f9f0d9;
+  --sh:0 1px 2px rgba(26,33,41,.06),0 3px 12px rgba(26,33,41,.05);
 }
-@media (prefers-color-scheme: dark){
+@media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --paper:#101923;
-    --surface:#182430;
-    --surface-2:#1f2c39;
-    --ink:#e8edf1;
-    --ink-2:#b3bfc9;
-    --ink-3:#8695a2;
-    --grid:#2b3947;
-    --grid-strong:#3b4a59;
-    --blueprint:#63a5e0;
-    --blueprint-soft:#1c3247;
-    --safety:#e0954c;
-    --safety-soft:#3a2a17;
-    --alert:#e2695d;
-    --alert-soft:#3d1f1c;
-    --ok:#6fb187;
-    --ok-soft:#1b3225;
-    --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
+    --paper:#0e151c;--card:#172029;--card2:#1e2831;--ink:#e9edf0;--ink2:#b0bac3;--ink3:#7d8892;
+    --line:#293440;--line2:#3a4753;
+    --vh:#6aa8dc;--vh-bg:#17293a;--ng:#d99450;--ng-bg:#352514;
+    --err:#df6a5f;--err-bg:#3a1e1b;--ok:#6cae84;--ok-bg:#1a3024;--warn:#d4ab4a;--warn-bg:#332a12;
+    --sh:0 1px 2px rgba(0,0,0,.35),0 3px 12px rgba(0,0,0,.28);
   }
 }
 :root[data-theme="dark"]{
-  --paper:#101923;
-  --surface:#182430;
-  --surface-2:#1f2c39;
-  --ink:#e8edf1;
-  --ink-2:#b3bfc9;
-  --ink-3:#8695a2;
-  --grid:#2b3947;
-  --grid-strong:#3b4a59;
-  --blueprint:#63a5e0;
-  --blueprint-soft:#1c3247;
-  --safety:#e0954c;
-  --safety-soft:#3a2a17;
-  --alert:#e2695d;
-  --alert-soft:#3d1f1c;
-  --ok:#6fb187;
-  --ok-soft:#1b3225;
-  --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
+  --paper:#0e151c;--card:#172029;--card2:#1e2831;--ink:#e9edf0;--ink2:#b0bac3;--ink3:#7d8892;
+  --line:#293440;--line2:#3a4753;
+  --vh:#6aa8dc;--vh-bg:#17293a;--ng:#d99450;--ng-bg:#352514;
+  --err:#df6a5f;--err-bg:#3a1e1b;--ok:#6cae84;--ok-bg:#1a3024;--warn:#d4ab4a;--warn-bg:#332a12;
+  --sh:0 1px 2px rgba(0,0,0,.35),0 3px 12px rgba(0,0,0,.28);
 }
-
 *{box-sizing:border-box}
-body{
-  margin:0;
-  background:var(--paper);
-  color:var(--ink);
-  font-family:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
-  font-size:14px;
-  line-height:1.55;
-}
-h1,h2,h3,h4{font-family:Oswald,"IBM Plex Sans",sans-serif;font-weight:500;text-wrap:balance;margin:0}
-code,.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Source Sans 3",system-ui,sans-serif;font-size:14.5px;line-height:1.6}
+h1,h2,h3,h4{font-family:"Barlow Condensed","Source Sans 3",sans-serif;margin:0;text-wrap:balance;letter-spacing:.01em}
+.mono,code{font-family:"Roboto Mono",ui-monospace,monospace}
 
-/* ---------- shell ---------- */
-.app{display:grid;grid-template-columns:216px 1fr;min-height:100vh}
-.rail{
-  background:var(--surface);border-right:1px solid var(--grid);
-  display:flex;flex-direction:column;gap:2px;padding:0 0 16px;
-  position:sticky;top:0;height:100vh;overflow-y:auto;
-}
-.brand{padding:18px 18px 14px;border-bottom:1px solid var(--grid);margin-bottom:10px}
-.brand h1{font-size:17px;letter-spacing:.02em;line-height:1.15}
-.brand .sub{font-size:10.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--ink-3);margin-top:5px}
-.stage{
-  display:flex;gap:11px;align-items:flex-start;width:100%;
-  padding:9px 18px;background:none;border:0;border-left:3px solid transparent;
-  font:inherit;color:var(--ink-2);cursor:pointer;text-align:left;
-}
-.stage:hover{background:var(--surface-2);color:var(--ink)}
-.stage[aria-current="true"]{border-left-color:var(--blueprint);background:var(--blueprint-soft);color:var(--ink)}
-.stage .n{
-  font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ink-3);
-  border:1px solid var(--grid-strong);border-radius:3px;
-  width:19px;height:19px;display:grid;place-items:center;flex:none;margin-top:1px;
-}
-.stage[aria-current="true"] .n{border-color:var(--blueprint);color:var(--blueprint)}
-.stage.done .n{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
-.stage .lbl{font-size:13px;font-weight:500;display:block}
-.stage .hint{font-size:11px;color:var(--ink-3);display:block;line-height:1.35}
-.rail-foot{margin-top:auto;padding:14px 18px 0;border-top:1px solid var(--grid);font-size:11px;color:var(--ink-3)}
+/* ---------- hero ---------- */
+.hero{border-bottom:1px solid var(--line);background:var(--card);padding:34px 28px 26px}
+.hero-in{max-width:1180px;margin:0 auto}
+.eyebrow{font-family:"Roboto Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink3)}
+.hero h1{font-size:clamp(30px,4.6vw,46px);font-weight:700;line-height:1.04;margin:10px 0 0;max-width:19ch}
+.hero h1 em{font-style:normal;color:var(--ng)}
+.hero p{margin:12px 0 0;font-size:16px;color:var(--ink2);max-width:66ch}
+.facts{display:flex;gap:26px;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
+.fact .n{font-family:"Barlow Condensed",sans-serif;font-size:29px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.fact .l{font-size:11.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
+.fact .n.ng{color:var(--ng)} .fact .n.vh{color:var(--vh)} .fact .n.er{color:var(--err)}
 
-.main{min-width:0;display:flex;flex-direction:column}
-.topbar{
-  display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-  padding:13px 24px;border-bottom:1px solid var(--grid);background:var(--surface);
-  position:sticky;top:0;z-index:40;
-}
-.topbar .ttl{font-family:Oswald,sans-serif;font-size:16px;letter-spacing:.02em}
-.topbar .spacer{flex:1}
-.crumb{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.1em}
-.content{padding:22px 24px 60px;max-width:1500px;width:100%}
+/* ---------- nav ---------- */
+.nav{position:sticky;top:0;z-index:50;background:var(--card);border-bottom:1px solid var(--line);
+  display:flex;gap:0;overflow-x:auto;padding:0 28px}
+.nav-in{display:flex;gap:0;max-width:1180px;margin:0 auto;width:100%}
+.nav button{font:inherit;font-size:13px;font-weight:600;background:none;border:0;cursor:pointer;
+  color:var(--ink3);padding:12px 15px;border-bottom:2.5px solid transparent;white-space:nowrap;display:flex;gap:7px;align-items:center}
+.nav button:hover{color:var(--ink)}
+.nav button[aria-current="true"]{color:var(--ng);border-bottom-color:var(--ng)}
+.nav .bn{font-family:"Roboto Mono",monospace;font-size:10.5px;color:var(--ink3);border:1px solid var(--line2);
+  border-radius:3px;width:18px;height:18px;display:grid;place-items:center}
+.nav button[aria-current="true"] .bn{border-color:var(--ng);color:var(--ng)}
+.nav .sp{flex:1}
+.nav .th{color:var(--ink3);border-bottom:0}
 
-/* ---------- primitives ---------- */
-.btn{
-  font:inherit;font-size:12.5px;font-weight:500;cursor:pointer;
-  padding:7px 14px;border-radius:4px;border:1px solid var(--grid-strong);
-  background:var(--surface);color:var(--ink);display:inline-flex;align-items:center;gap:7px;
-}
-.btn:hover{border-color:var(--blueprint);color:var(--blueprint)}
-.btn.primary{background:var(--blueprint);border-color:var(--blueprint);color:#fff}
-.btn.primary:hover{filter:brightness(1.08);color:#fff}
-.btn.go{background:var(--safety);border-color:var(--safety);color:#fff}
-.btn.go:hover{filter:brightness(1.08);color:#fff}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.btn:focus-visible,.stage:focus-visible,select:focus-visible,input:focus-visible,.cell:focus-visible{
-  outline:2px solid var(--blueprint);outline-offset:2px}
+/* ---------- layout ---------- */
+main{max-width:1180px;margin:0 auto;padding:26px 28px 70px}
+.view{display:none}.view.on{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.view.on{animation:none}}
 
-.card{background:var(--surface);border:1px solid var(--grid);border-radius:6px;box-shadow:var(--shadow)}
-.card-h{padding:13px 16px;border-bottom:1px solid var(--grid);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.card-h h3{font-size:13.5px;letter-spacing:.03em;text-transform:uppercase}
-.card-h .sp{flex:1}
-.card-b{padding:16px}
-.lead{font-size:12.5px;color:var(--ink-2);margin:4px 0 0;max-width:74ch}
+.vh-head{margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.vh-head h2{font-size:27px;font-weight:700}
+.vh-head .sub{font-size:15px;color:var(--ink2);margin-top:5px;max-width:74ch}
+.tagrow{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
 
-.pill{font-size:10.5px;font-weight:600;padding:2.5px 8px;border-radius:999px;border:1px solid;letter-spacing:.02em;white-space:nowrap}
-.p-blue{background:var(--blueprint-soft);border-color:var(--blueprint);color:var(--blueprint)}
-.p-amber{background:var(--safety-soft);border-color:var(--safety);color:var(--safety)}
-.p-red{background:var(--alert-soft);border-color:var(--alert);color:var(--alert)}
-.p-ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
-.p-mute{background:var(--surface-2);border-color:var(--grid-strong);color:var(--ink-3)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:7px;box-shadow:var(--sh);margin-bottom:18px;overflow:hidden}
+.ch{padding:13px 17px;border-bottom:1px solid var(--line);display:flex;gap:11px;align-items:center;flex-wrap:wrap;background:var(--card2)}
+.ch h3{font-size:14.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.ch .sp{flex:1}
+.cb{padding:17px}
+.cb.tight{padding:0}
 
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
-.stat{background:var(--surface);border:1px solid var(--grid);border-radius:6px;padding:12px 14px;border-top:3px solid var(--grid-strong)}
-.stat.b{border-top-color:var(--blueprint)} .stat.a{border-top-color:var(--safety)}
-.stat.r{border-top-color:var(--alert)} .stat.g{border-top-color:var(--ok)}
-.stat .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.11em;color:var(--ink-3)}
-.stat .v{font-family:"IBM Plex Mono",monospace;font-size:25px;font-weight:600;line-height:1.25;font-variant-numeric:tabular-nums}
-.stat .d{font-size:11px;color:var(--ink-3)}
+.pill{font-size:11px;font-weight:600;padding:2.5px 9px;border-radius:99px;border:1px solid;white-space:nowrap;display:inline-block}
+.p-vh{background:var(--vh-bg);border-color:var(--vh);color:var(--vh)}
+.p-ng{background:var(--ng-bg);border-color:var(--ng);color:var(--ng)}
+.p-er{background:var(--err-bg);border-color:var(--err);color:var(--err)}
+.p-ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.p-wn{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.p-mu{background:var(--card2);border-color:var(--line2);color:var(--ink3)}
 
-.view{display:none}.view.on{display:block}
+.btn{font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:7px 14px;border-radius:5px;
+  border:1px solid var(--line2);background:var(--card);color:var(--ink);display:inline-flex;gap:7px;align-items:center}
+.btn:hover{border-color:var(--ng);color:var(--ng)}
+.btn.go{background:var(--ng);border-color:var(--ng);color:#fff}
+.btn.go:hover{filter:brightness(1.09);color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:focus-visible,.nav button:focus-visible,select:focus-visible,input:focus-visible,.cell:focus-visible,.opt:focus-visible{outline:2px solid var(--vh);outline-offset:2px}
 
 /* ---------- timetable ---------- */
-.tt-wrap{overflow-x:auto;border:1px solid var(--grid-strong);border-radius:6px;background:var(--surface)}
-table.tt{border-collapse:collapse;width:100%;min-width:1080px;font-size:11.5px}
-table.tt th,table.tt td{border:1px solid var(--grid);padding:0}
-table.tt thead th{
-  background:var(--surface-2);font-family:Oswald,sans-serif;font-weight:500;
-  font-size:11px;letter-spacing:.03em;padding:8px 6px;text-align:center;
-  position:sticky;top:0;z-index:5;
-}
-table.tt thead th .cls-name{display:block;font-size:11.5px;line-height:1.25;text-transform:uppercase}
-table.tt thead th .cls-meta{display:block;font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--ink-3);font-weight:400;margin-top:2px}
-.ax{background:var(--surface-2);text-align:center;font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:11px;width:34px}
-.ax-day{writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.1em;font-family:Oswald,sans-serif;font-size:12px}
-.ax-ses{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10.5px;color:var(--ink-2);letter-spacing:.06em}
-.day-sep td,.day-sep th{border-top:2px solid var(--grid-strong)}
+.ttw{overflow-x:auto}
+table.tt{border-collapse:collapse;width:100%;min-width:940px;font-size:11.5px}
+table.tt th,table.tt td{border:1px solid var(--line);padding:0}
+table.tt thead th{background:var(--card2);font-family:"Barlow Condensed",sans-serif;font-weight:600;
+  font-size:12px;padding:7px 5px;text-align:center;position:sticky;top:0;z-index:5;line-height:1.2}
+.cn{display:block;text-transform:uppercase;font-size:11.5px}
+.cm{display:block;font-family:"Roboto Mono",monospace;font-size:9.5px;color:var(--ink3);font-weight:400;margin-top:2px}
+.ax{background:var(--card2);text-align:center;font-family:"Roboto Mono",monospace;font-weight:600;font-size:10.5px;width:30px}
+.axd{writing-mode:vertical-rl;transform:rotate(180deg);font-family:"Barlow Condensed",sans-serif;font-size:13px;letter-spacing:.08em}
+.axs{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;color:var(--ink2);letter-spacing:.05em}
+.dsep td,.dsep th{border-top:2px solid var(--line2)}
+.cell{min-height:32px;height:32px;width:100%;display:block;padding:0;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.cell.e{cursor:default}
+.cell.e::after{content:"";display:block;height:32px}
+.blk{display:flex;height:100%;min-height:32px;border-left:3px solid var(--vh);background:var(--vh-bg);position:relative}
+.blk.ng{border-left-color:var(--ng);background:var(--ng-bg)}
+.blk.bad{outline:2px solid var(--err);outline-offset:-2px}
+.blk.dim{opacity:.3}
+.blk .t{flex:1;padding:3px 5px;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.blk .m{font-weight:600;font-size:10.5px;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-transform:uppercase}
+.blk .g{font-size:10px;color:var(--ink2);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.blk .r{writing-mode:vertical-rl;transform:rotate(180deg);font-family:"Roboto Mono",monospace;font-size:9px;
+  color:var(--ink3);padding:2px 1px;border-left:1px solid var(--line);display:grid;place-items:center;flex:none}
+.lk{position:absolute;top:1px;right:1px;font-size:8.5px}
 
-.cell{min-height:34px;height:34px;position:relative;cursor:pointer;background:none;border:0;width:100%;display:block;padding:0;font:inherit;color:inherit;text-align:left}
-.cell:hover{background:var(--blueprint-soft)}
-.cell.empty::after{content:"";display:block;height:34px}
-.blk{
-  display:flex;align-items:stretch;height:100%;min-height:34px;
-  border-left:3px solid var(--blueprint);background:var(--blueprint-soft);
-}
-.blk.voc{border-left-color:var(--safety);background:var(--safety-soft)}
-.blk.clash{outline:2px solid var(--alert);outline-offset:-2px;animation:pulse 1.4s ease-in-out infinite}
-@keyframes pulse{0%,100%{outline-color:var(--alert)}50%{outline-color:transparent}}
-@media (prefers-reduced-motion:reduce){.blk.clash{animation:none}}
-.blk .txt{flex:1;padding:3px 6px;min-width:0;display:flex;flex-direction:column;justify-content:center}
-.blk .mod{font-weight:600;font-size:11px;line-height:1.2;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.blk .gv{font-size:10.5px;color:var(--ink-2);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.blk .rm{
-  writing-mode:vertical-rl;transform:rotate(180deg);
-  font-family:"IBM Plex Mono",monospace;font-size:9.5px;color:var(--ink-3);
-  padding:3px 1px;border-left:1px solid var(--grid);display:grid;place-items:center;flex:none;
-}
-.blk .lk{position:absolute;top:2px;right:2px;font-size:9px;color:var(--ink-3)}
-.sel{outline:2px solid var(--ink);outline-offset:-2px}
+.lg{display:flex;gap:15px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--ink2);padding:11px 17px;border-top:1px solid var(--line);background:var(--card2)}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:5px;border-left:3px solid}
+.sw-v{background:var(--vh-bg);border-left-color:var(--vh)}
+.sw-n{background:var(--ng-bg);border-left-color:var(--ng)}
+.sw-e{background:var(--err-bg);border-left-color:var(--err)}
 
-.legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--ink-2);margin-top:12px}
-.legend .sw{display:inline-block;width:11px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:5px;border-left:3px solid}
-.sw-b{background:var(--blueprint-soft);border-left-color:var(--blueprint)}
-.sw-a{background:var(--safety-soft);border-left-color:var(--safety)}
-.sw-r{background:var(--alert-soft);border-left-color:var(--alert)}
+/* ---------- callouts ---------- */
+.box{display:flex;gap:11px;padding:12px 14px;border-radius:6px;border:1px solid;margin-bottom:11px;align-items:flex-start}
+.box:last-child{margin-bottom:0}
+.box.er{background:var(--err-bg);border-color:var(--err)}
+.box.wn{background:var(--warn-bg);border-color:var(--warn)}
+.box.ok{background:var(--ok-bg);border-color:var(--ok)}
+.box.nu{background:var(--card2);border-color:var(--line2)}
+.box .i{font-family:"Roboto Mono",monospace;font-weight:700;font-size:12px;flex:none;margin-top:1px}
+.box .x{font-size:13.5px;line-height:1.55}
+.box .x b{font-weight:600}
+.box .f{font-size:12.5px;color:var(--ink2);margin-top:4px;padding-top:4px;border-top:1px dashed currentColor;opacity:.92}
 
-.ctl{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
-select,input[type=text],input[type=number]{
-  font:inherit;font-size:12.5px;padding:6px 9px;border-radius:4px;
-  border:1px solid var(--grid-strong);background:var(--surface);color:var(--ink);
-}
-label.fld{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.08em}
+table.d{width:100%;border-collapse:collapse;font-size:13px}
+table.d th{text-align:left;font-family:"Barlow Condensed",sans-serif;font-weight:600;font-size:12px;
+  text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);padding:8px 12px;border-bottom:1px solid var(--line2);background:var(--card2)}
+table.d td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+table.d tr:last-child td{border-bottom:0}
+table.d td.n{font-family:"Roboto Mono",monospace;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+table.d tr.hl td{background:var(--err-bg)}
 
-/* ---------- lists / tables ---------- */
-table.data{width:100%;border-collapse:collapse;font-size:12.5px}
-table.data th{
-  text-align:left;font-family:Oswald,sans-serif;font-weight:500;font-size:11px;
-  text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);
-  padding:8px 10px;border-bottom:1px solid var(--grid-strong);
-}
-table.data td{padding:8px 10px;border-bottom:1px solid var(--grid);vertical-align:top}
-table.data tr:last-child td{border-bottom:0}
-table.data td.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;text-align:right}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:13px}
+dl.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 15px;font-size:13px;margin:0}
+dl.kv dt{color:var(--ink3)}
+dl.kv dd{margin:0;font-weight:500}
+.tag{font-family:"Roboto Mono",monospace;font-size:10.5px;padding:1px 5px;border-radius:3px;background:var(--card2);border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
 
-.issue{display:flex;gap:10px;padding:10px 12px;border-radius:5px;border:1px solid;margin-bottom:8px;align-items:flex-start}
-.issue.err{background:var(--alert-soft);border-color:var(--alert)}
-.issue.warn{background:var(--safety-soft);border-color:var(--safety)}
-.issue.ok{background:var(--ok-soft);border-color:var(--ok)}
-.issue .ic{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:11px;flex:none;margin-top:1px}
-.issue .m{font-size:12.5px;line-height:1.5}
-.issue .m b{font-weight:600}
-.issue .fix{font-size:11.5px;color:var(--ink-2);margin-top:3px;font-style:italic}
+/* ---------- interactive bits ---------- */
+.opts{display:flex;gap:9px;flex-wrap:wrap}
+.opt{font:inherit;font-size:12.5px;font-weight:500;cursor:pointer;padding:8px 13px;border-radius:6px;
+  border:1px solid var(--line2);background:var(--card);color:var(--ink2);text-align:left}
+.opt:hover{border-color:var(--ng)}
+.opt[aria-pressed="true"]{background:var(--ng-bg);border-color:var(--ng);color:var(--ng);font-weight:600}
+.split{display:flex;gap:2px;height:34px;border-radius:5px;overflow:hidden;border:1px solid var(--line2);margin:12px 0 6px}
+.split i{display:grid;place-items:center;font-family:"Roboto Mono",monospace;font-size:11px;font-weight:600;
+  color:#fff;font-style:normal;transition:flex-grow .4s ease;min-width:0;overflow:hidden}
+@media(prefers-reduced-motion:reduce){.split i{transition:none}}
+.bar{height:7px;background:var(--card2);border-radius:99px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;background:var(--vh);width:0;transition:width .35s ease}
+.bar.f i{background:var(--ok)}
+.cap{font-size:11.5px;color:var(--ink3);margin-top:9px;line-height:1.5}
+.stepn{display:flex;align-items:baseline;gap:9px;margin-bottom:7px}
+.stepn b{font-family:"Barlow Condensed",sans-serif;font-size:20px;color:var(--ng);font-weight:700}
+input[type=range]{accent-color:var(--ng);width:100%}
+select{font:inherit;font-size:12.5px;padding:6px 9px;border-radius:5px;border:1px solid var(--line2);background:var(--card);color:var(--ink)}
 
-.rules{display:flex;flex-direction:column;gap:0}
-.rule{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--grid);flex-wrap:wrap}
-.rule:last-child{border-bottom:0}
-.rule .nm{flex:1;min-width:230px}
-.rule .nm .t{font-size:13px;font-weight:500}
-.rule .nm .s{font-size:11.5px;color:var(--ink-3)}
-input[type=range]{accent-color:var(--blueprint);width:118px}
-.wv{font-family:"IBM Plex Mono",monospace;font-size:12.5px;font-weight:600;width:20px;text-align:right;color:var(--blueprint)}
+.flow{display:flex;flex-wrap:wrap;gap:0;align-items:stretch;margin:4px 0}
+.fstep{flex:1;min-width:132px;padding:11px 13px;border:1px solid var(--line);background:var(--card2);position:relative}
+.fstep:not(:last-child){border-right:0}
+.fstep .k{font-family:"Roboto Mono",monospace;font-size:10px;color:var(--ink3);letter-spacing:.08em}
+.fstep .v{font-size:13px;font-weight:600;margin-top:2px;line-height:1.3}
+.fstep .d{font-size:11.5px;color:var(--ink2);margin-top:3px;line-height:1.4}
+.fstep.on{background:var(--ng-bg);border-color:var(--ng);z-index:2}
+.fstep.lk{background:var(--vh-bg);border-color:var(--vh)}
 
-.prog{height:7px;background:var(--surface-2);border-radius:99px;overflow:hidden;border:1px solid var(--grid)}
-.prog i{display:block;height:100%;background:var(--blueprint);width:0;transition:width .35s ease}
-.prog.done i{background:var(--ok)}
-
-.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:16px}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12.5px}
-.kv dt{color:var(--ink-3)}
-.kv dd{margin:0;font-weight:500}
-
-/* ---------- drawer ---------- */
-.scrim{position:fixed;inset:0;background:rgba(20,32,46,.45);backdrop-filter:blur(2px);z-index:60;display:none}
-.scrim.on{display:block}
-.drawer{
-  position:fixed;top:0;right:0;bottom:0;width:min(400px,94vw);background:var(--surface);
-  border-left:1px solid var(--grid-strong);z-index:61;transform:translateX(100%);
-  transition:transform .22s ease;display:flex;flex-direction:column;
-}
-.drawer.on{transform:none}
-@media (prefers-reduced-motion:reduce){.drawer{transition:none}}
-.drawer h3{font-size:15px}
-.drawer .dh{padding:15px 18px;border-bottom:1px solid var(--grid);display:flex;align-items:flex-start;gap:10px}
-.drawer .db{padding:16px 18px;overflow-y:auto;flex:1}
-.drawer .df{padding:13px 18px;border-top:1px solid var(--grid);display:flex;gap:9px;flex-wrap:wrap}
-.x{margin-left:auto;background:none;border:0;font-size:19px;line-height:1;cursor:pointer;color:var(--ink-3);padding:0 2px}
-.x:hover{color:var(--ink)}
-
-.toast{
-  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(120%);
-  background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:5px;
-  font-size:12.5px;z-index:80;transition:transform .25s ease;box-shadow:var(--shadow);max-width:90vw;
-}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(150%);background:var(--ink);
+  color:var(--paper);padding:11px 19px;border-radius:6px;font-size:13px;z-index:80;transition:transform .26s ease;
+  box-shadow:var(--sh);max-width:88vw;text-align:center}
 .toast.on{transform:translateX(-50%)}
+.scrim{position:fixed;inset:0;background:rgba(26,33,41,.5);z-index:60;display:none}
+.scrim.on{display:block}
+.dw{position:fixed;top:0;right:0;bottom:0;width:min(410px,94vw);background:var(--card);border-left:1px solid var(--line2);
+  z-index:61;transform:translateX(100%);transition:transform .22s ease;display:flex;flex-direction:column}
+.dw.on{transform:none}
+@media(prefers-reduced-motion:reduce){.dw{transition:none}}
+.dw .h{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}
+.dw .h h3{font-size:16px;font-weight:600}
+.dw .b{padding:17px 18px;overflow-y:auto;flex:1}
+.dw .f{padding:13px 18px;border-top:1px solid var(--line);display:flex;gap:9px}
+.xb{margin-left:auto;background:none;border:0;font-size:20px;line-height:1;cursor:pointer;color:var(--ink3);padding:0 2px}
+.xb:hover{color:var(--ink)}
 
-.note{font-size:11.5px;color:var(--ink-3);border-left:2px solid var(--grid-strong);padding-left:10px;margin-top:14px}
-.tag{font-family:"IBM Plex Mono",monospace;font-size:10px;padding:1px 5px;border-radius:3px;background:var(--surface-2);border:1px solid var(--grid);color:var(--ink-2)}
+footer{border-top:1px solid var(--line);background:var(--card);padding:22px 28px;font-size:12.5px;color:var(--ink3)}
+.f-in{max-width:1180px;margin:0 auto}
 
-@media (max-width:900px){
-  .app{grid-template-columns:1fr}
-  .rail{position:static;height:auto;flex-direction:row;overflow-x:auto;gap:0;padding:0}
-  .brand{display:none}
-  .stage{flex-direction:column;gap:3px;min-width:112px;border-left:0;border-bottom:3px solid transparent;padding:9px 11px}
-  .stage[aria-current="true"]{border-left:0;border-bottom-color:var(--blueprint)}
-  .stage .hint{display:none}
-  .rail-foot{display:none}
-  .content{padding:16px 13px 50px}
+@media(max-width:760px){
+  .hero{padding:24px 16px 20px}main{padding:20px 16px 55px}.nav{padding:0 16px}
+  .facts{gap:18px}.fact .n{font-size:24px}
+  .flow{flex-direction:column}.fstep:not(:last-child){border-right:1px solid var(--line);border-bottom:0}
 }
 </style>
 
-<div class="app">
-  <nav class="rail" aria-label="Quy trình xếp thời khoá biểu">
-    <div class="brand">
-      <h1>EVO Scheduler</h1>
-      <div class="sub">CĐ Xây dựng CTĐT</div>
-    </div>
-    <button class="stage done" data-go="import"><span class="n">1</span><span><span class="lbl">Nhập dữ liệu</span><span class="hint">Excel · 6 sheet</span></span></button>
-    <button class="stage done" data-go="horizon"><span class="n">2</span><span><span class="lbl">Khung giờ</span><span class="hint">Tuần · buổi · tiết</span></span></button>
-    <button class="stage done" data-go="rules"><span class="n">3</span><span><span class="lbl">Ràng buộc</span><span class="hint">Cứng · mềm</span></span></button>
-    <button class="stage" data-go="check"><span class="n">4</span><span><span class="lbl">Kiểm tra khả thi</span><span class="hint">Tiền kiểm số học</span></span></button>
-    <button class="stage" data-go="solve"><span class="n">5</span><span><span class="lbl">Xếp tự động</span><span class="hint">CP-SAT · 2 pha</span></span></button>
-    <button class="stage" aria-current="true" data-go="grid"><span class="n">6</span><span><span class="lbl">Tinh chỉnh</span><span class="hint">Kéo thả · khoá tiết</span></span></button>
-    <button class="stage" data-go="publish"><span class="n">7</span><span><span class="lbl">Xuất bản</span><span class="hint">PDF · Excel</span></span></button>
-    <div class="rail-foot">
-      Bản mẫu tương tác<br>SRS-EVO-SCHED-CUWC v1.0
-    </div>
-  </nav>
-
-  <div class="main">
-    <header class="topbar">
-      <span class="ttl" id="vTitle">Tinh chỉnh thời khoá biểu</span>
-      <span class="crumb" id="vCrumb">Bước 6 / 7</span>
-      <span class="spacer"></span>
-      <span class="pill p-ok" id="statePill">Đã giải · 319/319 tiết</span>
-      <button class="btn" id="themeBtn" title="Đổi giao diện sáng/tối">◐ Giao diện</button>
-    </header>
-
-    <div class="content">
-
-      <!-- ============ GRID ============ -->
-      <section class="view on" id="v-grid">
-        <div class="stats">
-          <div class="stat b"><div class="k">Tổng số tiết</div><div class="v">319</div><div class="d">Toàn trường / tuần</div></div>
-          <div class="stat g"><div class="k">Đã xếp</div><div class="v">319</div><div class="d">100% phủ lịch</div></div>
-          <div class="stat b"><div class="k">Khối văn hoá</div><div class="v">124</div><div class="d">Hệ 9+ song bằng</div></div>
-          <div class="stat a"><div class="k">Khối nghề</div><div class="v">195</div><div class="d">Lý thuyết + thực hành</div></div>
-          <div class="stat r"><div class="k">Xung đột</div><div class="v" id="clashN">1</div><div class="d">Cần xử lý</div></div>
-        </div>
-
-        <div class="card">
-          <div class="card-h">
-            <h3>Thời khoá biểu nghề khối 11 — TC khoá 43</h3>
-            <span class="pill p-mute">Tuần 03 · 24/8 – 28/8/2026</span>
-            <span class="sp"></span>
-            <button class="btn" id="btnClash">⚠ Tới ô xung đột</button>
-            <button class="btn" id="btnUndo" disabled>↶ Hoàn tác</button>
-          </div>
-          <div class="card-b">
-            <div class="ctl">
-              <label class="fld">Xem theo
-                <select id="fView"><option value="class">Lớp</option><option value="teacher">Giáo viên</option><option value="room">Phòng / xưởng</option></select>
-              </label>
-              <label class="fld">Lọc giáo viên
-                <select id="fTeacher"><option value="">Tất cả</option></select>
-              </label>
-              <label class="fld">Lọc khối
-                <select id="fTier"><option value="">Tất cả</option><option value="culture">Văn hoá</option><option value="vocational">Nghề</option></select>
-              </label>
-              <label class="fld">Buổi
-                <select id="fSes"><option value="">Cả ngày</option><option value="S">Sáng</option><option value="C">Chiều</option></select>
-              </label>
-            </div>
-
-            <div class="tt-wrap">
-              <table class="tt" id="tt"><thead id="ttHead"></thead><tbody id="ttBody"></tbody></table>
-            </div>
-
-            <div class="legend">
-              <span><i class="sw sw-b"></i>Khối văn hoá</span>
-              <span><i class="sw sw-a"></i>Khối nghề</span>
-              <span><i class="sw sw-r"></i>Xung đột</span>
-              <span><span class="tag">🔒</span> Tiết đã khoá</span>
-              <span><span class="tag">⚯</span> Lớp tách nhiều nhóm nghề</span>
-              <span style="margin-left:auto;color:var(--ink-3)">Bấm ô để xem chi tiết</span>
-            </div>
-
-            <div class="issue warn" style="margin-top:14px">
-              <span class="ic">⚯</span>
-              <span class="m"><b>Lớp văn hoá 11A3 tách thành ba nhóm nghề</b> — CNKT Điều khiển tự động (16 SV), Thiết kế nội thất (17 SV), Công nghệ ô tô 1 (30 SV).
-                <span class="fix">Dữ liệu lấy từ TKB tuần 02 do trường công bố. Mô hình dữ liệu hiện tại chưa diễn đạt được quan hệ nhiều-nhiều này (khoảng trống G-11) — đây là hạng mục chặn.</span></span>
-            </div>
-
-            <p class="note">Bố cục tái hiện đúng bản in của trường: trục dọc <b>Thứ → Buổi → Tiết</b>, mỗi cột một nhóm nghề kèm mã lớp văn hoá và sĩ số, mã phòng in dọc ở dải hẹp bên phải. Ô có hai tên giáo viên là <b>đồng giảng</b> — cũng có thật trong TKB của trường.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============ IMPORT ============ -->
-      <section class="view" id="v-import">
-        <div class="card">
-          <div class="card-h"><h3>Nhập dữ liệu từ Excel</h3><span class="sp"></span><span class="pill p-ok">Đã nhập · 20/8/2026</span></div>
-          <div class="card-b">
-            <p class="lead">Hệ thống nhận diện tên sheet và tiêu đề cột không dấu, sai hoa thường hoặc viết tắt. Kiểm tra toàn bộ trước, chỉ ghi vào cơ sở dữ liệu khi không còn lỗi.</p>
-            <table class="data" style="margin-top:14px">
-              <thead><tr><th>Sheet</th><th>Nội dung</th><th class="num">Dòng</th><th>Trạng thái</th></tr></thead>
-              <tbody>
-                <tr><td><b>Giáo viên</b></td><td>Mã GV, họ tên, khối, định mức giờ chuẩn</td><td class="num">86</td><td><span class="pill p-ok">Hợp lệ</span></td></tr>
-                <tr><td><b>Lớp học</b></td><td>Mã lớp, tên, loại hình, sĩ số</td><td class="num">32</td><td><span class="pill p-ok">Hợp lệ</span></td></tr>
-                <tr><td><b>Thiết bị</b></td><td>Phòng lý thuyết, xưởng, bộ dụng cụ</td><td class="num">54</td><td><span class="pill p-amber">2 cảnh báo</span></td></tr>
-                <tr><td><b>Môn học</b></td><td>Mã mô-đun, giờ lý thuyết, giờ thực hành</td><td class="num">118</td><td><span class="pill p-ok">Hợp lệ</span></td></tr>
-                <tr><td><b>GV - Môn học</b></td><td>Năng lực giảng dạy</td><td class="num">241</td><td><span class="pill p-ok">Hợp lệ</span></td></tr>
-                <tr><td><b>Tiết cố định</b></td><td>Buổi học cần xếp</td><td class="num">319</td><td><span class="pill p-ok">Hợp lệ</span></td></tr>
-                <tr><td><b>Cấu hình</b></td><td>Số tuần, ngày học, tiết mỗi ngày</td><td class="num">1</td><td><span class="pill p-mute">Tuỳ chọn</span></td></tr>
-              </tbody>
-            </table>
-            <div class="issue warn" style="margin-top:14px">
-              <span class="ic">!</span>
-              <span class="m"><b>Thiết bị · dòng 41:</b> "Còn lại" (12) lớn hơn "Số lượng" (10).
-                <span class="fix">Cách sửa: đặt số lượng khả dụng không vượt quá tổng số lượng thiết bị.</span></span>
-            </div>
-            <div class="grid2" style="margin-top:18px">
-              <div>
-                <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:8px">Đề xuất bổ sung</h4>
-                <p class="lead"><b>Nhập không huỷ hoại.</b> Hiện tại thao tác ghi sẽ xoá sạch toàn bộ giáo viên, lớp, môn, thiết bị và buổi học của đơn vị rồi ghi lại từ đầu. Cần thêm chế độ cập nhật/bổ sung để không mất dữ liệu đã tinh chỉnh.</p>
-              </div>
-              <div>
-                <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:8px">Đề xuất bổ sung</h4>
-                <p class="lead"><b>Sinh buổi học từ chương trình.</b> Số giờ lý thuyết và thực hành đang được nhập nhưng chưa được bung thành buổi học. Cán bộ vẫn phải khai tay từng tiết ở sheet "Tiết cố định".</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============ HORIZON ============ -->
-      <section class="view" id="v-horizon">
-        <div class="card">
-          <div class="card-h"><h3>Khung thời khoá biểu</h3><span class="sp"></span><span class="pill p-mute" id="hzTotal">60 tiết/tuần</span></div>
-          <div class="card-b">
-            <p class="lead">Số tiết khả dụng mỗi tuần là trần cứng của mọi lời giải: một lớp hay một giáo viên cần nhiều tiết hơn con số này thì không có lịch nào tồn tại.</p>
-            <div class="ctl" style="margin-top:16px">
-              <label class="fld">Số ngày học / tuần<input type="number" id="hzDays" value="6" min="1" max="7"></label>
-              <label class="fld">Số tiết / ngày<input type="number" id="hzPer" value="10" min="1" max="16"></label>
-              <label class="fld">Số tiết buổi sáng<input type="number" id="hzMorn" value="5" min="0" max="16"></label>
-              <label class="fld">Số tuần<input type="number" id="hzWeeks" value="1" min="1" max="8"></label>
-            </div>
-            <div class="issue ok"><span class="ic">✓</span><span class="m">Tổng cộng <b id="hzCalc">60</b> tiết mỗi tuần. Khối nghề đang cần 195 tiết trên 32 lớp — còn dư năng lực.</span></div>
-            <p class="note">Trường học cả sáng và chiều phải cộng cả hai buổi: 5 tiết sáng + 5 tiết chiều = 10 tiết mỗi ngày. Hai khối có thể dùng khung giờ riêng.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============ RULES ============ -->
-      <section class="view" id="v-rules">
-        <div class="grid2">
-          <div class="card">
-            <div class="card-h"><h3>Ràng buộc cứng</h3><span class="sp"></span><span class="pill p-blue">Luôn áp dụng</span></div>
-            <div class="card-b">
-              <p class="lead">Không thương lượng. Lời giải vi phạm một ràng buộc cứng là lời giải không hợp lệ.</p>
-              <table class="data" style="margin-top:12px">
-                <tbody>
-                  <tr><td>Giáo viên không dạy hai buổi cùng lúc</td><td><span class="tag">teacher_no_overlap</span></td></tr>
-                  <tr><td>Lớp không học hai buổi cùng lúc</td><td><span class="tag">student_no_overlap</span></td></tr>
-                  <tr><td>Không vượt sức chứa xưởng, bộ dụng cụ</td><td><span class="tag">shared_resource_pool</span></td></tr>
-                  <tr><td>Thực hành phải vào xưởng hoặc bộ dụng cụ</td><td><span class="tag">resource_requirement</span></td></tr>
-                  <tr><td>Sĩ số không vượt sức chứa phòng</td><td><span class="tag">capacity_limit</span></td></tr>
-                  <tr><td>Buổi nhiều tiết phải liền mạch trong ngày</td><td><span class="tag">valid_starts</span></td></tr>
-                  <tr><td>Không vượt định mức giờ chuẩn</td><td><span class="tag">quota_limit</span></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-h"><h3>Ràng buộc mềm</h3><span class="sp"></span><button class="btn" id="btnReset">Mặc định</button></div>
-            <div class="card-b">
-              <p class="lead">Bộ giải cân bằng các tiêu chí này. Trọng số càng cao, hệ thống càng cố tránh vi phạm.</p>
-              <div class="rules" id="ruleList"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top:16px">
-          <div class="card-h"><h3>Bộ ràng buộc khuyến nghị</h3><span class="sp"></span><span class="pill p-amber">Đề xuất bổ sung</span></div>
-          <div class="card-b">
-            <p class="lead">Theo tài liệu thực tiễn, đây là cấu hình cho ra thời khoá biểu "đẹp và khoa học". Giao diện khai báo các ràng buộc này hiện chưa có — cần bổ sung.</p>
-            <div class="grid2" style="margin-top:12px">
-              <div>
-                <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--blueprint);margin-bottom:7px">Với giáo viên</h4>
-                <table class="data">
-                  <tbody>
-                    <tr><td>Số tiết dạy ít nhất trong một buổi</td><td class="num">2</td></tr>
-                    <tr><td>Số tiết dạy nhiều nhất trong một buổi</td><td class="num">4</td></tr>
-                    <tr><td>Không xếp cách quá 1 tiết trong buổi</td><td class="num">Có</td></tr>
-                    <tr><td>Số ngày nghỉ trong tuần</td><td class="num">1</td></tr>
-                  </tbody>
-                </table>
-              </div>
-              <div>
-                <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--safety);margin-bottom:7px">Với môn học</h4>
-                <table class="data">
-                  <tbody>
-                    <tr><td>Môn 2–3 tiết: chỉ học 1 tiết mỗi buổi</td><td class="num">Có</td></tr>
-                    <tr><td>Môn nhiều tiết: có cặp tiết xếp liền</td><td class="num">Có</td></tr>
-                    <tr><td>Xếp cách ngày (chỉ môn 2 tiết)</td><td class="num">Có</td></tr>
-                    <tr><td>Không xếp thể chất vào tiết 5</td><td class="num">Có</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============ CHECK ============ -->
-      <section class="view" id="v-check">
-        <div class="card">
-          <div class="card-h"><h3>Kiểm tra khả thi</h3><span class="sp"></span><button class="btn primary" id="btnCheck">Kiểm tra lại</button></div>
-          <div class="card-b">
-            <p class="lead">Chạy trước bộ giải để bắt các mâu thuẫn số học. Những lỗi này khiến <b>không lời giải nào tồn tại</b> — phát hiện sớm thay vì để bộ giải chạy hết 10 phút rồi báo "không khả thi" chung chung.</p>
-            <div id="checkOut" style="margin-top:14px">
-              <div class="issue err">
-                <span class="ic">✕</span>
-                <span class="m"><b>Vượt trần sĩ số thực hành</b> — nhóm "Điện công nghiệp và dân dụng" (11A1) có 38 SV, trong khi quy định giới hạn lớp thực hành ở <b>18 học viên</b> (TT 07/2017).
-                  <span class="fix">Cách sửa: tách nhóm thực hành làm hai ca, hoặc bố trí thêm giáo viên hướng dẫn. Đây chính là lý do trường phải tách lớp 11A3 thành ba nhóm nghề.</span></span>
-              </div>
-              <div class="issue err">
-                <span class="ic">✕</span>
-                <span class="m"><b>Thiếu xưởng theo ngưỡng sức chứa</b> — khối nghề cần 6 xưởng chứa được ≥ 30 chỗ, hiện chỉ có 4.
-                  <span class="fix">Cách sửa: tách nhóm thực hành, bổ sung xưởng, hoặc mở thêm buổi chiều thứ 7 (quy chế cho phép dạy tới 22:00, kể cả T7 và CN).</span></span>
-              </div>
-              <div class="issue warn">
-                <span class="ic">!</span>
-                <span class="m"><b>Mô-đun MĐ22 "Kỹ thuật cảm biến" chưa có giáo viên đủ năng lực.</b>
-                  <span class="fix">Cách sửa: khai báo năng lực giảng dạy ở sheet "GV - Môn học". Nếu bỏ qua, buổi học sẽ được xếp mà không có giáo viên.</span></span>
-              </div>
-              <div class="issue ok">
-                <span class="ic">✓</span>
-                <span class="m">Khối văn hoá: 124 buổi / 60 tiết mỗi tuần — không có mâu thuẫn hiển nhiên.</span>
-              </div>
-            </div>
-            <p class="note">Hệ thống thực hiện 13 phép kiểm tra: khung giờ rỗng, thiếu tài nguyên, buổi quá dài, lớp quá tải, giáo viên quá tải, nhóm giáo viên không đủ năng lực, thiếu tài nguyên theo loại, thiếu theo ngưỡng sức chứa, không có tài nguyên phù hợp, tiết khoá không hợp lệ, tài nguyên đã khoá biến mất, mô-đun thiếu giáo viên.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============ SOLVE ============ -->
-      <section class="view" id="v-solve">
-        <div class="card">
-          <div class="card-h"><h3>Xếp lịch tự động</h3><span class="sp"></span>
-            <button class="btn go" id="btnSolve">▶ Bắt đầu xếp</button>
-            <button class="btn" id="btnStop" disabled>■ Dừng</button>
-          </div>
-          <div class="card-b">
-            <p class="lead">Bộ giải chạy hai pha: pha một tìm một phương án khả thi bất kỳ, pha hai lấy phương án đó làm gợi ý rồi tối ưu. Hết giờ ở pha hai thì phương án pha một vẫn được giữ — có thời khoá biểu vẫn hơn không có gì.</p>
-
-            <div style="margin:18px 0 6px;display:flex;justify-content:space-between;font-size:12px">
-              <span id="solvePhase">Sẵn sàng</span><span class="mono" id="solvePct"></span>
-            </div>
-            <div class="prog" id="solveBar"><i></i></div>
-
-            <div class="grid2" style="margin-top:18px">
-              <div class="card" style="box-shadow:none">
-                <div class="card-h"><h3 style="font-size:12px">Khối văn hoá</h3><span class="sp"></span><span class="pill p-blue" id="c1">Chờ</span></div>
-                <div class="card-b"><dl class="kv">
-                  <dt>Buổi học</dt><dd>124</dd>
-                  <dt>Thứ tự</dt><dd>Xếp trước, khoá lại</dd>
-                  <dt>Giá trị mục tiêu</dt><dd class="mono" id="o1">—</dd>
-                </dl></div>
-              </div>
-              <div class="card" style="box-shadow:none">
-                <div class="card-h"><h3 style="font-size:12px">Khối nghề</h3><span class="sp"></span><span class="pill p-amber" id="c2">Chờ</span></div>
-                <div class="card-b"><dl class="kv">
-                  <dt>Buổi học</dt><dd>195</dd>
-                  <dt>Thứ tự</dt><dd>Tránh tiết đã khoá</dd>
-                  <dt>Giá trị mục tiêu</dt><dd class="mono" id="o2">—</dd>
-                </dl></div>
-              </div>
-            </div>
-            <p class="note">Xếp hai khối tuần tự là cách hệ thống xử lý giáo viên dạy chéo: khối văn hoá được xếp và khoá trước, sau đó khối nghề né các tiết đã chiếm.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============ PUBLISH ============ -->
-      <section class="view" id="v-publish">
-        <div class="card">
-          <div class="card-h"><h3>Xuất bản thời khoá biểu</h3><span class="sp"></span><span class="pill p-amber">Chưa xuất bản</span></div>
-          <div class="card-b">
-            <p class="lead">Chốt phiên bản chính thức và phát hành tới giáo viên, sinh viên. Bản in phải đúng mẫu đang dán bảng tin của trường.</p>
-            <div class="ctl" style="margin-top:16px">
-              <button class="btn primary" id="btnPub">Xuất bản chính thức</button>
-              <button class="btn" data-toast="Đang tạo bản PDF theo mẫu của trường…">⤓ Tải PDF</button>
-              <button class="btn" data-toast="Đang tạo tệp Excel hai sheet: Lịch và Chi tiết…">⤓ Tải Excel</button>
-              <button class="btn" data-toast="Đã sao chép đường dẫn xem lịch công khai.">🔗 Chia sẻ</button>
-            </div>
-            <div class="grid2" style="margin-top:18px">
-              <div>
-                <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:8px">Bản in gồm</h4>
-                <dl class="kv">
-                  <dt>Tiêu đề</dt><dd>Khối, khoá, tuần và khoảng ngày</dd>
-                  <dt>Trục dọc</dt><dd>Thứ → Buổi → Tiết</dd>
-                  <dt>Trục ngang</dt><dd>Mỗi cột một lớp, kèm nghề và sĩ số</dd>
-                  <dt>Trong ô</dt><dd>Mô-đun, giáo viên, mã phòng in dọc</dd>
-                </dl>
-              </div>
-              <div>
-                <h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-bottom:8px">Phát hành tới</h4>
-                <dl class="kv">
-                  <dt>Giáo viên</dt><dd>Lịch cá nhân, xem trên điện thoại</dd>
-                  <dt>Sinh viên</dt><dd>Lịch lớp</dd>
-                  <dt>Khoa</dt><dd>Lịch toàn khoa, báo cáo tải giảng dạy</dd>
-                </dl>
-              </div>
-            </div>
-            <p class="note">Trạng thái "đã xuất bản" và endpoint xuất bản hiện chưa được cài đặt — đây là khoảng trống G-6 trong tài liệu yêu cầu.</p>
-          </div>
-        </div>
-      </section>
-
+<header class="hero">
+  <div class="hero-in">
+    <div class="eyebrow">Trường Cao đẳng Xây dựng Công trình đô thị · CUWC</div>
+    <h1>Sáu bài toán mà phần mềm xếp lịch phổ thông <em>không giải được</em></h1>
+    <p>Khảo sát thời khoá biểu trường đang phát hành, quy chế đào tạo nội bộ và tài liệu phần mềm FTKB. Mỗi bài toán dưới đây đều rút ra từ dữ liệu thật, kèm bản mẫu tương tác minh hoạ cách hệ thống cần xử lý.</p>
+    <div class="facts">
+      <div class="fact"><div class="n ng">90%</div><div class="l">Chỉ tiêu TC là hệ 9+</div></div>
+      <div class="fact"><div class="n">3</div><div class="l">Luồng TKB độc lập</div></div>
+      <div class="fact"><div class="n er">14→44</div><div class="l">Sĩ số lớp, trần TH là 18</div></div>
+      <div class="fact"><div class="n vh">2</div><div class="l">Cơ sở đào tạo</div></div>
+      <div class="fact"><div class="n">6:00–22:00</div><div class="l">Biên pháp lý, cả T7 &amp; CN</div></div>
     </div>
   </div>
-</div>
+</header>
+
+<nav class="nav"><div class="nav-in">
+  <button data-v="p1" aria-current="true"><span class="bn">1</span>Lớp tách nhóm</button>
+  <button data-v="p2"><span class="bn">2</span>Trần sĩ số</button>
+  <button data-v="p3"><span class="bn">3</span>Ba luồng lịch</button>
+  <button data-v="p4"><span class="bn">4</span>Đồng giảng</button>
+  <button data-v="p5"><span class="bn">5</span>Tuần thực tập</button>
+  <button data-v="p6"><span class="bn">6</span>Giờ chuẩn</button>
+  <span class="sp"></span>
+  <button class="th" id="thBtn" title="Sáng / tối">◐</button>
+</div></nav>
+
+<main>
+
+<!-- ══════════ 1 ══════════ -->
+<section class="view on" id="v-p1">
+  <div class="vh-head">
+    <h2>Một lớp văn hoá tách thành nhiều nhóm nghề</h2>
+    <p class="sub">Học sinh hệ 9+ sinh hoạt theo <b>lớp văn hoá</b>, nhưng học nghề theo <b>nhóm nghề</b> — và hai thứ này không trùng nhau. Đây là ràng buộc khó nhất, vì nó vô hình trên bản in.</p>
+    <div class="tagrow">
+      <span class="pill p-er">Chặn</span>
+      <span class="pill p-mu">Nguồn: TKB nghề K43 tuần 02</span>
+      <span class="pill p-mu">90% chỉ tiêu trung cấp</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><h3>Bằng chứng từ bản in của trường</h3><span class="sp"></span><span class="pill p-mu">Trích nguyên văn</span></div>
+    <div class="cb">
+      <p style="margin:0 0 13px;color:var(--ink2)">Tiêu đề cột trong TKB nghề khối 11 ghi mã lớp văn hoá kèm sĩ số. Lớp <b>11A3</b> xuất hiện ở ba cột khác nhau:</p>
+      <table class="d">
+        <thead><tr><th>Cột nghề trên bản in</th><th>Mã lớp văn hoá</th><th class="n">Sĩ số</th></tr></thead>
+        <tbody>
+          <tr class="hl"><td>CNKT Điều khiển tự động</td><td><span class="tag">11A3</span></td><td class="n">16</td></tr>
+          <tr class="hl"><td>Thiết kế nội thất</td><td><span class="tag">11A3</span></td><td class="n">17</td></tr>
+          <tr class="hl"><td>Công nghệ ô tô 1</td><td><span class="tag">11A3</span></td><td class="n">30</td></tr>
+          <tr><td>Kỹ thuật máy lạnh &amp; ĐHKK</td><td><span class="tag">11A2</span></td><td class="n">38</td></tr>
+          <tr><td>Điện công nghiệp &amp; dân dụng</td><td><span class="tag">11A1</span></td><td class="n">38</td></tr>
+        </tbody>
+      </table>
+      <div class="box nu" style="margin-top:14px">
+        <span class="i">Σ</span>
+        <span class="x">Lớp <b>11A3</b> có <b>63 học sinh</b>, chia ba nhóm nghề. Lớp <b>11A11</b> cũng tách hai nhóm (14 và 25).
+          <span class="f">Quan hệ lớp văn hoá ↔ nhóm nghề là <b>nhiều-nhiều</b>. Mô hình một-một sẽ xếp sai ngay từ ngày đầu.</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><h3>Thử: xếp tiết văn hoá cho lớp 11A3</h3><span class="sp"></span>
+      <button class="btn" id="p1r">↺ Đặt lại</button></div>
+    <div class="cb">
+      <p style="margin:0 0 12px;color:var(--ink2);font-size:13.5px">Ba nhóm nghề của 11A3 đang học sáng thứ Sáu. Chọn khung giờ để xếp tiết <b>Ngữ văn</b> cho <b>cả lớp</b> 11A3:</p>
+      <div class="opts" id="p1o">
+        <button class="opt" data-s="S" data-p="1">Sáng · tiết 1–2</button>
+        <button class="opt" data-s="S" data-p="3">Sáng · tiết 3–4</button>
+        <button class="opt" data-s="C" data-p="1">Chiều · tiết 1–2</button>
+        <button class="opt" data-s="C" data-p="3">Chiều · tiết 3–4</button>
+      </div>
+      <div id="p1out" style="margin-top:14px"></div>
+    </div>
+    <div class="ttw"><table class="tt" id="p1t"><thead></thead><tbody></tbody></table></div>
+    <div class="lg">
+      <span><i class="sw sw-n"></i>Nhóm nghề</span>
+      <span><i class="sw sw-v"></i>Tiết văn hoá (cả lớp)</span>
+      <span><i class="sw sw-e"></i>Xung đột</span>
+      <span style="margin-left:auto;color:var(--ink3)">Thứ Sáu · lớp 11A3</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><h3>Yêu cầu rút ra</h3></div>
+    <div class="cb">
+      <div class="g2">
+        <div>
+          <div class="stepn"><b>BR-7</b><span style="font-weight:600">Ràng buộc loại trừ theo lớp gốc</span></div>
+          <p style="margin:0;font-size:13.5px;color:var(--ink2)">Khi bất kỳ nhóm nghề nào của lớp đang học, cả lớp không thể có tiết văn hoá. Suy rộng: hai nhóm nghề cùng lớp gốc không được trùng giờ.</p>
+        </div>
+        <div>
+          <div class="stepn"><b>BR-11</b><span style="font-weight:600">Hai quỹ giờ độc lập</span></div>
+          <p style="margin:0;font-size:13.5px;color:var(--ink2)">Điều 3.5 quy chế trường: giờ văn hoá THPT <b>không tính</b> vào thời gian đào tạo nghề. Hạch toán tiến độ phải tách riêng, không cộng dồn.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 2 ══════════ -->
+<section class="view" id="v-p2">
+  <div class="vh-head">
+    <h2>Trần sĩ số thực hành — nguyên nhân gốc của việc tách nhóm</h2>
+    <p class="sub">Quy định giới hạn lớp thực hành ở 18 học viên, trong khi lớp văn hoá thực tế lên tới 44. Đây chính là lý do trường phải tách lớp, và là ràng buộc hệ thống bắt buộc phải biết.</p>
+    <div class="tagrow">
+      <span class="pill p-er">Chặn</span>
+      <span class="pill p-mu">TT 07/2017/TT-BLĐTBXH</span>
+      <span class="pill p-wn">Cần đối chiếu công báo</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><h3>Bộ chia nhóm thực hành</h3><span class="sp"></span><span class="pill p-mu" id="p2m">Nghề thường · trần 18</span></div>
+    <div class="cb">
+      <div class="g2" style="align-items:end">
+        <div>
+          <label style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em">Sĩ số lớp: <b class="mono" id="p2v" style="color:var(--ng);font-size:15px">38</b></label>
+          <input type="range" id="p2s" min="10" max="44" value="38" style="margin-top:7px">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:6px">Loại buổi học</label>
+          <div class="opts">
+            <button class="opt" data-k="lt">Lý thuyết · 35</button>
+            <button class="opt" data-k="th" aria-pressed="true">Thực hành · 18</button>
+            <button class="opt" data-k="dh">Nghề độc hại · 10</button>
+          </div>
+        </div>
+      </div>
+      <div class="split" id="p2sp"></div>
+      <p class="cap" id="p2c"></p>
+      <div id="p2out" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><h3>Hệ quả dây chuyền lên bài toán xếp lịch</h3></div>
+    <div class="cb">
+      <div class="g3">
+        <div class="box nu"><span class="i">1</span><span class="x"><b>Nhân số buổi</b><br>Một mô-đun thực hành của lớp 38 SV thành <b>3 ca</b> riêng, mỗi ca cần xưởng và giáo viên.</span></div>
+        <div class="box nu"><span class="i">2</span><span class="x"><b>Nhân nhu cầu xưởng</b><br>Nhu cầu xưởng tăng gấp ba, trong khi xưởng là tài nguyên khan hiếm nhất.</span></div>
+        <div class="box nu"><span class="i">3</span><span class="x"><b>Nhân tải giáo viên</b><br>Cùng nội dung dạy 3 lần — phải tính đủ vào định mức giờ chuẩn.</span></div>
+      </div>
+      <div class="box wn" style="margin-top:13px">
+        <span class="i">!</span>
+        <span class="x">Ràng buộc sức chứa hiện chỉ so <b>sĩ số với sức chứa phòng</b>. Nó không biết rằng một xưởng 30 chỗ vẫn <b>không được</b> nhận nhóm thực hành 30 người.
+          <span class="f">Cần trần cấu hình được theo <b>loại buổi</b> và theo <b>nghề</b>, tách khỏi sức chứa vật lý của phòng.</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 3 ══════════ -->
+<section class="view" id="v-p3">
+  <div class="vh-head">
+    <h2>Ba luồng thời khoá biểu, hai nhịp phát hành</h2>
+    <p class="sub">Trường phát hành ba TKB độc lập với nhịp khác nhau. Học sinh 9+ nằm trong hai luồng cùng lúc — nên không thể xếp riêng rồi ghép lại.</p>
+    <div class="tagrow"><span class="pill p-wn">Ưu tiên cao</span><span class="pill p-mu">Nguồn: 3 file TKB trường công bố</span></div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><h3>So sánh ba luồng</h3></div>
+    <div class="cb tight">
+      <table class="d">
+        <thead><tr><th>Luồng</th><th>Khoá</th><th>Nhịp phát hành</th><th>Khung ngày</th><th>Mô hình phòng</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill p-mu">Cao đẳng</span></td><td>K21, K22</td><td><b>Hằng tuần</b> · tuần 01–46</td><td class="n">10 tiết</td><td>Theo mô-đun</td></tr>
+          <tr><td><span class="pill p-ng">Trung cấp nghề</span></td><td>K42, K43</td><td><b>Hằng tuần</b> · tuần 01–46</td><td class="n">5 tiết, chủ yếu sáng</td><td>Xưởng, phòng chuyên môn</td></tr>
+          <tr><td><span class="pill p-vh">Văn hoá</span></td><td>Khối 10, 11, 12</td><td><b>Ổn định cả kỳ</b> · "áp dụng từ…"</td><td class="n">5 sáng + 5 chiều</td><td><b>Phòng cố định</b> theo lớp</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="lg"><span>Học sinh <b>hệ 9+</b> xuất hiện đồng thời ở luồng <b>trung cấp nghề</b> và <b>văn hoá</b></span></div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><h3>Hai mô hình phòng đối lập nhau</h3></div>
+    <div class="cb">
+      <div class="g2">
+        <div>
+          <div class="stepn"><b>VH</b><span style="font-weight:600">Lớp ở yên, giáo viên di chuyển</span></div>
+          <p style="margin:0 0 10px;font-size:13.5px;color:var(--ink2)">Mỗi lớp văn hoá gắn <b>một phòng cố định</b> suốt kỳ. Trích từ TKB khối 10:</p>
+          <div style="display:flex;gap:5px;flex-wrap:wrap">
+            <span class="tag">10A1→A6-501</span><span class="tag">10A2→A6-502</span><span class="tag">10A3→A6-503</span>
+            <span class="tag">10A4→A6-504</span><span class="tag">10A5→A6-505</span><span class="tag">10A6→A6-506</span>
+            <span class="tag">10A7→A6-507</span><span class="tag">10A8→A6-601</span><span class="tag">10A9→A6-603</span>
+            <span class="tag">10A10→A6-605</span><span class="tag">10A11→A6-602</span>
+          </div>
+          <p class="cap">Xếp phòng gần như không phải bài toán — chỉ cần gán một lần.</p>
+        </div>
+        <div>
+          <div class="stepn"><b>NG</b><span style="font-weight:600">Phòng theo mô-đun, lớp di chuyển</span></div>
+          <p style="margin:0 0 10px;font-size:13.5px;color:var(--ink2)">Nhóm nghề đi tới phòng chuyên môn phù hợp với mô-đun:</p>
+          <table class="d">
+            <tbody>
+              <tr><td><span class="tag">A11-1xx/2xx</span></td><td>Nhà kỹ thuật · phòng thí nghiệm điện</td></tr>
+              <tr><td><span class="tag">A10-XTH</span></td><td>Xưởng thực hành cơ khí</td></tr>
+              <tr><td><span class="tag">A4-5xx</span></td><td>Phòng máy tính · AutoCAD, đồ hoạ</td></tr>
+              <tr><td><span class="tag">B3</span></td><td>Nhà ăn · thực hành chế biến món ăn</td></tr>
+              <tr><td><span class="tag">SÂN A6</span></td><td>Ngoài trời · thực hành trắc địa</td></tr>
+              <tr><td><span class="tag">A7-T1</span></td><td>Nghiệp vụ lễ tân</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="box er" style="margin-top:14px">
+        <span class="i">✕</span>
+        <span class="x">Hệ thống hiện chỉ có <b>một khung thời gian duy nhất</b> cho cả đơn vị.
+          <span class="f">Cần: khung riêng theo luồng, đánh số tuần 01–46, và cơ chế phát hành theo tuần song song với lịch gốc ổn định cả kỳ.</span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 4 ══════════ -->
+<section class="view" id="v-p4">
+  <div class="vh-head">
+    <h2>Đồng giảng và các kiểu ghép lớp</h2>
+    <p class="sub">Hai giáo viên cùng đứng một buổi là chuyện thường ngày trong đào tạo nghề. Tài liệu FTKB liệt kê thêm ba biến thể nữa, tất cả đều cần mô hình dữ liệu riêng.</p>
+    <div class="tagrow"><span class="pill p-wn">Ưu tiên cao</span><span class="pill p-mu">TKB K43 + tài liệu Dạy chung lớp</span></div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><h3>Đồng giảng có thật trong lịch đang chạy</h3><span class="sp"></span><span class="pill p-ng">Trích nguyên văn</span></div>
+    <div class="cb">
+      <div class="g2">
+        <div class="box nu"><span class="i">◆</span><span class="x"><b>Kỹ thuật gia công ống kim loại</b> · lớp 11A2 · phòng A11-104<br>
+          <span style="color:var(--ink2)">Thầy Đ.K.Huynh <b>+</b> Thầy N.V.Hiện</span></span></div>
+        <div class="box nu"><span class="i">◆</span><span class="x"><b>Máy điện và thiết bị điện gia dụng</b> · lớp 11A1 · phòng A11-104<br>
+          <span style="color:var(--ink2)">Thầy L.N.Khanh <b>+</b> Cô N.P.Thuý</span></span></div>
+      </div>
+      <div class="box wn" style="margin-top:12px"><span class="i">!</span>
+        <span class="x">Cả hai giáo viên phải bị <b>chặn khỏi mọi lớp khác</b> trong đúng khung giờ đó, và cả hai đều được tính tải giảng dạy.
+          <span class="f">Quan hệ buổi học ↔ giáo viên đã là nhiều-nhiều ở tầng dữ liệu, nhưng chưa có giao diện khai báo và chưa có ràng buộc tương ứng trong bộ giải.</span></span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><h3>Bốn kiểu ghép cần phân biệt</h3></div>
+    <div class="cb tight">
+      <table class="d">
+        <thead><tr><th>Kiểu</th><th>Tình huống</th><th>Điều hệ thống phải bảo đảm</th></tr></thead>
+        <tbody>
+          <tr><td><b>Đồng giảng</b></td><td>2 GV cùng dạy 1 nhóm, 1 tiết</td><td>Cả hai bị chặn ở lớp khác; cả hai được tính tải</td></tr>
+          <tr><td><b>Ghép giảng đường</b></td><td>Nhiều lớp học chung 1 tiết, 1 GV, 1 phòng lớn</td><td>Buổi học liên kết nhiều lớp; sức chứa cộng dồn</td></tr>
+          <tr><td><b>Tách nhóm trong lớp</b></td><td>Lớp chia đôi: nam học Tin, nữ học May</td><td>Nhóm con của lớp; hai phòng, hai GV, cùng khung giờ</td></tr>
+          <tr><td><b>Luân phiên</b></td><td>Môn 3 tiết, 2 GV thay nhau, 1 tiết dạy chung</td><td>Tách buổi theo GV; riêng tiết chung thì đồng giảng</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 5 ══════════ -->
+<section class="view" id="v-p5">
+  <div class="vh-head">
+    <h2>Tuần thực tập chiếm trọn lịch nhưng không tốn tài nguyên</h2>
+    <p class="sub">Lớp đi thực tập tốt nghiệp vẫn phải hiện trên thời khoá biểu, nhưng không dùng phòng và không chiếm giáo viên của trường. Buổi học thông thường không diễn đạt được điều này.</p>
+    <div class="tagrow"><span class="pill p-wn">Ưu tiên cao</span><span class="pill p-mu">Nguồn: TKB cao đẳng K22 tuần 02</span></div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><h3>Trích TKB cao đẳng K22 · tuần 02</h3><span class="sp"></span>
+      <span class="pill p-mu">4 lớp · 50 tiết/lớp</span></div>
+    <div class="cb tight"><div class="ttw"><table class="tt" id="p5t"><thead></thead><tbody></tbody></table></div></div>
+    <div class="lg"><span>Mọi tiết, mọi ngày đều là thực tập — <b>không mã phòng, không tên giáo viên</b></span></div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><h3>Vì sao không mô hình hoá bằng buổi học thường</h3></div>
+    <div class="cb">
+      <table class="d">
+        <thead><tr><th>Đặc điểm</th><th>Buổi học thường</th><th>Khối thực tập</th></tr></thead>
+        <tbody>
+          <tr><td>Chiếm phòng</td><td>Có — bắt buộc</td><td><b>Không</b></td></tr>
+          <tr><td>Chiếm giáo viên</td><td>Có — bắt buộc</td><td><b>Không</b> (doanh nghiệp hướng dẫn)</td></tr>
+          <tr><td>Chặn lớp</td><td>Có</td><td><b>Có</b> — chặn cả tuần</td></tr>
+          <tr><td>Độ dài</td><td>1–5 tiết</td><td><b>Cả tuần</b>, có thể nhiều tuần</td></tr>
+          <tr><td>Tính vào định mức GV</td><td>Có</td><td><b>Không</b></td></tr>
+        </tbody>
+      </table>
+      <div class="box er" style="margin-top:13px"><span class="i">✕</span>
+        <span class="x">Nếu khai bằng buổi học thường, ràng buộc tài nguyên sẽ đòi phòng và giáo viên cho 50 tiết × 4 lớp — <b>bộ giải sẽ báo bất khả thi</b> dù thực tế không cần gì cả.
+          <span class="f">Cần loại buổi học riêng: chặn lớp, không tiêu tốn tài nguyên, không tính tải. Điều 4 quy chế trường cũng công nhận doanh nghiệp là địa điểm đào tạo hợp lệ.</span></span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════ 6 ══════════ -->
+<section class="view" id="v-p6">
+  <div class="vh-head">
+    <h2>Giờ chuẩn không bằng số tiết</h2>
+    <p class="sub">Một tiết lý thuyết 45 phút và một tiết thực hành 60 phút đều quy đổi thành 1 giờ chuẩn. Đếm tiết thay vì quy đổi sẽ cho ra báo cáo tải giảng dạy sai.</p>
+    <div class="tagrow"><span class="pill p-wn">Ưu tiên cao</span><span class="pill p-mu">TT 07/2017/TT-BLĐTBXH</span><span class="pill p-wn">Cần đối chiếu công báo</span></div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><h3>Máy tính tải giảng dạy</h3><span class="sp"></span>
+      <select id="p6r"><option value="cd">Giảng viên cao đẳng · 380–450</option><option value="tc" selected>Giáo viên trung cấp · 430–510</option><option value="sc">Sơ cấp · 500–580</option></select></div>
+    <div class="cb">
+      <div class="g2">
+        <div><label style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em">Tiết lý thuyết / năm: <b class="mono" id="p6lv" style="color:var(--vh);font-size:15px">300</b></label>
+          <input type="range" id="p6l" min="0" max="700" step="10" value="300" style="margin-top:7px"></div>
+        <div><label style="font-size:12px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em">Tiết thực hành / năm: <b class="mono" id="p6tv" style="color:var(--ng);font-size:15px">200</b></label>
+          <input type="range" id="p6t" min="0" max="700" step="10" value="200" style="margin-top:7px"></div>
+      </div>
+      <div class="g2" style="margin-top:16px">
+        <div class="box nu" style="display:block"><div style="font-size:11.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em">Đếm tiết — cách sai</div>
+          <div class="mono" style="font-size:26px;font-weight:600;margin-top:3px" id="p6a">500</div>
+          <div style="font-size:12px;color:var(--ink2)">tiết, cộng thẳng</div></div>
+        <div class="box ok" style="display:block"><div style="font-size:11.5px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em">Quy đổi giờ chuẩn — đúng</div>
+          <div class="mono" style="font-size:26px;font-weight:600;margin-top:3px;color:var(--ok)" id="p6b">425</div>
+          <div style="font-size:12px;color:var(--ink2)" id="p6d">giờ chuẩn</div></div>
+      </div>
+      <div class="bar" style="margin-top:14px"><i id="p6bar"></i></div>
+      <p class="cap" id="p6c"></p>
+      <div id="p6out" style="margin-top:11px"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><h3>Quy tắc quy đổi</h3></div>
+    <div class="cb tight">
+      <table class="d">
+        <thead><tr><th>Loại giờ giảng</th><th class="n">Thời lượng</th><th class="n">Giờ chuẩn</th><th>Hệ quả</th></tr></thead>
+        <tbody>
+          <tr><td>Lý thuyết</td><td class="n">45 phút</td><td class="n">1,00</td><td>Tiết chuẩn</td></tr>
+          <tr><td>Thực hành</td><td class="n">60 phút</td><td class="n">1,00</td><td>Dài hơn 1/3 nhưng cùng hệ số</td></tr>
+          <tr><td>Tích hợp</td><td class="n">60 phút</td><td class="n">1,00</td><td>Như thực hành</td></tr>
+        </tbody>
+      </table>
+      <div style="padding:14px 17px">
+        <div class="box wn"><span class="i">!</span>
+          <span class="x">Toàn bộ thông tư của Bộ LĐ-TB&amp;XH đã chuyển về Bộ GD&amp;ĐT từ 01/3/2025, và Luật GDNN mới hiệu lực 01/01/2026.
+            <span class="f">Không mã hoá cứng hệ số quy đổi, định mức và trần sĩ số — phải đưa vào cấu hình để đổi được khi thông tư ban hành lại.</span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer><div class="f-in">
+  <b>Nguồn khảo sát:</b> TKB nghề K43 tuần 02, TKB cao đẳng K22 tuần 02, TKB khối văn hoá khối 10 (cuwc.edu.vn) ·
+  Quy chế tổ chức đào tạo QĐ 245/QĐ-CDT (06/6/2024) · Đề án tuyển sinh 2026 · TT 01/2024 và TT 07/2017/TT-BLĐTBXH ·
+  Bộ tài liệu phần mềm FTKB.
+  <br><br>Số liệu đánh dấu <span class="pill p-wn">Cần đối chiếu công báo</span> lấy từ cổng pháp luật thứ cấp, chưa kiểm chứng bản gốc.
+</div></footer>
 
 <div class="scrim" id="scrim"></div>
-<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
-  <div class="dh">
-    <div><h3 id="dTitle">Chi tiết buổi học</h3><div style="font-size:11.5px;color:var(--ink-3)" id="dSub"></div></div>
-    <button class="x" id="dClose" aria-label="Đóng">×</button>
-  </div>
-  <div class="db" id="dBody"></div>
-  <div class="df">
-    <button class="btn" id="dLock">🔒 Khoá tiết</button>
-    <button class="btn" id="dSwap">⇄ Đổi tiết</button>
-    <button class="btn" id="dCloseB">Đóng</button>
-  </div>
+<aside class="dw" id="dw" role="dialog" aria-modal="true" aria-labelledby="dwt">
+  <div class="h"><div><h3 id="dwt"></h3><div style="font-size:12px;color:var(--ink3)" id="dws"></div></div>
+    <button class="xb" id="dwx" aria-label="Đóng">×</button></div>
+  <div class="b" id="dwb"></div>
+  <div class="f"><button class="btn" id="dwc">Đóng</button></div>
 </aside>
-
 <div class="toast" id="toast"></div>
 
 <script>
 "use strict";
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 
-/* ---------- dữ liệu mẫu: khối 11, TC khoá 43 ---------- */
-/* Cột lấy đúng TKB nghề khối 11 (TC khoá 43) tuần 02 do trường công bố.
-   Chú ý: lớp văn hoá 11A3 xuất hiện ở BA cột nghề khác nhau với sĩ số 16/17/30
-   — đây là quan hệ nhiều-nhiều giữa lớp văn hoá và nhóm nghề (BR-7 / G-11). */
-const CLASSES=[
-  {code:"11A3",grp:"G1",nghe:"CNKT Điều khiển tự động",si:16},
-  {code:"11A2",grp:"G2",nghe:"Kỹ thuật máy lạnh & ĐHKK",si:38},
-  {code:"11A1",grp:"G3",nghe:"Điện công nghiệp & dân dụng",si:38},
-  {code:"11A3",grp:"G4",nghe:"Thiết kế nội thất",si:17},
-  {code:"11A3",grp:"G5",nghe:"Công nghệ ô tô 1",si:30}
-];
-const DAYS=[{c:"T2",l:"Thứ hai"},{c:"T3",l:"Thứ ba"},{c:"T4",l:"Thứ tư"},{c:"T5",l:"Thứ năm"},{c:"T6",l:"Thứ sáu"}];
-const SES=[{c:"S",l:"Sáng",p:[1,2,3,4,5]},{c:"C",l:"Chiều",p:[1,2,3,4,5]}];
-
-/* buổi học: grp = nhóm nghề (cột), cls = lớp văn hoá gốc.
-   gv2 = giáo viên đồng giảng (có thật trong TKB của trường). */
-let SESSIONS=[
-  {d:0,s:"S",p:1,len:3,grp:"G1",mod:"Kỹ thuật cảm biến",gv:"Cô N.Thuỷ",gvc:"GV018",room:"A11-204",tier:"vocational",lock:true},
-  {d:0,s:"S",p:1,len:3,grp:"G2",mod:"KT gia công ống kim loại",gv:"Thầy Đ.K.Huynh",gvc:"GV022",gv2:"Thầy N.V.Hiện",room:"A11-104",tier:"vocational"},
-  {d:0,s:"S",p:1,len:3,grp:"G3",mod:"Máy điện & thiết bị điện gia dụng",gv:"Thầy L.N.Khanh",gvc:"GV011",gv2:"Cô N.P.Thuý",room:"A11-104",tier:"vocational"},
-  {d:0,s:"S",p:1,len:3,grp:"G4",mod:"Luật phối cảnh",gv:"Thầy Đ.A.Vũ",gvc:"GV031",room:"A6-301",tier:"vocational"},
-  {d:0,s:"S",p:1,len:3,grp:"G5",mod:"Kỹ thuật điện - điện tử cơ bản",gv:"Thầy N.K.Thụ",gvc:"GV035",room:"A11-203",tier:"vocational"},
-  {d:0,s:"C",p:1,len:2,grp:"G2",mod:"Ngữ văn",gv:"Cô T.T.Mai",gvc:"GV004",room:"A6-305",tier:"culture"},
-  {d:0,s:"C",p:1,len:2,grp:"G3",mod:"Toán",gv:"Thầy N.V.Bình",gvc:"GV002",room:"A6-306",tier:"culture"},
-
-  {d:1,s:"S",p:1,len:3,grp:"G1",mod:"Khí cụ điện & trang bị điện",gv:"Thầy L.N.Khanh",gvc:"GV011",room:"A11-204",tier:"vocational"},
-  {d:1,s:"S",p:1,len:3,grp:"G2",mod:"KT gia công ống kim loại",gv:"Thầy Đ.K.Huynh",gvc:"GV022",gv2:"Thầy N.V.Hiện",room:"A11-104",tier:"vocational"},
-  {d:1,s:"S",p:1,len:3,grp:"G3",mod:"Vẽ điện bằng AutoCAD",gv:"Thầy N.Q.Tâm",gvc:"GV015",gv2:"Cô N.Thuỷ",room:"A4-504",tier:"vocational"},
-  {d:1,s:"S",p:1,len:2,grp:"G4",mod:"Nhân trắc học",gv:"Cô N.H.Minh",gvc:"GV029",room:"A6-301",tier:"vocational"},
-  {d:1,s:"C",p:1,len:3,grp:"G2",mod:"Thực hành lạnh cơ bản",gv:"Thầy N.V.Hiện",gvc:"GV024",room:"A10-XTH",tier:"vocational"},
-
-  {d:2,s:"S",p:1,len:2,grp:"G1",mod:"Kỹ thuật cảm biến",gv:"Cô N.Thuỷ",gvc:"GV018",room:"A11-204",tier:"vocational"},
-  {d:2,s:"S",p:1,len:2,grp:"G2",mod:"Kỹ thuật cơ khí cơ bản",gv:"Thầy N.T.Anh",gvc:"GV021",room:"A10-XTH",tier:"vocational"},
-  {d:2,s:"S",p:1,len:3,grp:"G3",mod:"Máy điện & thiết bị điện gia dụng",gv:"Thầy L.N.Khanh",gvc:"GV011",gv2:"Cô N.P.Thuý",room:"A11-104",tier:"vocational"},
-  {d:2,s:"S",p:1,len:2,grp:"G4",mod:"Vật liệu nội thất",gv:"Thầy N.V.Thiệu",gvc:"GV027",room:"A6-301",tier:"vocational"},
-  {d:2,s:"S",p:1,len:3,grp:"G5",mod:"Kỹ thuật điện - điện tử cơ bản",gv:"Thầy N.K.Thụ",gvc:"GV035",room:"A11-203",tier:"vocational"},
-  {d:2,s:"C",p:1,len:2,grp:"G5",mod:"Tin học ứng dụng",gv:"Cô L.T.Vân",gvc:"GV009",room:"A4-501",tier:"culture"},
-
-  {d:3,s:"S",p:1,len:3,grp:"G1",mod:"Khí cụ điện & trang bị điện",gv:"Thầy L.N.Khanh",gvc:"GV011",room:"A11-204",tier:"vocational"},
-  {d:3,s:"S",p:1,len:3,grp:"G2",mod:"KT gia công ống kim loại",gv:"Thầy Đ.K.Huynh",gvc:"GV022",gv2:"Thầy N.V.Hiện",room:"A11-104",tier:"vocational"},
-  {d:3,s:"S",p:1,len:3,grp:"G3",mod:"Vẽ điện bằng AutoCAD",gv:"Thầy N.Q.Tâm",gvc:"GV015",room:"A4-504",tier:"vocational"},
-  {d:3,s:"S",p:1,len:2,grp:"G4",mod:"Nhân trắc học",gv:"Cô N.H.Minh",gvc:"GV029",room:"A6-301",tier:"vocational"},
-  {d:3,s:"S",p:1,len:3,grp:"G5",mod:"Kỹ thuật điện - điện tử",gv:"Thầy N.K.Thụ",gvc:"GV035",room:"A11-203",tier:"vocational"},
-  {d:3,s:"C",p:1,len:3,grp:"G3",mod:"Thực hành trang bị điện",gv:"Cô N.P.Thuý",gvc:"GV013",room:"A10-XTH",tier:"vocational"},
-
-  {d:4,s:"S",p:1,len:3,grp:"G1",mod:"Khí cụ điện & trang bị điện",gv:"Thầy L.N.Khanh",gvc:"GV011",room:"A11-204",tier:"vocational"},
-  {d:4,s:"S",p:1,len:2,grp:"G2",mod:"Kỹ thuật cơ khí cơ bản",gv:"Thầy N.T.Anh",gvc:"GV021",room:"A10-XTH",tier:"vocational"},
-  {d:4,s:"S",p:1,len:2,grp:"G4",mod:"Vật liệu nội thất",gv:"Thầy N.V.Thiệu",gvc:"GV027",room:"A6-301",tier:"vocational"},
-  /* XUNG ĐỘT LỚP GỐC (BR-7): G5 là nhóm nghề của lớp văn hoá 11A3, mà G1 cũng là
-     nhóm nghề của 11A3 — hai nhóm cùng lớp gốc không thể học cùng giờ. */
-  {d:4,s:"S",p:1,len:2,grp:"G5",mod:"Giáo dục thể chất",gv:"Thầy V.H.Sơn",gvc:"GV041",room:"SÂN A6",tier:"culture",clash:true}
-];
-
-SESSIONS.forEach((s,i)=>s.id="S"+String(i+1).padStart(3,"0"));
-
-/* ---------- điều hướng ---------- */
-const VIEWS={
-  import:["Nhập dữ liệu từ Excel","Bước 1 / 7"],
-  horizon:["Khung thời khoá biểu","Bước 2 / 7"],
-  rules:["Khai báo ràng buộc","Bước 3 / 7"],
-  check:["Kiểm tra khả thi","Bước 4 / 7"],
-  solve:["Xếp lịch tự động","Bước 5 / 7"],
-  grid:["Tinh chỉnh thời khoá biểu","Bước 6 / 7"],
-  publish:["Xuất bản thời khoá biểu","Bước 7 / 7"]
-};
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
-
-function go(key){
-  $$(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+key));
-  $$(".stage").forEach(b=>b.setAttribute("aria-current",String(b.dataset.go===key)));
-  $("#vTitle").textContent=VIEWS[key][0];
-  $("#vCrumb").textContent=VIEWS[key][1];
+/* nav */
+$$(".nav button[data-v]").forEach(b=>b.addEventListener("click",()=>{
+  $$(".view").forEach(v=>v.classList.toggle("on",v.id==="v-"+b.dataset.v));
+  $$(".nav button[data-v]").forEach(x=>x.setAttribute("aria-current",String(x===b)));
   window.scrollTo({top:0,behavior:"smooth"});
-}
-$$(".stage").forEach(b=>b.addEventListener("click",()=>go(b.dataset.go)));
-
-/* ---------- toast ---------- */
-let tTimer;
-function toast(msg){
-  const t=$("#toast");t.textContent=msg;t.classList.add("on");
-  clearTimeout(tTimer);tTimer=setTimeout(()=>t.classList.remove("on"),2600);
-}
-$$("[data-toast]").forEach(b=>b.addEventListener("click",()=>toast(b.dataset.toast)));
-
-/* ---------- giao diện sáng/tối ---------- */
-$("#themeBtn").addEventListener("click",()=>{
-  const cur=document.documentElement.getAttribute("data-theme");
-  const dark=cur?cur==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
-  document.documentElement.setAttribute("data-theme",dark?"light":"dark");
+}));
+$("#thBtn").addEventListener("click",()=>{
+  const c=document.documentElement.getAttribute("data-theme");
+  const d=c?c==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+  document.documentElement.setAttribute("data-theme",d?"light":"dark");
 });
+let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),3000);}
 
-/* ---------- lưới thời khoá biểu ---------- */
-let selected=null, history=[];
-
-function visible(s){
-  const gv=$("#fTeacher").value, ti=$("#fTier").value, se=$("#fSes").value;
-  if(gv&&s.gvc!==gv)return false;
-  if(ti&&s.tier!==ti)return false;
-  if(se&&s.s!==se)return false;
-  return true;
+/* ══ 1 · lớp tách nhóm ══ */
+const G=[{g:"G1",n:"CNKT Điều khiển tự động",si:16},{g:"G4",n:"Thiết kế nội thất",si:17},{g:"G5",n:"Công nghệ ô tô 1",si:30}];
+const BASE=[
+  {g:"G1",s:"S",p:1,len:3,m:"Khí cụ điện & trang bị điện",gv:"Thầy L.N.Khanh",r:"A11-204"},
+  {g:"G4",s:"S",p:1,len:2,m:"Vật liệu nội thất",gv:"Thầy N.V.Thiệu",r:"A6-301"},
+  {g:"G5",s:"S",p:1,len:3,m:"Kỹ thuật điện - điện tử",gv:"Thầy N.K.Thụ",r:"A11-203"}
+];
+let p1pick=null;
+function p1render(){
+  const th=$("#p1t thead"),tb=$("#p1t tbody");
+  th.innerHTML="<tr><th class='ax'>Buổi</th><th class='ax'>Tiết</th>"+
+    G.map(x=>`<th><span class="cn">${x.n}</span><span class="cm">(11A3) · ${x.si} SV</span></th>`).join("")+"</tr>";
+  // Dựng lưới chiếm dụng trước rồi mới sinh HTML — tránh rowspan chồng nhau.
+  // grid[buổi][tiết][cột] = {kind,span} | "cover" | null
+  const grid={};
+  [{c:"S"},{c:"C"}].forEach(ses=>{
+    grid[ses.c]={};
+    for(let p=1;p<=5;p++){grid[ses.c][p]={};G.forEach(col=>grid[ses.c][p][col.g]=null);}
+  });
+  // 1) buổi nghề
+  BASE.forEach(b=>{
+    grid[b.s][b.p][b.g]={kind:"ng",span:b.len,data:b};
+    for(let k=1;k<b.len;k++)if(b.p+k<=5)grid[b.s][b.p+k][b.g]="cover";
+  });
+  // 2) tiết văn hoá 2 tiết, đè lên mọi cột (cả lớp học chung)
+  if(p1pick){
+    const {s,p}=p1pick,len=Math.min(2,5-p+1);
+    G.forEach(col=>{
+      const bad=BASE.some(b=>b.g===col.g&&b.s===s&&p<b.p+b.len&&b.p<p+len);
+      // xoá dấu vết buổi nghề bị đè để không sinh ô trùng
+      for(let q=1;q<=5;q++){
+        const c=grid[s][q][col.g];
+        if(c&&c!=="cover"&&c.kind==="ng"&&q<p+len&&q+c.span>p){
+          for(let k=0;k<c.span;k++)if(q+k<=5)grid[s][q+k][col.g]=null;
+        }
+      }
+      grid[s][p][col.g]={kind:"vh",span:len,bad};
+      for(let k=1;k<len;k++)if(p+k<=5)grid[s][p+k][col.g]="cover";
+    });
+  }
+  let h="";
+  [{c:"S",l:"Sáng"},{c:"C",l:"Chiều"}].forEach(ses=>{
+    for(let p=1;p<=5;p++){
+      h+=`<tr${p===1?" class='dsep'":""}>`;
+      if(p===1)h+=`<td class="ax" rowspan="5"><div class="axs">${ses.l}</div></td>`;
+      h+=`<td class="ax">${p}</td>`;
+      G.forEach(col=>{
+        const c=grid[ses.c][p][col.g];
+        if(c==="cover")return;
+        if(!c){h+=`<td><span class="cell e"></span></td>`;return;}
+        if(c.kind==="vh"){
+          h+=`<td rowspan="${c.span}"><button class="cell" data-vh="1"><span class="blk ${c.bad?"bad":""}">
+            <span class="t"><span class="m">Ngữ văn</span><span class="g">Cô T.T.Mai · cả lớp 11A3</span></span>
+            <span class="r">A6-305</span></span></button></td>`;return;
+        }
+        const b=c.data;
+        h+=`<td rowspan="${c.span}"><button class="cell" data-g="${b.g}"><span class="blk ng">
+          <span class="t"><span class="m">${b.m}</span><span class="g">${b.gv}</span></span>
+          <span class="r">${b.r}</span></span></button></td>`;
+      });
+      h+="</tr>";
+    }
+  });
+  tb.innerHTML=h;
 }
-
-function buildHead(){
-  const h=$("#ttHead");
-  const dup=CLASSES.filter(c=>CLASSES.filter(x=>x.code===c.code).length>1).map(c=>c.grp);
-  h.innerHTML="<tr><th class='ax'>Thứ</th><th class='ax'>Buổi</th><th class='ax'>Tiết</th>"+
-    CLASSES.map(c=>`<th><span class="cls-name">${c.nghe}</span><span class="cls-meta">(${c.code})${dup.includes(c.grp)?" ⚯":""} · ${c.si} SV</span></th>`).join("")+"</tr>";
+function p1eval(){
+  const o=$("#p1out");
+  if(!p1pick){o.innerHTML="";return;}
+  const hit=G.filter(col=>BASE.some(b=>b.g===col.g&&b.s===p1pick.s&&p1pick.p<b.p+b.len&&b.p<p1pick.p+2));
+  if(hit.length){
+    o.innerHTML=`<div class="box er"><span class="i">✕</span><span class="x">
+      <b>Không xếp được.</b> ${hit.length} nhóm nghề của chính lớp 11A3 đang học khung giờ này:
+      ${hit.map(x=>`<b>${x.n}</b> (${x.si} SV)`).join(", ")}.
+      <span class="f">Học sinh không thể vừa ngồi xưởng vừa ngồi lớp văn hoá. Ràng buộc BR-7 phải chặn phương án này ngay khi dựng mô hình.</span></span></div>`;
+  }else{
+    o.innerHTML=`<div class="box ok"><span class="i">✓</span><span class="x">
+      <b>Xếp được.</b> Cả ba nhóm nghề của 11A3 đều rảnh — 63 học sinh cùng vào tiết Ngữ văn.
+      <span class="f">Đây là khung giờ duy nhất còn trống trong buổi sáng thứ Sáu. Hệ thống phải tự tìm ra nó thay vì để cán bộ dò tay.</span></span></div>`;
+  }
 }
+$$("#p1o .opt").forEach(b=>b.addEventListener("click",()=>{
+  $$("#p1o .opt").forEach(x=>x.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true");
+  p1pick={s:b.dataset.s,p:+b.dataset.p};p1render();p1eval();
+}));
+$("#p1r").addEventListener("click",()=>{
+  p1pick=null;$$("#p1o .opt").forEach(x=>x.setAttribute("aria-pressed","false"));p1render();p1eval();
+});
+p1render();
 
-function buildBody(){
-  const b=$("#ttBody");
-  let html="";
-  const sesFilter=$("#fSes").value;
-  DAYS.forEach((day,di)=>{
-    const blocks=SES.filter(s=>!sesFilter||s.c===sesFilter);
-    const rowspanDay=blocks.reduce((n,s)=>n+s.p.length,0);
-    let firstOfDay=true;
-    blocks.forEach(ses=>{
-      ses.p.forEach((per,pi)=>{
-        const covered=new Set();
-        html+=`<tr${(firstOfDay&&pi===0)?' class="day-sep"':''}>`;
-        if(firstOfDay&&pi===0) html+=`<td class="ax" rowspan="${rowspanDay}"><div class="ax-day">${day.c}</div></td>`;
-        if(pi===0) html+=`<td class="ax" rowspan="${ses.p.length}"><div class="ax-ses">${ses.l}</div></td>`;
-        html+=`<td class="ax">${per}</td>`;
-        CLASSES.forEach(c=>{
-          const s=SESSIONS.find(x=>x.d===di&&x.s===ses.c&&x.grp===c.grp&&x.p===per&&visible(x));
-          if(s){
-            const span=Math.min(s.len,ses.p.length-pi);
-            const gvTxt=s.gv2?`${s.gv} · ${s.gv2}`:s.gv;
-            html+=`<td rowspan="${span}"><button class="cell" data-id="${s.id}">
-              <span class="blk ${s.tier==="vocational"?"voc":""} ${s.clash?"clash":""} ${selected===s.id?"sel":""}">
-                <span class="txt"><span class="mod">${s.mod}</span><span class="gv">${gvTxt}</span></span>
-                <span class="rm">${s.room}</span>
-              </span>${s.lock?'<span class="lk">🔒</span>':''}</button></td>`;
-          } else {
-            const cont=SESSIONS.find(x=>x.d===di&&x.s===ses.c&&x.grp===c.grp&&x.p<per&&x.p+x.len>per&&visible(x));
-            if(!cont) html+=`<td><span class="cell empty" aria-hidden="true"></span></td>`;
-          }
+/* ══ 2 · trần sĩ số ══ */
+const CAPS={lt:{v:35,l:"Lý thuyết · trần 35"},th:{v:18,l:"Nghề thường · trần 18"},dh:{v:10,l:"Nghề độc hại · trần 10"}};
+let p2k="th";
+function p2(){
+  const n=+$("#p2s").value,cap=CAPS[p2k].v;
+  $("#p2v").textContent=n;$("#p2m").textContent=CAPS[p2k].l;
+  const k=Math.ceil(n/cap),base=Math.floor(n/k),rem=n%k;
+  const sizes=Array.from({length:k},(_,i)=>base+(i<rem?1:0));
+  $("#p2sp").innerHTML=sizes.map((s,i)=>
+    `<i style="flex-grow:${s};background:${i%2?"var(--vh)":"var(--ng)"}">${s}</i>`).join("");
+  $("#p2c").textContent=`Lớp ${n} học sinh, trần ${cap} → phải chia ${k} ca: ${sizes.join(" + ")}.`;
+  const o=$("#p2out");
+  if(k===1){o.innerHTML=`<div class="box ok"><span class="i">✓</span><span class="x">Lớp vừa trần, học nguyên ca. Không phát sinh thêm buổi.</span></div>`;}
+  else{o.innerHTML=`<div class="box er"><span class="i">×${k}</span><span class="x">
+    Mỗi mô-đun thực hành phải nhân thành <b>${k} buổi riêng</b> — cần ${k} lượt xưởng và ${k} lượt giáo viên.
+    <span class="f">Với lớp 38 SV như 11A1 và 11A2 trong TKB thật, đây là ${k} ca cho <b>mỗi</b> mô-đun thực hành của học kỳ.</span></span></div>`;}
+}
+$("#p2s").addEventListener("input",p2);
+$$("#v-p2 .opt").forEach(b=>b.addEventListener("click",()=>{
+  $$("#v-p2 .opt").forEach(x=>x.setAttribute("aria-pressed","false"));
+  b.setAttribute("aria-pressed","true");p2k=b.dataset.k;p2();
+}));
+p2();
+
+/* ══ 5 · tuần thực tập ══ */
+(function(){
+  const C=[{n:"CLT CNKT Điều khiển & TĐH",c:"K22",si:19,t:"THỰC TẬP TỐT NGHIỆP"},
+           {n:"CLT Điện công nghiệp",c:"K22",si:18,t:"THỰC TẬP TỐT NGHIỆP"},
+           {n:"CLT KT Máy lạnh & ĐHKK",c:"K22",si:12,t:"THỰC TẬP TỐT NGHIỆP"},
+           {n:"CLT Công nghệ ô tô",c:"K22",si:34,t:"THỰC TẬP SẢN XUẤT"}];
+  const D=["T2","T3","T4","T5","T6"];
+  $("#p5t thead").innerHTML="<tr><th class='ax'>Thứ</th><th class='ax'>Buổi</th><th class='ax'>Tiết</th>"+
+    C.map(x=>`<th><span class="cn">${x.n}</span><span class="cm">${x.c} · ${x.si} SV</span></th>`).join("")+"</tr>";
+  let h="";
+  D.forEach((d,di)=>{
+    [{l:"Sáng",p:[1,2,3,4,5]},{l:"Chiều",p:[6,7,8,9,10]}].forEach((ses,si)=>{
+      ses.p.forEach((p,pi)=>{
+        h+=`<tr${(si===0&&pi===0)?" class='dsep'":""}>`;
+        if(si===0&&pi===0)h+=`<td class="ax" rowspan="10"><div class="axd">${d}</div></td>`;
+        if(pi===0)h+=`<td class="ax" rowspan="5"><div class="axs">${ses.l}</div></td>`;
+        h+=`<td class="ax">${p}</td>`;
+        C.forEach(col=>{
+          if(pi===0)h+=`<td rowspan="5"><button class="cell" data-tt="${col.t}" data-cl="${col.n}">
+            <span class="blk ng"><span class="t"><span class="m">${col.t}</span><span class="g">— không phòng, không GV —</span></span></span></button></td>`;
         });
-        html+="</tr>";
-        firstOfDay=false;
+        h+="</tr>";
       });
     });
   });
-  b.innerHTML=html;
-  b.querySelectorAll(".cell[data-id]").forEach(c=>c.addEventListener("click",()=>openDetail(c.dataset.id)));
-  $("#clashN").textContent=SESSIONS.filter(s=>s.clash).length;
-}
-
-function render(){buildHead();buildBody();}
-
-/* bộ lọc giáo viên */
-(function fillTeachers(){
-  const seen=new Map();
-  SESSIONS.forEach(s=>seen.set(s.gvc,s.gv));
-  const sel=$("#fTeacher");
-  [...seen.entries()].sort((a,b)=>a[1].localeCompare(b[1],"vi")).forEach(([c,n])=>{
-    const o=document.createElement("option");o.value=c;o.textContent=`${c} — ${n}`;sel.appendChild(o);
-  });
+  $("#p5t tbody").innerHTML=h;
 })();
-["fTeacher","fTier","fSes","fView"].forEach(id=>$("#"+id).addEventListener("change",()=>{
-  if(id==="fView") toast("Bản mẫu: chế độ xem theo "+$("#fView").selectedOptions[0].textContent.toLowerCase()+" sẽ đổi trục cột.");
-  render();
-}));
 
-/* ---------- ngăn chi tiết ---------- */
-function openDetail(id){
-  const s=SESSIONS.find(x=>x.id===id);if(!s)return;
-  selected=id;render();
-  const cls=CLASSES.find(c=>c.grp===s.grp);
-  const siblings=CLASSES.filter(c=>c.code===cls.code&&c.grp!==cls.grp);
-  $("#dTitle").textContent=s.mod;
-  $("#dSub").textContent=`${cls.nghe} (${cls.code}) · ${DAYS[s.d].l} · ${s.s==="S"?"Sáng":"Chiều"} tiết ${s.p}${s.len>1?"–"+(s.p+s.len-1):""}`;
-  $("#dBody").innerHTML=`
-    <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px">
-      <span class="pill ${s.tier==="vocational"?"p-amber":"p-blue"}">${s.tier==="vocational"?"Khối nghề":"Khối văn hoá"}</span>
-      <span class="pill p-mute">${s.len>=3?"Thực hành":"Lý thuyết"} · ${s.len} tiết</span>
-      ${s.gv2?'<span class="pill p-mute">Đồng giảng</span>':""}
-      ${s.lock?'<span class="pill p-mute">🔒 Đã khoá</span>':""}
-      ${s.clash?'<span class="pill p-red">Xung đột lớp gốc</span>':""}
-    </div>
-    ${s.clash?`<div class="issue err"><span class="ic">✕</span><span class="m"><b>Lớp văn hoá ${cls.code} bị xếp trùng giờ với chính mình.</b>
-      Nhóm nghề <b>${cls.nghe}</b> đang học tiết ${s.p}–${s.p+s.len-1} ${DAYS[s.d].l}, nhưng nhóm <b>CNKT Điều khiển tự động</b> của cùng lớp ${cls.code} cũng học đúng khung giờ này.
-      <span class="fix">Cách sửa: dời một trong hai nhóm sang buổi khác. Đây là ràng buộc BR-7 — một lớp văn hoá tách nhiều nhóm nghề thì các nhóm không được trùng giờ.</span></span></div>`:""}
-    ${siblings.length?`<div class="issue warn"><span class="ic">⚯</span><span class="m">Lớp <b>${cls.code}</b> tách thành <b>${siblings.length+1} nhóm nghề</b>: ${[cls,...siblings].map(x=>x.nghe+" ("+x.si+" SV)").join(" · ")}.
-      <span class="fix">Tổng ${[cls,...siblings].reduce((n,x)=>n+x.si,0)} SV. Các nhóm này không bao giờ được xếp trùng giờ nhau.</span></span></div>`:""}
-    <dl class="kv">
-      <dt>Mã buổi</dt><dd class="mono">${s.id}</dd>
-      <dt>Mô-đun</dt><dd>${s.mod}</dd>
-      <dt>Giáo viên</dt><dd>${s.gv} <span class="tag">${s.gvc}</span>${s.gv2?`<br>${s.gv2} <span class="tag">đồng giảng</span>`:""}</dd>
-      <dt>Nhóm nghề</dt><dd>${cls.nghe} · ${cls.si} SV</dd>
-      <dt>Lớp văn hoá</dt><dd><span class="tag">${cls.code}</span></dd>
-      <dt>Phòng</dt><dd class="mono">${s.room}</dd>
-      <dt>Thời gian</dt><dd>${DAYS[s.d].l}, ${s.s==="S"?"buổi sáng":"buổi chiều"}, tiết ${s.p}${s.len>1?"–"+(s.p+s.len-1):""}</dd>
-    </dl>`;
-  $("#dLock").textContent=s.lock?"🔓 Mở khoá":"🔒 Khoá tiết";
-  $("#scrim").classList.add("on");$("#drawer").classList.add("on");
-  $("#dClose").focus();
+/* ══ 6 · giờ chuẩn ══ */
+const QUOTA={cd:[380,450,"cao đẳng"],tc:[430,510,"trung cấp"],sc:[500,580,"sơ cấp"]};
+function p6(){
+  const lt=+$("#p6l").value,th=+$("#p6t").value;
+  $("#p6lv").textContent=lt;$("#p6tv").textContent=th;
+  const naive=lt+th;
+  // LT: 45' = 1 giờ chuẩn. TH: 60' = 1 giờ chuẩn -> tiết TH 45' quy đổi 0,75
+  const std=Math.round(lt*1+th*0.75);
+  $("#p6a").textContent=naive.toLocaleString("vi-VN");
+  $("#p6b").textContent=std.toLocaleString("vi-VN");
+  const q=QUOTA[$("#p6r").value],[lo,hi,nm]=q;
+  $("#p6d").textContent=`giờ chuẩn · định mức ${lo}–${hi}`;
+  const pct=Math.min(100,std/hi*100);
+  const bar=$("#p6bar");bar.style.width=pct+"%";
+  $("#p6bar").parentElement.classList.toggle("f",std>=lo&&std<=hi);
+  $("#p6c").textContent=`Chênh lệch giữa hai cách tính: ${Math.abs(naive-std).toLocaleString("vi-VN")} giờ.`;
+  const o=$("#p6out");
+  if(std<lo)o.innerHTML=`<div class="box wn"><span class="i">↓</span><span class="x"><b>Chưa đủ định mức</b> — thiếu ${lo-std} giờ chuẩn so với mức tối thiểu của giáo viên ${nm}.<span class="f">Nếu đếm tiết thay vì quy đổi, hệ thống sẽ báo ${naive} và tưởng đã đủ.</span></span></div>`;
+  else if(std>hi)o.innerHTML=`<div class="box er"><span class="i">↑</span><span class="x"><b>Vượt định mức</b> ${std-hi} giờ chuẩn — phải tính giờ vượt hoặc phân bớt.<span class="f">Ràng buộc định mức trong bộ giải phải so bằng giờ chuẩn, không phải số tiết.</span></span></div>`;
+  else o.innerHTML=`<div class="box ok"><span class="i">✓</span><span class="x">Nằm trong định mức ${lo}–${hi} giờ chuẩn của giáo viên ${nm}.</span></div>`;
 }
-function closeDetail(){
-  $("#scrim").classList.remove("on");$("#drawer").classList.remove("on");
-  selected=null;render();
-}
-$("#dClose").addEventListener("click",closeDetail);
-$("#dCloseB").addEventListener("click",closeDetail);
-$("#scrim").addEventListener("click",closeDetail);
-document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#drawer").classList.contains("on"))closeDetail();});
+["p6l","p6t","p6r"].forEach(i=>$("#"+i).addEventListener("input",p6));
+$("#p6r").addEventListener("change",p6);
+p6();
 
-$("#dLock").addEventListener("click",()=>{
-  const s=SESSIONS.find(x=>x.id===selected);if(!s)return;
-  s.lock=!s.lock;openDetail(s.id);
-  toast(s.lock?"Đã khoá tiết. Bộ giải sẽ giữ nguyên vị trí này.":"Đã mở khoá tiết.");
-});
-$("#dSwap").addEventListener("click",()=>{
-  const s=SESSIONS.find(x=>x.id===selected);if(!s)return;
-  if(s.clash){
-    history.push(JSON.parse(JSON.stringify(SESSIONS)));
-    s.s="C";s.p=1;s.clash=false;
-    $("#btnUndo").disabled=false;
-    closeDetail();
-    toast("Đã dời sang buổi chiều thứ Sáu. Giải lại cục bộ: 2 buổi thay đổi, 317 buổi giữ nguyên.");
-    $("#statePill").className="pill p-ok";
-    $("#statePill").textContent="Đã giải · không còn xung đột";
-  } else {
-    toast("Bản mẫu: hệ thống sẽ gợi ý các ô đổi được, tô xanh nếu thoả mọi ràng buộc.");
-  }
-});
-$("#btnUndo").addEventListener("click",()=>{
-  if(!history.length)return;
-  SESSIONS=history.pop();
-  $("#btnUndo").disabled=!history.length;
-  $("#statePill").className="pill p-ok";
-  $("#statePill").textContent="Đã giải · 319/319 tiết";
-  render();toast("Đã hoàn tác thay đổi.");
-});
-$("#btnClash").addEventListener("click",()=>{
-  const s=SESSIONS.find(x=>x.clash);
-  if(!s){toast("Không còn xung đột nào.");return;}
-  $("#fTeacher").value="";$("#fTier").value="";$("#fSes").value="";
-  render();openDetail(s.id);
-});
+/* ══ drawer dùng chung ══ */
+function openDw(t,s,b){$("#dwt").textContent=t;$("#dws").textContent=s;$("#dwb").innerHTML=b;
+  $("#scrim").classList.add("on");$("#dw").classList.add("on");$("#dwx").focus();}
+function closeDw(){$("#scrim").classList.remove("on");$("#dw").classList.remove("on");}
+$("#dwx").addEventListener("click",closeDw);$("#dwc").addEventListener("click",closeDw);
+$("#scrim").addEventListener("click",closeDw);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#dw").classList.contains("on"))closeDw();});
 
-/* ---------- ràng buộc mềm ---------- */
-const RULES=[
-  {k:"compact_schedule",t:"Dồn lịch gọn",s:"Phạt khi lịch của lớp rải quá nhiều ngày",w:5},
-  {k:"teacher_load_balance",t:"Cân bằng tải giáo viên",s:"Phạt khi tiết dạy phân bổ không đều giữa các ngày",w:4},
-  {k:"idle_teacher",t:"Trống giờ giáo viên",s:"Phạt khi giáo viên có khoảng trống giữa các tiết",w:3},
-  {k:"room_change",t:"Đổi phòng",s:"Phạt khi một lớp phải đổi phòng nhiều lần trong ngày",w:2}
-];
-function drawRules(){
-  $("#ruleList").innerHTML=RULES.map(r=>`
-    <div class="rule">
-      <span class="nm"><span class="t">${r.t}</span><span class="s">${r.s}</span></span>
-      <input type="range" min="0" max="10" value="${r.w}" data-k="${r.k}" aria-label="${r.t}">
-      <span class="wv" id="w-${r.k}">${r.w}</span>
-    </div>`).join("");
-  $$("#ruleList input").forEach(i=>i.addEventListener("input",()=>{
-    const r=RULES.find(x=>x.k===i.dataset.k);r.w=+i.value;
-    $("#w-"+r.k).textContent=r.w;
-  }));
-}
-drawRules();
-$("#btnReset").addEventListener("click",()=>{
-  RULES[0].w=5;RULES[1].w=4;RULES[2].w=3;RULES[3].w=2;drawRules();toast("Đã khôi phục trọng số mặc định.");
+document.addEventListener("click",e=>{
+  const c=e.target.closest(".cell[data-g]");
+  if(c){const b=BASE.find(x=>x.g===c.dataset.g),col=G.find(x=>x.g===c.dataset.g);
+    openDw(b.m,`${col.n} · ${col.si} SV`,`<dl class="kv">
+      <dt>Nhóm nghề</dt><dd>${col.n}</dd><dt>Lớp văn hoá</dt><dd><span class="tag">11A3</span></dd>
+      <dt>Sĩ số nhóm</dt><dd>${col.si} SV</dd><dt>Giáo viên</dt><dd>${b.gv}</dd>
+      <dt>Phòng</dt><dd class="mono">${b.r}</dd><dt>Thời lượng</dt><dd>${b.len} tiết liền</dd></dl>
+      <div class="box nu" style="margin-top:14px"><span class="i">⚯</span><span class="x">
+      Nhóm này thuộc lớp <b>11A3</b> — lớp còn hai nhóm nghề khác. Khi nhóm này học, cả lớp 11A3 không thể có tiết văn hoá.</span></div>`);return;}
+  const t=e.target.closest(".cell[data-tt]");
+  if(t){openDw(t.dataset.tt,t.dataset.cl,`<div class="box nu"><span class="i">◷</span><span class="x">
+    Chiếm <b>toàn bộ 50 tiết</b> trong tuần (10 tiết × 5 ngày).</span></div>
+    <dl class="kv" style="margin-top:14px"><dt>Chặn lớp</dt><dd>Có — cả tuần</dd>
+    <dt>Chiếm phòng</dt><dd><b>Không</b></dd><dt>Chiếm giáo viên</dt><dd><b>Không</b></dd>
+    <dt>Tính định mức</dt><dd><b>Không</b></dd><dt>Địa điểm</dt><dd>Doanh nghiệp</dd></dl>
+    <div class="box wn" style="margin-top:14px"><span class="i">!</span><span class="x">
+    Khai bằng buổi học thường sẽ khiến bộ giải đòi 50 tiết phòng và giáo viên cho mỗi lớp — và báo bất khả thi.</span></div>`);}
 });
-
-/* ---------- khung giờ ---------- */
-function hz(){
-  const d=+$("#hzDays").value,p=+$("#hzPer").value,w=+$("#hzWeeks").value;
-  const t=d*p*w;
-  $("#hzCalc").textContent=t;$("#hzTotal").textContent=t+" tiết/tuần";
-}
-["hzDays","hzPer","hzMorn","hzWeeks"].forEach(i=>$("#"+i).addEventListener("input",hz));
-
-/* ---------- kiểm tra khả thi ---------- */
-$("#btnCheck").addEventListener("click",()=>{
-  const b=$("#btnCheck");b.disabled=true;b.textContent="Đang kiểm tra…";
-  setTimeout(()=>{b.disabled=false;b.textContent="Kiểm tra lại";toast("Đã kiểm tra 13 phép: 1 lỗi chặn, 1 cảnh báo.");},900);
-});
-
-/* ---------- bộ giải ---------- */
-let solveTimer=null;
-$("#btnSolve").addEventListener("click",()=>{
-  const bar=$("#solveBar"),fill=bar.querySelector("i");
-  bar.classList.remove("done");
-  $("#btnSolve").disabled=true;$("#btnStop").disabled=false;
-  $("#c1").textContent="Đang giải";$("#c2").textContent="Chờ";
-  $("#o1").textContent="—";$("#o2").textContent="—";
-  let pct=0;
-  const phases=[[10,"Đang dựng mô hình"],[45,"Pha 1 · tìm phương án khả thi"],[75,"Pha 2 · tối ưu mục tiêu"],[92,"Đang xử lý kết quả"]];
-  solveTimer=setInterval(()=>{
-    pct+=Math.random()*7+2;
-    if(pct>=100){
-      pct=100;clearInterval(solveTimer);solveTimer=null;
-      fill.style.width="100%";bar.classList.add("done");
-      $("#solvePhase").textContent="Hoàn tất — 319/319 tiết đã xếp";
-      $("#solvePct").textContent="100%";
-      $("#c1").textContent="Đã giải";$("#c2").textContent="Đã giải";
-      $("#o1").textContent="1 284";$("#o2").textContent="2 507";
-      $("#btnSolve").disabled=false;$("#btnStop").disabled=true;
-      toast("Xếp lịch xong. Chuyển sang bước tinh chỉnh để rà soát.");
-      return;
-    }
-    fill.style.width=pct+"%";
-    $("#solvePct").textContent=Math.floor(pct)+"%";
-    const ph=phases.filter(p=>pct>=p[0]).pop();
-    $("#solvePhase").textContent=ph?ph[1]:"Đang khởi tạo";
-    if(pct>50)$("#c1").textContent="Đã giải",$("#o1").textContent="1 284",$("#c2").textContent="Đang giải";
-  },320);
-});
-$("#btnStop").addEventListener("click",()=>{
-  if(solveTimer){clearInterval(solveTimer);solveTimer=null;}
-  $("#btnSolve").disabled=false;$("#btnStop").disabled=true;
-  $("#solvePhase").textContent="Đã dừng — giữ phương án pha 1";
-  toast("Đã dừng bộ giải. Phương án khả thi của pha 1 vẫn được giữ.");
-});
-
-/* ---------- xuất bản ---------- */
-$("#btnPub").addEventListener("click",()=>{
-  $("#statePill").className="pill p-ok";
-  $("#statePill").textContent="Đã xuất bản · phiên bản 3";
-  toast("Đã xuất bản. Giáo viên và sinh viên xem được lịch mới.");
-});
-
-hz();render();
 </script>

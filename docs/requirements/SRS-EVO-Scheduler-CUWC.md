@@ -25,6 +25,25 @@ Tài liệu gồm ba lớp thông tin, phân biệt rõ để người đọc bi
 
 Mã yêu cầu: `FR-x.y` (chức năng), `NFR-x` (phi chức năng), `BR-x` (quy tắc nghiệp vụ), `CT-x` (ràng buộc xếp lịch).
 
+> **Nguyên tắc ưu tiên:** những gì **[ĐÃ CÓ]** trong hệ thống là **ưu tiên thấp nhất** — liệt kê chỉ để biết nền tảng đang đứng ở đâu, không phải việc cần làm. Trọng tâm của tài liệu là **[THIẾU]** và **[ĐỀ XUẤT]**, rút ra từ nghiệp vụ thật của trường.
+
+---
+
+## 0b. Sáu bài toán trọng tâm
+
+Toàn bộ giá trị của dự án nằm ở sáu bài toán dưới đây. Đây là những thứ phần mềm xếp lịch phổ thông **không giải được**, và đều rút ra từ thời khoá biểu trường đang phát hành cùng quy chế đào tạo nội bộ.
+
+| # | Bài toán | Vì sao khó | Mức |
+|---|---|---|---|
+| **1** | **Lớp văn hoá tách nhiều nhóm nghề** — 11A3 → 3 nhóm (16/17/30 SV) | Quan hệ nhiều-nhiều, vô hình trên bản in. Xếp sai là học sinh trùng giờ với chính mình | **Chặn** |
+| **2** | **Trần sĩ số thực hành 18** trong khi lớp tới 44 SV | Nhân ba số buổi, nhu cầu xưởng và tải giáo viên. Là nguyên nhân gốc của bài toán 1 | **Chặn** |
+| **3** | **Ba luồng TKB, hai nhịp phát hành** | CĐ và TC phát hành theo tuần, văn hoá ổn định cả kỳ; học sinh 9+ nằm trong hai luồng | Cao |
+| **4** | **Đồng giảng và các kiểu ghép lớp** | Hai GV một buổi, ghép giảng đường, tách nhóm, luân phiên — bốn mô hình khác nhau | Cao |
+| **5** | **Tuần thực tập trọn gói** | Chiếm trọn lịch nhưng không tốn phòng, không tốn giáo viên | Cao |
+| **6** | **Giờ chuẩn ≠ số tiết** | LT 45 phút và TH 60 phút cùng bằng 1 giờ chuẩn; đếm tiết là sai định mức | Cao |
+
+**Bản mẫu tương tác** minh hoạ sáu bài toán này: [prototype.html](./prototype.html).
+
 ---
 
 ## 1. Bối cảnh và phạm vi
@@ -179,7 +198,9 @@ evo-scheduler-service/
 └── docker-compose*   PostgreSQL + Redis + backend + frontend
 ```
 
-**Quyết định kỹ thuật đáng chú ý (đã có, cần giữ):**
+> **[ĐÃ CÓ] — ưu tiên thấp nhất.** Mục 4 và 5.1 chỉ mô tả nền tảng đang có để biết điểm xuất phát. Việc cần làm nằm ở §5.3 (khoảng trống), §6 (yêu cầu **[THIẾU]** / **[ĐỀ XUẤT]**) và §7.3 (tình huống đặc thù).
+
+**Quyết định kỹ thuật đáng chú ý (đã có, cần giữ nguyên):**
 
 - **Mô hình bộ giải theo khoảng thời gian.** Mỗi buổi có hai nhóm biến: tiết bắt đầu và tài nguyên được chọn. Xung đột diễn đạt bằng `IntervalVar` + `AddNoOverlap`/`AddCumulative`. Cách cũ (bool cho mỗi bộ ba buổi × tiết × phòng) sinh hơn 190 nghìn biến trên dữ liệu một trường thật và chạy 600 giây không kết luận được.
 - **Giải hai pha.** Pha 1 dựng mô hình không hàm mục tiêu → dừng ngay khi có phương án đầu tiên. Pha 2 dựng mô hình đầy đủ, lấy nghiệm pha 1 làm gợi ý (`AddHint`) rồi tối ưu. Hết giờ ở pha 2 vẫn giữ được nghiệm pha 1.
@@ -220,7 +241,18 @@ evo-scheduler-service/
 
 ### 5.3 Khoảng trống mô hình dữ liệu **[THIẾU]**
 
-Đây là những phát hiện quan trọng nhất từ khảo sát mã nguồn, ảnh hưởng trực tiếp tới việc hệ thống có dùng được cho một trường thật hay không:
+Đây là những phát hiện quan trọng nhất, ảnh hưởng trực tiếp tới việc hệ thống có dùng được cho trường thật hay không. Cột cuối ánh xạ sang **sáu bài toán trọng tâm** ở §0b:
+
+| Khoảng trống | Thuộc bài toán |
+|---|---|
+| G-11 | ① Lớp tách nhóm |
+| G-14 | ② Trần sĩ số |
+| G-3, G-15 | ③ Ba luồng lịch |
+| G-10 | ④ Đồng giảng |
+| G-12 | ⑤ Tuần thực tập |
+| G-13 | ⑥ Giờ chuẩn |
+| G-1, G-2, G-7 | Nền tảng — chặn mọi bài toán trên |
+
 
 | # | Khoảng trống | Hệ quả nghiệp vụ | Ưu tiên |
 |---|---|---|---|
