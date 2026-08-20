@@ -209,6 +209,8 @@ input[type=range]{accent-color:var(--ng);width:110px}
     <a data-v="mon"><i>≡</i>Mô-đun<span class="cnt" id="nMon">18</span></a>
   </div>
   <div class="navg"><p>Cấu hình</p>
+    <a data-v="ctdt"><i>◈</i>Chương trình ĐT<span class="cnt">3</span></a>
+    <a data-v="hedt"><i>⊞</i>Hệ &amp; khoá học<span class="cnt">7</span></a>
     <a data-v="rb"><i>⚖</i>Ràng buộc</a>
     <a data-v="khung"><i>◷</i>Khung giờ</a>
   </div>
@@ -220,7 +222,11 @@ input[type=range]{accent-color:var(--ng);width:110px}
     <h2 id="tTitle">Tổng quan</h2>
     <span class="bc" id="tCrumb">Học kỳ I · 2026–2027</span>
     <span class="sp"></span>
-    <select id="selKhoi"><option>Khối 11 · TC khoá 43</option><option>Khối 10 · TC khoá 44</option><option>Cao đẳng K22</option></select>
+    <select id="selKhoi">
+      <option value="sb">Song bằng 9+ · K43 khối 11</option>
+      <option value="cd">Cao đẳng · K22</option>
+      <option value="vh">Văn hoá · khối 11</option>
+    </select>
     <button class="btn" id="thBtn" title="Sáng/tối">◐</button>
   </header>
   <div class="wrap">
@@ -388,6 +394,61 @@ input[type=range]{accent-color:var(--ng);width:110px}
     </div>
   </section>
 
+  <!-- ===== CHƯƠNG TRÌNH ĐÀO TẠO ===== -->
+  <section class="view" id="v-ctdt">
+    <div class="card">
+      <div class="ch"><h3>Ba chương trình đào tạo</h3><span class="sp"></span>
+        <span class="pill p-wn">Mỗi chương trình một cấu hình riêng</span>
+        <button class="btn sm" data-toast="Bản mẫu: mở biểu mẫu thêm chương trình đào tạo.">+ Thêm</button></div>
+      <div class="cb">
+        <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">Trường vận hành ba chương trình có <b>khung giờ, nhịp phát hành và mô hình phòng khác nhau</b>. Chọn một chương trình để xem và sửa cấu hình.</p>
+        <div class="cb t0" style="padding:0"><table class="d">
+          <thead><tr><th>Chương trình</th><th class="n">Lớp/nhóm</th><th class="n">Tiết/ngày</th><th>Nhịp phát hành</th><th>Ca học</th><th>Mô hình phòng</th><th></th></tr></thead>
+          <tbody id="tbCt"></tbody></table></div>
+      </div>
+    </div>
+    <div class="card" id="ctDetail"></div>
+  </section>
+
+  <!-- ===== HỆ & KHOÁ HỌC ===== -->
+  <section class="view" id="v-hedt">
+    <div class="card">
+      <div class="ch"><h3>Hệ đào tạo và khoá học đang chạy</h3><span class="sp"></span>
+        <button class="btn sm" data-toast="Bản mẫu: mở biểu mẫu mở khoá học mới.">+ Mở khoá mới</button></div>
+      <div class="tabs"><button class="on" data-ht="all">Tất cả</button><button data-ht="cd">Cao đẳng</button><button data-ht="sb">Song bằng 9+</button><button data-ht="tc">Trung cấp</button></div>
+      <div class="cb t0"><div class="scroll"><table class="d">
+        <thead><tr><th>Khoá</th><th>Hệ đào tạo</th><th>Năm học</th><th class="n">Số lớp</th><th class="n">Sĩ số</th><th>Học văn hoá</th><th>Trạng thái</th><th></th></tr></thead>
+        <tbody id="tbHe"></tbody></table></div></div>
+      <div class="lg"><span>Hệ <b>song bằng 9+</b> chiếm 90% chỉ tiêu trung cấp — vừa học chương trình GDTX cấp THPT vừa học nghề, 3 năm.</span></div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Cấu hình hệ song bằng 9+</h3><span class="sp"></span><span class="pill p-er">Phức tạp nhất</span></div>
+      <div class="cb">
+        <div class="g2">
+          <div>
+            <div style="font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px">Quỹ giờ văn hoá (GDTX cấp THPT)</div>
+            <dl class="kv"><dt>Chương trình</dt><dd>GDTX cấp THPT</dd>
+              <dt>Số môn</dt><dd>7 môn + HĐTN + Sinh hoạt</dd>
+              <dt>Đơn vị lớp</dt><dd>Lớp văn hoá (11A1…11A11)</dd>
+              <dt>Phòng</dt><dd>Cố định theo lớp</dd>
+              <dt>Tính vào giờ nghề</dt><dd><b>Không</b> — Điều 3.5 quy chế</dd></dl>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px">Quỹ giờ nghề (trung cấp)</div>
+            <dl class="kv"><dt>Chương trình</dt><dd>Trung cấp nghề</dd>
+              <dt>Số mô-đun</dt><dd>Theo nghề, 9–14 mô-đun</dd>
+              <dt>Đơn vị lớp</dt><dd><b>Nhóm nghề</b> (tách từ lớp VH)</dd>
+              <dt>Phòng</dt><dd>Xưởng, phòng chuyên môn</dd>
+              <dt>Trần thực hành</dt><dd>18 HS/ca</dd></dl>
+          </div>
+        </div>
+        <div class="box er" style="margin-top:13px"><span class="i">⚯</span><span class="x">
+          <b>Hai đơn vị lớp khác nhau trên cùng một học sinh.</b> Em học văn hoá theo <b>lớp 11A3</b>, học nghề theo <b>nhóm nghề</b> — mà lớp 11A3 tách thành 3 nhóm nghề khác nhau.
+          <span class="f">Đây là lý do phải có ràng buộc <span class="tag">group_same_class</span>: khi bất kỳ nhóm nghề nào của lớp đang học, cả lớp không thể có tiết văn hoá.</span></span></div>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== RÀNG BUỘC ===== -->
   <section class="view" id="v-rb">
     <div class="card">
@@ -468,6 +529,8 @@ const VT={dash:["Tổng quan","Học kỳ I · 2026–2027"],tkb:["Thời khoá 
   solve:["Xếp lịch tự động","Bộ giải CP-SAT"],check:["Kiểm tra khả thi","Tiền kiểm số học"],
   lop:["Lớp & nhóm nghề","14 nhóm · 11 lớp văn hoá"],gv:["Giáo viên","Định mức 550 tiết chuẩn"],
   phong:["Phòng & xưởng","54 phòng"],mon:["Mô-đun","Chương trình khối 11"],
+  ctdt:["Chương trình đào tạo","Cao đẳng · Song bằng · Trung cấp"],
+  hedt:["Hệ & khoá học","7 khoá đang chạy"],
   rb:["Ràng buộc","Cứng & mềm"],khung:["Khung giờ","T2–T6 · 10 tiết/ngày"]};
 function go(v){
   $$(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
@@ -587,6 +650,42 @@ let SES=[
 ];
 const DAYS=[{c:"T2",l:"Thứ hai"},{c:"T3",l:"Thứ ba"},{c:"T4",l:"Thứ tư"},{c:"T5",l:"Thứ năm"},{c:"T6",l:"Thứ sáu"}];
 
+/* --- luồng CAO ĐẲNG K22: 10 tiết/ngày, tuần này thực tập trọn gói --- */
+const CD_COLS=[{g:"C1",vh:"K22",si:19,nghe:"CLT CNKT Điều khiển & TĐH"},
+  {g:"C2",vh:"K22",si:18,nghe:"CLT Điện công nghiệp"},
+  {g:"C3",vh:"K22",si:12,nghe:"CLT KT Máy lạnh & ĐHKK"},
+  {g:"C4",vh:"K22",si:34,nghe:"CLT Công nghệ ô tô"}];
+const CD_SES=(()=>{const out=[];let i=0;
+  CD_COLS.forEach(c=>{for(let d=0;d<5;d++){["S","C"].forEach(s=>{
+    out.push({id:"C"+(++i),d,s,p:1,len:5,g:c.g,m:c.g==="C4"?"Thực tập sản xuất":"Thực tập tốt nghiệp",
+      gv:"— doanh nghiệp hướng dẫn —",gvc:"",r:"",t:"tt"});});}});
+  return out;})();
+
+/* --- luồng VĂN HOÁ khối 11: phòng cố định, học buổi chiều --- */
+const VH_COLS=[{g:"V1",vh:"11A1",si:38,nghe:"Lớp 11A1"},{g:"V2",vh:"11A2",si:38,nghe:"Lớp 11A2"},
+  {g:"V3",vh:"11A3",si:63,nghe:"Lớp 11A3"},{g:"V4",vh:"11A4",si:31,nghe:"Lớp 11A4"},
+  {g:"V5",vh:"11A5",si:44,nghe:"Lớp 11A5"}];
+const VH_ROOM={V1:"A6-501",V2:"A6-502",V3:"A6-503",V4:"A6-504",V5:"A6-505"};
+const VH_SES=(()=>{
+  const mon=[["Ngữ văn","Cô T.T.Mai"],["Toán","Thầy N.V.Bình"],["Tiếng Anh","Cô P.T.Hà"],
+    ["Vật lí","Thầy N.V.Long"],["Hoá học","Cô Đ.N.Tú"],["Lịch sử","Cô L.Duyên"],["Địa lí","Cô N.T.Trang"]];
+  const out=[];let i=0;
+  VH_COLS.forEach((c,ci)=>{for(let d=0;d<5;d++){
+    // tiết 1–2, 3–4 (2 tiết liền), tiết 5 đứng riêng — không tràn khỏi buổi 5 tiết
+    [[1,2],[3,2],[5,1]].forEach(([p,len])=>{
+      const m=mon[(ci+d+p)%mon.length];
+      out.push({id:"V"+(++i),d,s:"C",p,len,g:c.g,m:m[0],gv:m[1],gvc:"",r:VH_ROOM[c.g],t:"vh"});
+    });}});
+  return out;})();
+
+const STREAMS={
+  sb:{cols:COLS_SB(),ses:null,per:5,lbl:"Song bằng 9+ · K43 khối 11",note:"5 nhóm nghề đầu · buổi sáng học nghề"},
+  cd:{cols:CD_COLS,ses:CD_SES,per:5,lbl:"Cao đẳng · K22",note:"10 tiết/ngày · tuần 02 toàn thực tập"},
+  vh:{cols:VH_COLS,ses:VH_SES,per:5,lbl:"Văn hoá · khối 11",note:"Phòng cố định theo lớp · khối 11 học chiều"}
+};
+function COLS_SB(){return GROUPS.slice(0,5);}
+let stream="sb";
+
 /* ================= TỔNG QUAN ================= */
 function std(t){return Math.round(t.lt*1+t.th*0.75);}
 (function(){
@@ -613,14 +712,17 @@ function flt(x){
   return true;
 }
 function ttRender(){
+  const st=STREAMS[stream];
+  const COLS=stream==="sb"?COLS_SB():st.cols;
+  const DATA=stream==="sb"?SES:st.ses;
   const th=$("#tt thead"),tb=$("#tt tbody");
   th.innerHTML="<tr><th class='ax'>Thứ</th><th class='ax'>Buổi</th><th class='ax'>Tiết</th>"+
-    COLS.map(c=>`<th><span class="cn">${c.nghe}</span><span class="cm">(${c.vh}) · ${c.si} SV</span></th>`).join("")+"</tr>";
+    COLS.map(c=>`<th><span class="cn">${c.nghe}</span><span class="cm">(${c.vh}) · ${c.si} ${stream==="cd"?"SV":"HS"}</span></th>`).join("")+"</tr>";
   // lưới chiếm dụng
   const grid={};
   DAYS.forEach((_,d)=>{grid[d]={};["S","C"].forEach(s=>{grid[d][s]={};
     for(let p=1;p<=5;p++){grid[d][s][p]={};COLS.forEach(c=>grid[d][s][p][c.g]=null);}});});
-  SES.forEach(x=>{
+  DATA.forEach(x=>{
     if(!COLS.some(c=>c.g===x.g))return;
     const cell=grid[x.d][x.s][x.p];if(!cell)return;
     grid[x.d][x.s][x.p][x.g]={s:x};
@@ -638,22 +740,31 @@ function ttRender(){
           const c=grid[d][ses.c][p][col.g];
           if(c==="cov")return;
           if(!c){h+=`<td><button class="cell e" data-drop="${d}|${ses.c}|${p}|${col.g}" title="Ô trống"></button></td>`;return;}
-          const x=c.s,vis=flt(x);shown+=vis?1:0;
+          const x=c.s,vis=stream==="sb"?flt(x):true;shown+=vis?1:0;
           const gv=x.gv2?`${x.gv} · ${x.gv2}`:x.gv;
+          const cls=x.t==="ng"?"ng":x.t==="tt"?"tt2":"";
           h+=`<td rowspan="${x.len}"><button class="cell" data-id="${x.id}">
-            <span class="blk ${x.t==="ng"?"ng":""} ${x.bad?"bad":""} ${sel===x.id?"sel":""} ${vis?"":"dim"}">
+            <span class="blk ${cls} ${x.bad?"bad":""} ${sel===x.id?"sel":""} ${vis?"":"dim"}">
             <span class="t"><span class="m">${x.m}</span><span class="g">${gv}</span></span>
-            <span class="r">${x.r}</span></span>${x.lock?'<span class="lk">🔒</span>':""}</button></td>`;
+            ${x.r?`<span class="r">${x.r}</span>`:""}</span>${x.lock?'<span class="lk">🔒</span>':""}</button></td>`;
         });
         h+="</tr>";
       }
     });
   });
   tb.innerHTML=h;
-  $("#cntShow").textContent=shown+" buổi hiển thị";
+  $("#cntShow").textContent=shown+" buổi · "+st.note;
   const nb=SES.filter(x=>x.bad).length;
   $("#nChk").textContent=nb+1;$("#kIss").textContent=nb+1;
+  $("#nTkb").textContent=DATA.length;
 }
+$("#selKhoi").addEventListener("change",e=>{
+  stream=e.target.value;sel=null;
+  const dis=stream!=="sb";
+  ["fGv","fPh","fTier"].forEach(i=>{$("#"+i).disabled=dis;if(dis)$("#"+i).value="";});
+  ttRender();
+  toast("Đang xem luồng: "+STREAMS[stream].lbl);
+});
 (function(){
   const gset=new Map(),pset=new Set();
   SES.forEach(x=>{gset.set(x.gvc,x.gv);pset.add(x.r);});
@@ -678,6 +789,7 @@ document.addEventListener("click",e=>{
   const c=e.target.closest(".cell[data-id]");if(c){openSes(c.dataset.id);return;}
   const d=e.target.closest(".cell[data-drop]");
   if(d){
+    if(stream!=="sb"){toast("Bản mẫu: thao tác chuyển tiết đang minh hoạ ở luồng Song bằng 9+.");return;}
     if(!sel){toast("Bấm một buổi học trước, rồi bấm ô trống để chuyển.");return;}
     const [dd,ss,pp,gg]=d.dataset.drop.split("|");
     const x=SES.find(y=>y.id===sel);
@@ -691,7 +803,42 @@ document.addEventListener("click",e=>{
   }
 });
 function openSes(id){
-  const x=SES.find(y=>y.id===id);if(!x)return;sel=id;ttRender();
+  const pool=stream==="sb"?SES:STREAMS[stream].ses;
+  const x=pool.find(y=>y.id===id);if(!x)return;sel=id;ttRender();
+  if(x.t==="tt"){ // khối thực tập
+    const c=STREAMS.cd.cols.find(y=>y.g===x.g);
+    $("#dwt").textContent=x.m;$("#dws").textContent=`${c.nghe} · ${DAYS[x.d].l} · ${x.s==="S"?"Sáng":"Chiều"}`;
+    $("#dwb").innerHTML=`<div class="box nu"><span class="i">◷</span><span class="x">
+      Chiếm <b>toàn bộ tiết trong tuần</b> — 10 tiết × 5 ngày = 50 tiết.</span></div>
+      <dl class="kv" style="margin-top:13px"><dt>Lớp</dt><dd>${c.nghe} · ${c.si} SV</dd>
+      <dt>Chặn lớp</dt><dd>Có — cả tuần</dd><dt>Chiếm phòng</dt><dd><b>Không</b></dd>
+      <dt>Chiếm giáo viên</dt><dd><b>Không</b></dd><dt>Tính định mức GV</dt><dd><b>Không</b></dd>
+      <dt>Địa điểm</dt><dd>Doanh nghiệp</dd></dl>
+      <div class="box wn" style="margin-top:13px"><span class="i">!</span><span class="x">
+      Khai bằng buổi học thường sẽ khiến bộ giải đòi 50 tiết phòng và giáo viên cho mỗi lớp — rồi báo bất khả thi.
+      <span class="f">Cần loại buổi riêng: chặn lớp nhưng không tiêu tốn tài nguyên.</span></span></div>`;
+    $("#dwf").innerHTML='<button class="btn" id="bCl2">Đóng</button>';
+    $("#bCl2").onclick=closeDw;
+    $("#scrim").classList.add("on");$("#dw").classList.add("on");$("#dwx").focus();return;
+  }
+  if(stream==="vh"){ // tiết văn hoá
+    const c=VH_COLS.find(y=>y.g===x.g);
+    const grp=GROUPS.filter(g=>g.vh===c.vh);
+    $("#dwt").textContent=x.m;$("#dws").textContent=`${c.nghe} · ${DAYS[x.d].l} · chiều tiết ${x.p}–${x.p+x.len-1}`;
+    $("#dwb").innerHTML=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <span class="pill p-vh">Khối văn hoá</span><span class="pill p-mu">Lý thuyết · ${x.len} tiết</span></div>
+      <dl class="kv"><dt>Lớp</dt><dd><span class="tag">${c.vh}</span> · ${c.si} HS</dd>
+      <dt>Giáo viên</dt><dd>${x.gv}</dd><dt>Phòng</dt><dd class="mono">${x.r} <span class="tag">cố định</span></dd>
+      <dt>Ca học</dt><dd>Chiều — khối 11</dd></dl>
+      ${grp.length>1?`<div class="box wn" style="margin-top:13px"><span class="i">⚯</span><span class="x">
+      Lớp <b>${c.vh}</b> tách <b>${grp.length} nhóm nghề</b>: ${grp.map(g=>g.nghe+" ("+g.si+")").join(" · ")}.
+      <span class="f">Tiết văn hoá này áp cho cả ${c.si} HS, nên cả ${grp.length} nhóm nghề phải rảnh cùng lúc.</span></span></div>`:""}
+      <div class="box nu" style="margin-top:11px"><span class="i">◈</span><span class="x">
+      <b>Phòng cố định theo lớp</b> — lớp ở yên, giáo viên di chuyển. Xếp phòng không phải bài toán ở luồng này.</span></div>`;
+    $("#dwf").innerHTML='<button class="btn" id="bCl3">Đóng</button>';
+    $("#bCl3").onclick=closeDw;
+    $("#scrim").classList.add("on");$("#dw").classList.add("on");$("#dwx").focus();return;
+  }
   const col=GROUPS.find(c=>c.g===x.g);
   const sib=GROUPS.filter(c=>c.vh===col.vh&&c.g!==col.g);
   let warn="";
@@ -904,6 +1051,88 @@ $("#tbRec").innerHTML=REC.map(([n,a,v,on],i)=>`<tr><td>${n}</td><td>${a}</td><td
 $$("#tbRec .sw-toggle").forEach(b=>b.addEventListener("click",()=>{
   const on=b.getAttribute("aria-pressed")==="true";b.setAttribute("aria-pressed",String(!on));
   toast((!on?"Đã bật: ":"Đã tắt: ")+REC[+b.dataset.i][0]);}));
+
+/* ================= CHƯƠNG TRÌNH ĐÀO TẠO ================= */
+const PROGS=[
+  {k:"cd",n:"Cao đẳng",lop:7,tiet:10,nhip:"Hằng tuần · tuần 01–46",ca:"Cả ngày",
+   ph:"Theo mô-đun",dv:"Lớp cao đẳng",si:"9–34",tg:"2,5–3 năm",vh:"Không",
+   note:"Sĩ số nhỏ, học cả ngày. Có tuần thực tập trọn gói chiếm cả 50 tiết.",
+   dac:["Tuần thực tập tốt nghiệp / sản xuất chiếm trọn tuần","Không chiếm phòng và giáo viên khi đi thực tập","Liên thông từ trung cấp: 1–1,5 năm"]},
+  {k:"sb",n:"Song bằng 9+",lop:14,tiet:10,nhip:"VH ổn định cả kỳ · nghề hằng tuần",ca:"Nửa ngày VH · nửa ngày nghề",
+   ph:"VH cố định · nghề theo mô-đun",dv:"Lớp VH + nhóm nghề",si:"14–44",tg:"3 năm",vh:"Có — GDTX cấp THPT",
+   note:"Khối lớn nhất và khó nhất. Một học sinh thuộc hai đơn vị lớp khác nhau.",
+   dac:["Lớp văn hoá tách thành nhiều nhóm nghề","Hai quỹ giờ độc lập, không cộng dồn","Ca văn hoá cố định theo khối, ca nghề là phần bù"]},
+  {k:"tc",n:"Trung cấp thường",lop:4,tiet:5,nhip:"Hằng tuần · tuần 01–46",ca:"Chủ yếu sáng",
+   ph:"Xưởng, phòng chuyên môn",dv:"Lớp trung cấp",si:"20–35",tg:"1,5–2 năm",vh:"Không",
+   note:"Đã tốt nghiệp THPT nên không học văn hoá — đơn giản nhất trong ba chương trình.",
+   dac:["Không vướng ràng buộc ca văn hoá","Toàn thời gian dành cho mô-đun nghề","Dùng chung xưởng với hệ song bằng"]}
+];
+let curProg="sb";
+function ctRender(){
+  $("#tbCt").innerHTML=PROGS.map(p=>`<tr class="${p.k===curProg?"bad":""}" style="${p.k===curProg?"background:var(--vh-bg)":""}">
+    <td><b>${p.n}</b><br><span style="font-size:11.5px;color:var(--ink3)">${p.tg}</span></td>
+    <td class="n">${p.lop}</td><td class="n">${p.tiet}</td><td>${p.nhip}</td>
+    <td><span class="pill ${p.k==="sb"?"p-ng":"p-mu"}">${p.ca}</span></td><td>${p.ph}</td>
+    <td><button class="btn sm" data-ct="${p.k}">${p.k===curProg?"Đang xem":"Cấu hình"}</button></td></tr>`).join("");
+  $$("#tbCt [data-ct]").forEach(b=>b.addEventListener("click",()=>{curProg=b.dataset.ct;ctRender();}));
+  const p=PROGS.find(x=>x.k===curProg);
+  $("#ctDetail").innerHTML=`
+    <div class="ch"><h3>Cấu hình · ${p.n}</h3><span class="sp"></span>
+      <span class="pill ${p.k==="sb"?"p-ng":"p-mu"}">${p.lop} lớp/nhóm</span>
+      <button class="btn sm" data-toast="Bản mẫu: lưu cấu hình chương trình ${p.n}.">Lưu</button></div>
+    <div class="cb">
+      <div class="box nu"><span class="i">◈</span><span class="x">${p.note}</span></div>
+      <div class="g2" style="margin-top:13px">
+        <div>
+          <div style="font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Khung thời gian</div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <label class="fld"><span>Tiết/ngày</span><input type="number" value="${p.tiet}" min="1" max="16"></label>
+            <label class="fld"><span>Ngày/tuần</span><input type="number" value="5" min="1" max="7"></label>
+            <label class="fld"><span>Tiết buổi sáng</span><input type="number" value="5" min="0" max="16"></label>
+          </div>
+          <div style="margin-top:11px;display:flex;gap:9px;flex-wrap:wrap">
+            <label class="fld"><span>Nhịp phát hành</span><select><option${p.nhip.includes("Hằng tuần")?" selected":""}>Hằng tuần</option><option${p.nhip.includes("ổn định")?" selected":""}>Ổn định cả kỳ</option></select></label>
+            <label class="fld"><span>Đơn vị xếp lịch</span><select><option>${p.dv}</option></select></label>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Đặc thù cần bộ giải xử lý</div>
+          ${p.dac.map(d=>`<div class="box nu" style="padding:7px 11px;margin-bottom:7px"><span class="i">·</span><span class="x" style="font-size:12.5px">${d}</span></div>`).join("")}
+        </div>
+      </div>
+      <div style="margin-top:13px">
+        <div style="font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Học văn hoá</div>
+        <div class="box ${p.vh==="Không"?"nu":"wn"}"><span class="i">${p.vh==="Không"?"—":"◑"}</span><span class="x">
+          <b>${p.vh}</b>${p.vh!=="Không"?" — học sinh mang hai quỹ giờ độc lập, phải xếp vào cùng một tuần vật lý.":" — toàn bộ thời gian dành cho chương trình nghề."}</span></div>
+      </div>
+    </div>`;
+  $$("#ctDetail [data-toast]").forEach(b=>b.addEventListener("click",()=>toast(b.dataset.toast)));
+}
+ctRender();
+
+/* ================= HỆ & KHOÁ HỌC ================= */
+const COURSES=[
+  {kh:"K22",he:"cd",hen:"Cao đẳng chính quy",nam:"2025–2028",lop:4,si:83,vh:"—",st:"Đang chạy"},
+  {kh:"K22-LT",he:"cd",hen:"Cao đẳng liên thông",nam:"2026–2027",lop:3,si:47,vh:"—",st:"Đang chạy"},
+  {kh:"K43",he:"sb",hen:"Trung cấp song bằng 9+",nam:"2025–2028",lop:14,si:405,vh:"Khối 11",st:"Đang chạy"},
+  {kh:"K44",he:"sb",hen:"Trung cấp song bằng 9+",nam:"2026–2029",lop:11,si:352,vh:"Khối 10",st:"Đang chạy"},
+  {kh:"K42",he:"sb",hen:"Trung cấp song bằng 9+",nam:"2024–2027",lop:11,si:318,vh:"Khối 12",st:"Đang chạy"},
+  {kh:"K43-TC",he:"tc",hen:"Trung cấp thường",nam:"2026–2027",lop:2,si:58,vh:"—",st:"Đang chạy"},
+  {kh:"K41",he:"sb",hen:"Trung cấp song bằng 9+",nam:"2023–2026",lop:0,si:0,vh:"—",st:"Đã tốt nghiệp"}
+];
+let heTab="all";
+function heRender(){
+  const rows=heTab==="all"?COURSES:COURSES.filter(c=>c.he===heTab);
+  $("#tbHe").innerHTML=rows.map(c=>`<tr><td><b>${c.kh}</b></td>
+    <td>${c.hen}</td><td>${c.nam}</td><td class="n">${c.lop||"—"}</td><td class="n">${c.si||"—"}</td>
+    <td>${c.vh==="—"?'<span style="color:var(--ink3)">—</span>':'<span class="pill p-vh">'+c.vh+'</span>'}</td>
+    <td>${c.st==="Đang chạy"?'<span class="pill p-ok">Đang chạy</span>':'<span class="pill p-mu">Đã tốt nghiệp</span>'}</td>
+    <td><button class="btn sm" data-toast="Bản mẫu: mở cấu hình khoá ${c.kh}.">Cấu hình</button></td></tr>`).join("");
+  $$("#tbHe [data-toast]").forEach(b=>b.addEventListener("click",()=>toast(b.dataset.toast)));
+}
+$$("#v-hedt .tabs button").forEach(b=>b.addEventListener("click",()=>{
+  $$("#v-hedt .tabs button").forEach(x=>x.classList.toggle("on",x===b));heTab=b.dataset.ht;heRender();}));
+heRender();
 
 /* ================= CA HỌC THEO KHỐI ================= */
 const SHIFTS=[{k:"Khối 12",lop:11,vh:"S",ph:"A6-5xx, A6-6xx"},
