@@ -37,7 +37,7 @@ Toàn bộ giá trị của dự án nằm ở sáu bài toán dưới đây. Đ
 |---|---|---|---|
 | **1** | **Lớp văn hoá tách nhiều nhóm nghề** — 11A3 → 3 nhóm (16/17/30 SV) | Quan hệ nhiều-nhiều, vô hình trên bản in. Xếp sai là học sinh trùng giờ với chính mình | **Chặn** |
 | **2** | **Trần sĩ số thực hành 18** trong khi lớp tới 44 SV | Nhân ba số buổi, nhu cầu xưởng và tải giáo viên. Là nguyên nhân gốc của bài toán 1 | **Chặn** |
-| **3** | **Ba luồng TKB, hai nhịp phát hành** | CĐ và TC phát hành theo tuần, văn hoá ổn định cả kỳ; học sinh 9+ nằm trong hai luồng | Cao |
+| **3** | **Ca học cố định theo khối + ba luồng TKB** | Khối 12 và 10 học văn hoá sáng, khối 11 chiều → hai khối dồn về 11 xưởng cùng buổi chiều. CĐ và TC phát hành theo tuần, văn hoá ổn định cả kỳ | **Chặn** |
 | **4** | **Đồng giảng và các kiểu ghép lớp** | Hai GV một buổi, ghép giảng đường, tách nhóm, luân phiên — bốn mô hình khác nhau | Cao |
 | **5** | **Tuần thực tập trọn gói** | Chiếm trọn lịch nhưng không tốn phòng, không tốn giáo viên | Cao |
 | **6** | **Giờ chuẩn ≠ số tiết** | LT 45 phút và TH 60 phút cùng bằng 1 giờ chuẩn; đếm tiết là sai định mức | Cao |
@@ -162,13 +162,48 @@ Mô hình `StudentGroup` hiện tại **không diễn đạt được điều n�
 
 > **Rủi ro pháp lý cần lưu ý:** toàn bộ hệ thống thông tư của Bộ LĐ-TB&XH được Bộ GD&ĐT tiếp quản từ 01/3/2025, và Luật GDNN mới có hiệu lực 01/01/2026. Các thông tư trên vẫn là căn cứ hiện hành nhưng nhiều khả năng sẽ được ban hành lại. **Không mã hoá cứng** hệ số giờ chuẩn, định mức và trần sĩ số — phải đưa vào cấu hình.
 
-### 2.6 Thông tin cần trường cung cấp để chốt yêu cầu
+### 2.6 Cơ sở vật chất — số liệu trường cung cấp
+
+| Nhóm phòng | Số lượng | Sức chứa | Ghi chú |
+|---|---|---|---|
+| Phòng văn hoá lớn | **26** | 40–50 HS | |
+| Phòng văn hoá nhỏ | **5** | < 30 HS | |
+| Xưởng ô tô | **3** | | |
+| Xưởng điện tầng 1 | **4** | | Điện, Máy lạnh & ĐHKK |
+| Xưởng điện tầng 2 | **2 + 2** | | 2 phòng Điện tử, 2 phòng Điện dân dụng |
+| Phòng máy tính | **5** | 18–24 máy | |
+| Phòng lý thuyết nghề | **4 to + 5 nhỏ** | | **Dùng chung với khối văn hoá** |
+
+**Tổng: 31 phòng văn hoá · 11 xưởng · 5 phòng máy · 9 phòng lý thuyết (chung).**
+
+**Định mức giảng dạy: 550 tiết/giáo viên** — con số vận hành thực tế của trường. Dùng số này thay cho khoảng 430–510 suy ra từ thông tư.
+
+> Phòng lý thuyết nghề **dùng chung** với khối văn hoá là một ràng buộc tranh chấp tài nguyên: mô hình dữ liệu phải cho phép một phòng phục vụ nhiều khối, và bộ giải phải biết hai khối đang cạnh tranh cùng một nhóm phòng.
+
+### 2.7 Ca học văn hoá theo khối — ràng buộc cứng
+
+| Khối | Ca văn hoá | Ca học nghề |
+|---|---|---|
+| **Khối 12** | Sáng | Chiều |
+| **Khối 11** | Chiều | Sáng |
+| **Khối 10** | Sáng | Chiều |
+
+Học sinh hệ 9+ học văn hoá nửa ngày, học nghề nửa ngày còn lại. Ca của khối là **cố định**, nên ca học nghề được suy ra hoàn toàn — bộ giải không được tự chọn.
+
+**Điểm nghẽn suy ra từ cấu hình này:**
+
+- **Khối 10 và khối 12 cùng học văn hoá buổi sáng** → 22 lớp tranh 31 phòng văn hoá buổi sáng (vẫn đủ), nhưng **cùng dồn về 11 xưởng buổi chiều** — đây là nút thắt nặng nhất trong tuần, càng chặt hơn khi mỗi lớp còn phải chia ca theo trần 18 HS.
+- **Buổi chiều chỉ khối 11 dùng phòng văn hoá** → 11 lớp trên 31 phòng, dư nhiều.
+
+Hệ thống cần: khai báo ca theo khối (`shift_by_grade`), tự suy ca nghề (`shift_complement`), và cảnh báo nghẽn xưởng khi hai khối cùng ca.
+
+### 2.8 Thông tin còn cần trường cung cấp
 
 1. **Tổng số giáo viên** và phân bổ theo khoa.
-2. **Danh mục phòng, xưởng kèm sức chứa** — trang cơ sở vật chất của trường không công bố số liệu.
-3. **Mốc giờ từng tiết 1–10** (mới chỉ biết Chào cờ 7h25).
-4. **Sĩ số thực tế** đang học (con số 2.000 là *chỉ tiêu*, không phải quy mô thực).
-5. **Phân hiệu Huế** xếp lịch độc lập hay chung, và **giáo viên có dạy chéo hai cơ sở không** — nếu có, đây là ràng buộc lớn với bộ giải.
+2. **Mốc giờ từng tiết 1–10** (mới chỉ biết Chào cờ 7h25).
+3. **Sĩ số thực tế** đang học (con số 2.000 là *chỉ tiêu*, không phải quy mô thực).
+4. **Phân hiệu Huế** xếp lịch độc lập hay chung, và **giáo viên có dạy chéo hai cơ sở không** — nếu có, đây là ràng buộc lớn với bộ giải.
+5. **Nghề nào thuộc diện nặng nhọc, độc hại** (trần thực hành 10 thay vì 18).
 
 ---
 
@@ -247,7 +282,7 @@ evo-scheduler-service/
 |---|---|
 | G-11 | ① Lớp tách nhóm |
 | G-14 | ② Trần sĩ số |
-| G-3, G-15 | ③ Ba luồng lịch |
+| G-3, G-15, **G-16**, **G-17** | ③ Ca học theo khối + ba luồng lịch |
 | G-10 | ④ Đồng giảng |
 | G-12 | ⑤ Tuần thực tập |
 | G-13 | ⑥ Giờ chuẩn |
@@ -271,6 +306,8 @@ evo-scheduler-service/
 | G-13 | Không phân biệt **giờ chuẩn** với **giờ thực dạy** | `quota_standard_hours` đang so trực tiếp với số tiết. Theo TT 07/2017, 45 phút lý thuyết = 1 giờ chuẩn nhưng 60 phút thực hành = 1 giờ chuẩn — hệ số khác nhau. Báo cáo tải giảng dạy hiện sẽ sai | Cao |
 | G-14 | Không có **trần sĩ số riêng cho lý thuyết và thực hành** | Quy định: lý thuyết ≤ 35, thực hành ≤ 18 (≤ 10 nghề độc hại). Lớp văn hoá thực tế tới 44 SV. `capacity_limit` chỉ so sức chứa phòng, không áp trần theo loại buổi — đây chính là lý do lớp 9+ phải tách nhóm | **Chặn** |
 | G-15 | Không có **nhịp phát hành theo tuần** song song với lịch gốc ổn định | Trường phát hành TKB cao đẳng và trung cấp **hằng tuần** (tuần 01–46) nhưng TKB văn hoá **ổn định cả kỳ**. Hệ thống chỉ có một khung `weeks` duy nhất | Cao |
+| G-16 | Không có **thuộc tính ca học của khối** | Khối 12 và 10 học văn hoá sáng, khối 11 chiều; ca nghề là phần bù. Không có ràng buộc này, bộ giải sẽ xếp tiết văn hoá khối 11 vào buổi sáng — sai hoàn toàn thực tế vận hành | **Chặn** |
+| G-17 | Không diễn đạt được **phòng dùng chung giữa các khối** | 4 phòng lý thuyết to + 5 nhỏ dùng chung khối văn hoá và khối nghề. Không mô hình hoá thì bộ giải không thấy tranh chấp | Cao |
 
 ---
 
@@ -404,6 +441,10 @@ evo-scheduler-service/
 | CT-9 | Tổng giờ dạy không vượt định mức giáo viên | `quota_limit` |
 | CT-10 | Các buổi trong nhóm phải liền kề nhau | `adjacency` |
 | CT-11 | Các buổi loại trừ nhau không trùng tiết | `exclusion` |
+| CT-18 | **Tiết văn hoá phải nằm đúng ca của khối** (12 sáng · 11 chiều · 10 sáng) | **[THIẾU]** — `shift_by_grade` |
+| CT-19 | **Buổi học nghề nằm ở ca bù của ca văn hoá** | **[THIẾU]** — `shift_complement` |
+| CT-20 | **Trần sĩ số theo loại buổi** (LT 35 · TH 18 · độc hại 10), tách khỏi sức chứa phòng | **[THIẾU]** — `capacity_by_type` |
+| CT-21 | **Hai nhóm nghề cùng lớp văn hoá không trùng giờ** | **[THIẾU]** — `group_same_class` |
 
 ### 7.2 Ràng buộc mềm — mục tiêu tối ưu
 
@@ -433,6 +474,9 @@ Rút ra từ tài liệu *Dạy chung lớp* và thực tế trường nghề �
 | BR-9 | **Trần sĩ số theo loại buổi**: lý thuyết ≤ 35, thực hành ≤ 18, nghề độc hại ≤ 10 | Trần cấu hình được theo `session_type` và theo nghề (G-14) |
 | BR-10 | **Chào cờ thứ Hai 7h25**: sự kiện chặn toàn trường | Xếp trước, khoá cứng cho mọi lớp (FR-6.7) |
 | BR-11 | **Hai quỹ giờ độc lập cho học sinh 9+**: giờ văn hoá không tính vào thời gian đào tạo nghề (Điều 3.5 quy chế trường) | Tách hạch toán tiến độ theo từng khối, không cộng dồn |
+| BR-12 | **Ca văn hoá cố định theo khối**: khối 12 sáng, khối 11 chiều, khối 10 sáng | Thuộc tính ca của khối; bộ giải không được tự chọn |
+| BR-13 | **Ca nghề là phần bù của ca văn hoá**: học sinh học văn hoá nửa ngày, nghề nửa ngày kia | Suy ra tự động từ BR-12, không khai báo riêng |
+| BR-14 | **Phòng lý thuyết nghề dùng chung khối văn hoá** (4 to + 5 nhỏ) | Một nhóm phòng phục vụ nhiều khối; bộ giải phải thấy tranh chấp |
 
 ### 7.4 Bộ ràng buộc khuyến nghị **[ĐỀ XUẤT]**
 
@@ -518,7 +562,7 @@ Mẫu TKB thực tế của trường (tài liệu tham chiếu `img2.jpg` — *
 
 | Giai đoạn | Nội dung | Kết quả bàn giao |
 |---|---|---|
-| **GĐ 1 — Chặn** | G-1 (`Session`→`Schedule`), G-2 (sinh buổi học từ giờ chương trình), **G-11 (lớp văn hoá ↔ nhóm nghề)**, **G-14 (trần sĩ số theo loại buổi)**, G-7 (phân quyền), FR-1.4, FR-2.7 | Hệ thống dùng được cho dữ liệu thật của khối 9+ — khối lớn nhất và khó nhất |
+| **GĐ 1 — Chặn** | G-1 (`Session`→`Schedule`), G-2 (sinh buổi học từ giờ chương trình), **G-11 (lớp văn hoá ↔ nhóm nghề)**, **G-14 (trần sĩ số theo loại buổi)**, **G-16 (ca học theo khối)**, G-7 (phân quyền), FR-1.4, FR-2.7 | Hệ thống dùng được cho dữ liệu thật của khối 9+ — khối lớn nhất và khó nhất |
 | **GĐ 2 — Nghiệp vụ** | Khoa/Bộ môn/Ngành (G-4), cơ sở đào tạo (G-5), **G-15 (nhịp phát hành tuần)**, **G-12 (tuần thực tập)**, CRUD dữ liệu nền (FR-2.6), giao diện ràng buộc (FR-4.2) | Triển khai thí điểm toàn trường, cả ba luồng TKB |
 | **GĐ 3 — Đặc thù** | Đồng giảng, lớp ghép, nhóm giáo viên (BR-1…BR-6), **G-13 (giờ chuẩn)** | Bao phủ các tình huống thực tế đã quan sát trong TKB |
 | **GĐ 4 — Hoàn thiện** | Xuất bản (FR-8.3), PDF đúng mẫu (FR-8.2), cổng giáo viên/sinh viên (FR-8.4), kế thừa lịch cũ (FR-6.8), báo cáo (FR-9.3…9.5) | Vận hành chính thức |
