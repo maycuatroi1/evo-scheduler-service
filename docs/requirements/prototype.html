@@ -223,10 +223,10 @@ input[type=range]{accent-color:var(--ng);width:110px}
     <h2 id="tTitle">Tổng quan</h2>
     <span class="bc" id="tCrumb">Học kỳ I · 2026–2027</span>
     <span class="sp"></span>
-    <select id="selKhoi">
-      <option value="sb">Song bằng 9+ · K43 khối 11</option>
-      <option value="cd">Cao đẳng · K22</option>
-      <option value="vh">Văn hoá · khối 11</option>
+    <select id="selNam" title="Năm học và học kỳ">
+      <option>2026–2027 · Học kỳ I</option>
+      <option>2026–2027 · Học kỳ II</option>
+      <option>2025–2026 · Học kỳ II</option>
     </select>
     <button class="btn" id="thBtn" title="Sáng/tối">◐</button>
   </header>
@@ -277,6 +277,10 @@ input[type=range]{accent-color:var(--ng);width:110px}
         <button class="btn sm" id="btnPdf">⤓ PDF</button>
       </div>
       <div class="cb" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+        <label class="fld"><span>Khoá học</span><select id="fKhoa">
+          <option value="k43">K43 · Song bằng 9+ · khối 11</option>
+          <option value="k22">K22 · Cao đẳng</option></select></label>
+        <label class="fld"><span>Chương trình</span><select id="fCt"></select></label>
         <label class="fld"><span>Xem theo</span><select id="fMode"><option value="grp">Nhóm nghề</option><option value="gv">Giáo viên</option><option value="ph">Phòng</option></select></label>
         <label class="fld"><span>Giáo viên</span><select id="fGv"><option value="">Tất cả</option></select></label>
         <label class="fld"><span>Phòng</span><select id="fPh"><option value="">Tất cả</option></select></label>
@@ -858,13 +862,29 @@ function ttRender(){
   $("#nChk").textContent=nb+1;$("#kIss").textContent=nb+1;
   $("#nTkb").textContent=DATA.length;
 }
-$("#selKhoi").addEventListener("change",e=>{
-  stream=e.target.value;sel=null;
+/* Khoá học quyết định có những chương trình nào.
+   Hệ song bằng 9+ mới có hai chương trình song song (nghề + văn hoá);
+   cao đẳng chỉ có một. */
+const CT_BY_KHOA={
+  k43:[{v:"sb",l:"Nghề (trung cấp)"},{v:"vh",l:"Văn hoá (GDTX cấp THPT)"}],
+  k22:[{v:"cd",l:"Cao đẳng"}]
+};
+function fillCt(){
+  const k=$("#fKhoa").value,opts=CT_BY_KHOA[k];
+  $("#fCt").innerHTML=opts.map(o=>`<option value="${o.v}">${o.l}</option>`).join("");
+  $("#fCt").disabled=opts.length<2;
+  applyStream();
+}
+function applyStream(){
+  stream=$("#fCt").value;sel=null;
   const dis=stream!=="sb";
   ["fGv","fPh","fTier"].forEach(i=>{$("#"+i).disabled=dis;if(dis)$("#"+i).value="";});
   ttRender();
-  toast("Đang xem luồng: "+STREAMS[stream].lbl);
-});
+}
+$("#fKhoa").addEventListener("change",()=>{fillCt();
+  toast($("#fKhoa").selectedOptions[0].textContent);});
+$("#fCt").addEventListener("change",()=>{applyStream();
+  toast("Chương trình: "+$("#fCt").selectedOptions[0].textContent);});
 (function(){
   const gset=new Map(),pset=new Set();
   SES.forEach(x=>{gset.set(x.gvc,x.gv);pset.add(x.r);});
@@ -973,7 +993,7 @@ function openSes(id){
 function closeDw(){$("#scrim").classList.remove("on");$("#dw").classList.remove("on");}
 $("#dwx").onclick=closeDw;$("#scrim").onclick=closeDw;
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if($("#dw").classList.contains("on"))closeDw();else if(sel){sel=null;ttRender();}}});
-ttRender();
+fillCt();
 
 /* ================= KIỂM TRA ================= */
 function chkRender(){
