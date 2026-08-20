@@ -199,6 +199,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
   <div class="navg"><p>Vận hành</p>
     <a data-v="dash" class="on"><i>▤</i>Tổng quan</a>
     <a data-v="tkb"><i>▦</i>Thời khoá biểu<span class="cnt" id="nTkb">319</span></a>
+    <a data-v="kehoach"><i>⇉</i>Kế hoạch xếp<span class="cnt">4</span></a>
     <a data-v="solve"><i>▶</i>Xếp lịch</a>
     <a data-v="check"><i>⚑</i>Kiểm tra<span class="cnt al" id="nChk">3</span></a>
   </div>
@@ -294,6 +295,50 @@ input[type=range]{accent-color:var(--ng);width:110px}
     </div>
   </section>
 
+  <!-- ===== KẾ HOẠCH XẾP ===== -->
+  <section class="view" id="v-kehoach">
+    <div class="card">
+      <div class="ch"><h3>Thứ tự xếp lịch</h3><span class="sp"></span>
+        <span class="pill p-wn">Xếp theo lớp · khoá dần</span>
+        <button class="btn sm" id="bPlanRun">▶ Chạy theo kế hoạch</button></div>
+      <div class="cb">
+        <p style="margin:0 0 13px;color:var(--ink2);font-size:13px">
+          Không xếp cả trường trong một lần giải: giáo viên và xưởng dùng chung giữa các chương trình, xếp song song sẽ tranh nhau.
+          Cách làm là <b>xếp lớp có ít lựa chọn nhất trước, xong thì khoá lại</b> làm ràng buộc cho lớp sau.</p>
+        <div id="planList"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><h3>Vì sao thứ tự này</h3></div>
+      <div class="cb t0"><table class="d">
+        <thead><tr><th>Lớp xếp</th><th class="n">Bậc tự do</th><th>Bị khoá bởi</th><th>Nếu xếp sau thì hỏng gì</th></tr></thead>
+        <tbody>
+          <tr><td><b>0 · Ghim cố định</b></td><td class="n">0</td><td>—</td><td>Không có gì để giải — chỉ đặt rồi khoá</td></tr>
+          <tr><td><b>1 · Văn hoá</b></td><td class="n">Thấp</td><td>Lớp 0</td><td>Ca đã cố định, phòng gắn chết theo lớp. Xếp sau thì giáo viên văn hoá đã bị nghề chiếm hết giờ</td></tr>
+          <tr><td><b>2 · Nghề hệ 9+</b></td><td class="n">Cao</td><td>Lớp 0, 1</td><td>Đây là phần khó nhất, cần nhiều tự do nhất — phải để sau cùng trong nhóm ràng buộc chặt</td></tr>
+          <tr><td><b>3 · TC thường + CĐ</b></td><td class="n">Cao</td><td>Lớp 0, 1, 2</td><td>Không vướng văn hoá nên linh hoạt nhất, nhường xưởng cho hệ 9+ trước</td></tr>
+        </tbody></table></div>
+      <div class="lg"><span><b>Nguyên tắc:</b> lớp có <b>ít lựa chọn</b> xếp trước. Xếp cái linh hoạt trước thì cái cứng sẽ không còn chỗ.</span></div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><h3>Trong một lớp · xếp theo thứ tự nào</h3></div>
+      <div class="cb">
+        <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">Trong cùng một lớp xếp, bộ giải cũng ưu tiên buổi khó trước. Bảng dưới là thứ tự ưu tiên các buổi học của hệ song bằng:</p>
+        <div class="cb t0" style="padding:0"><table class="d">
+          <thead><tr><th class="n">#</th><th>Loại buổi</th><th>Vì sao khó</th><th>Tài nguyên tranh chấp</th></tr></thead>
+          <tbody>
+            <tr><td class="n">1</td><td><b>Thực hành xưởng, nhóm lớn</b></td><td>Chia nhiều ca theo trần 18, mỗi ca cần một xưởng</td><td><span class="pill p-er">11 xưởng</span></td></tr>
+            <tr><td class="n">2</td><td><b>Thực hành phòng máy</b></td><td>Chỉ 5 phòng, số máy giới hạn 18–24</td><td><span class="pill p-wn">5 phòng máy</span></td></tr>
+            <tr><td class="n">3</td><td><b>Mô-đun có đồng giảng</b></td><td>Phải rảnh đồng thời 2 giáo viên</td><td><span class="pill p-wn">2 GV/buổi</span></td></tr>
+            <tr><td class="n">4</td><td><b>Lý thuyết nghề</b></td><td>Dùng chung phòng với khối văn hoá</td><td><span class="pill p-wn">9 phòng chung</span></td></tr>
+            <tr><td class="n">5</td><td><b>Lý thuyết phòng thường</b></td><td>Linh hoạt nhất, xếp lấp chỗ trống</td><td><span class="pill p-ok">dư phòng</span></td></tr>
+          </tbody></table></div>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== XẾP LỊCH ===== -->
   <section class="view" id="v-solve">
     <div class="card">
@@ -302,7 +347,12 @@ input[type=range]{accent-color:var(--ng);width:110px}
         <button class="btn" id="bStop" disabled>■ Dừng</button></div>
       <div class="cb">
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:13px">
-          <label class="fld"><span>Phạm vi</span><select id="sScope"><option>Toàn khối 11</option><option>Chỉ nhóm nghề</option><option>Chỉ văn hoá</option></select></label>
+          <label class="fld"><span>Phạm vi xếp</span><select id="sScope">
+            <option>Theo kế hoạch · cả 4 lớp</option>
+            <option>Lớp 1 · Văn hoá theo khối</option>
+            <option selected>Lớp 2 · Nghề hệ song bằng 9+</option>
+            <option>Lớp 3 · TC thường + Cao đẳng</option>
+            <option>Một lớp cụ thể…</option></select></label>
           <label class="fld"><span>Giới hạn thời gian</span><select id="sTime"><option>2 phút</option><option selected>5 phút</option><option>10 phút</option></select></label>
           <label class="fld"><span>Giữ lịch cũ</span><select id="sKeep"><option>Có — chỉ xếp lại GV đổi phân công</option><option>Không — xếp mới hoàn toàn</option></select></label>
         </div>
@@ -526,6 +576,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
 "use strict";
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const VT={dash:["Tổng quan","Học kỳ I · 2026–2027"],tkb:["Thời khoá biểu","Tuần 03 · 24–28/8/2026"],
+  kehoach:["Kế hoạch xếp lịch","4 lớp xếp · khoá dần"],
   solve:["Xếp lịch tự động","Bộ giải CP-SAT"],check:["Kiểm tra khả thi","Tiền kiểm số học"],
   lop:["Lớp & nhóm nghề","14 nhóm · 11 lớp văn hoá"],gv:["Giáo viên","Định mức 550 tiết chuẩn"],
   phong:["Phòng & xưởng","54 phòng"],mon:["Mô-đun","Chương trình khối 11"],
@@ -1051,6 +1102,52 @@ $("#tbRec").innerHTML=REC.map(([n,a,v,on],i)=>`<tr><td>${n}</td><td>${a}</td><td
 $$("#tbRec .sw-toggle").forEach(b=>b.addEventListener("click",()=>{
   const on=b.getAttribute("aria-pressed")==="true";b.setAttribute("aria-pressed",String(!on));
   toast((!on?"Đã bật: ":"Đã tắt: ")+REC[+b.dataset.i][0]);}));
+
+/* ================= KẾ HOẠCH XẾP ================= */
+const PLAN=[
+  {n:0,t:"Ghim cố định",d:"Chào cờ T2 tiết 1 toàn trường · tuần thực tập cao đẳng · tiết sinh hoạt",
+   sl:"Toàn trường",bu:64,kh:"—",tn:"Không chiếm xưởng",st:"wait"},
+  {n:1,t:"Văn hoá theo khối",d:"Khối 12 sáng · khối 11 chiều · khối 10 sáng. Phòng cố định theo lớp",
+   sl:"33 lớp văn hoá",bu:495,kh:"Lớp 0",tn:"31 phòng văn hoá",st:"wait"},
+  {n:2,t:"Nghề hệ song bằng 9+",d:"Nhận ca bù của văn hoá · chia ca theo trần 18 · giành xưởng",
+   sl:"36 nhóm nghề",bu:612,kh:"Lớp 0, 1",tn:"11 xưởng · 5 phòng máy",st:"wait"},
+  {n:3,t:"Trung cấp thường + Cao đẳng",d:"Không vướng văn hoá · né xưởng và giáo viên đã bị chiếm",
+   sl:"11 lớp",bu:198,kh:"Lớp 0, 1, 2",tn:"Xưởng còn trống",st:"wait"}
+];
+let planRunning=false;
+function planRender(){
+  $("#planList").innerHTML=PLAN.map(p=>{
+    const ic={wait:["p-mu","Chờ"],run:["p-wn","Đang xếp"],done:["p-ok","Đã xếp · đã khoá"],skip:["p-er","Bất khả thi"]}[p.st];
+    return `<div class="box ${p.st==="done"?"ok":p.st==="run"?"wn":"nu"}" style="display:block">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;color:var(--ng);min-width:20px">${p.n}</span>
+        <b style="font-size:13.5px">${p.t}</b>
+        <span class="pill ${ic[0]}">${ic[1]}</span>
+        <span class="sp" style="flex:1"></span>
+        <span class="tag">${p.sl}</span><span class="tag">${p.bu} buổi</span>
+      </div>
+      <div style="font-size:12.5px;color:var(--ink2);margin-top:5px;padding-left:30px">${p.d}</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:6px;padding-left:30px;font-size:11.5px;color:var(--ink3)">
+        <span>Bị khoá bởi: <b style="color:var(--ink2)">${p.kh}</b></span>
+        <span>Tài nguyên: <b style="color:var(--ink2)">${p.tn}</b></span>
+      </div></div>`;}).join("");
+}
+planRender();
+$("#bPlanRun").addEventListener("click",()=>{
+  if(planRunning)return;planRunning=true;
+  PLAN.forEach(p=>p.st="wait");planRender();
+  const btn=$("#bPlanRun");btn.disabled=true;btn.textContent="Đang chạy…";
+  let i=0;
+  const step=()=>{
+    if(i>0)PLAN[i-1].st="done";
+    if(i>=PLAN.length){planRender();btn.disabled=false;btn.textContent="▶ Chạy theo kế hoạch";planRunning=false;
+      toast("Xong 4 lớp xếp. Mỗi lớp sau đều né kết quả đã khoá của lớp trước.");return;}
+    PLAN[i].st="run";planRender();
+    toast(`Lớp ${PLAN[i].n} · ${PLAN[i].t}` + (PLAN[i].kh!=="—"?` — né kết quả đã khoá của ${PLAN[i].kh}`:""));
+    i++;setTimeout(step,1500);
+  };
+  step();
+});
 
 /* ================= CHƯƠNG TRÌNH ĐÀO TẠO ================= */
 const PROGS=[
