@@ -198,7 +198,6 @@ input[type=range]{accent-color:var(--ng);width:110px}
   <div class="logo"><b>EVO Scheduler</b><span>CĐ Xây dựng CTĐT</span></div>
   <div class="navg"><p>Vận hành</p>
     <a data-v="dash" class="on"><i>▤</i>Tổng quan</a>
-    <a data-v="cochE"><i>◉</i>Cách hoạt động</a>
     <a data-v="tkb"><i>▦</i>Thời khoá biểu<span class="cnt" id="nTkb">319</span></a>
     <a data-v="kehoach"><i>⇉</i>Kế hoạch xếp<span class="cnt">4</span></a>
     <a data-v="solve"><i>▶</i>Xếp lịch</a>
@@ -265,85 +264,6 @@ input[type=range]{accent-color:var(--ng);width:110px}
     </div>
   </section>
 
-  <!-- ===== CÁCH HOẠT ĐỘNG ===== -->
-  <section class="view" id="v-cochE">
-    <div class="card">
-      <div class="ch"><h3>Hệ thống làm việc thế nào</h3><span class="sp"></span>
-        <span class="pill p-mu">OR-Tools CP-SAT</span></div>
-      <div class="cb">
-        <p style="margin:0 0 14px;color:var(--ink2);font-size:13px">
-          Đây là bài toán <b>lập lịch bằng ràng buộc</b>, không phải xếp tay có máy hỗ trợ. Người dùng mô tả <b>luật</b>, máy tự tìm phương án thoả mọi luật.</p>
-        <div class="g2">
-          <div class="box nu" style="display:block"><b style="font-size:13px">1 · Mỗi buổi học là hai ẩn số</b>
-            <div style="font-size:12.5px;color:var(--ink2);margin-top:4px">Bắt đầu ở <b>tiết nào</b> và dùng <b>phòng nào</b>. Toàn trường ~1.300 buổi/tuần → khoảng <b>2.600 ẩn số</b> cần tìm.</div></div>
-          <div class="box nu" style="display:block"><b style="font-size:13px">2 · Luật thành ràng buộc toán học</b>
-            <div style="font-size:12.5px;color:var(--ink2);margin-top:4px">"Thầy Khanh không dạy hai lớp cùng lúc" được viết thành điều kiện trên các ẩn số đó.</div></div>
-          <div class="box nu" style="display:block"><b style="font-size:13px">3 · Bộ giải suy luận, không thử mò</b>
-            <div style="font-size:12.5px;color:var(--ink2);margin-top:4px">Số phương án lớn hơn số nguyên tử trong vũ trụ. Bộ giải dùng logic <b>loại hàng loạt phương án sai cùng lúc</b>.</div></div>
-          <div class="box nu" style="display:block"><b style="font-size:13px">4 · Chấm điểm để chọn cái đẹp nhất</b>
-            <div style="font-size:12.5px;color:var(--ink2);margin-top:4px">Trong vô số phương án hợp lệ, chọn cái có <b>điểm lỗi thấp nhất</b> theo trọng số ở màn hình Ràng buộc.</div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="ch"><h3>Ba màn hình vận hành · làm gì và khi nào</h3></div>
-      <div class="cb t0"><table class="d">
-        <thead><tr><th>Màn hình</th><th>Vai trò</th><th>Có gọi bộ giải?</th><th class="n">Thời gian</th><th>Chạy khi nào</th></tr></thead>
-        <tbody>
-          <tr><td><b>⚑ Kiểm tra</b></td><td>Bắt mâu thuẫn số học trước khi giải</td><td><span class="pill p-mu">Không — chỉ đếm</span></td><td class="n">~3 giây</td><td>Trước tiên</td></tr>
-          <tr><td><b>⇉ Kế hoạch xếp</b></td><td>Quyết định thứ tự xếp các nhóm lớp</td><td><span class="pill p-mu">Không — người đặt</span></td><td class="n">—</td><td>Trước khi chạy</td></tr>
-          <tr><td><b>▶ Xếp lịch</b></td><td>Thực sự gọi bộ giải tìm lời giải</td><td><span class="pill p-ng">Có</span></td><td class="n">2–10 phút</td><td>Sau cùng</td></tr>
-        </tbody></table></div>
-    </div>
-
-    <div class="card">
-      <div class="ch"><h3>Vì sao phải kiểm tra trước khi giải</h3></div>
-      <div class="cb">
-        <div class="box wn"><span class="i">?</span><span class="x">
-          Bộ giải khi gặp dữ liệu bất khả thi sẽ chạy <b>hết thời gian cho phép</b> rồi trả về đúng một chữ "không tìm được lời giải" — <b>không nói vì sao</b>.
-          <span class="f">Với dữ liệu một trường thật, đó là 10 phút chờ để nhận một thông báo vô dụng.</span></span></div>
-        <div class="box ok" style="margin-top:10px"><span class="i">✓</span><span class="x">
-          Màn hình Kiểm tra làm <b>phép đếm thuần tuý</b>, không gọi bộ giải, nên trả lời trong vài giây và <b>chỉ đúng thực thể gây mâu thuẫn</b>.
-          <span class="f">Ví dụ: "cần 42 ca xưởng nhưng chỉ có 11 xưởng × 5 buổi = 55 suất" — nếu cần vượt có thì chắc chắn vô nghiệm, báo ngay.</span></span></div>
-        <div style="margin-top:13px;font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">13 phép kiểm tra đang chạy</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <span class="tag">khung giờ rỗng</span><span class="tag">thiếu phòng</span><span class="tag">buổi quá dài</span>
-          <span class="tag">lớp quá tải</span><span class="tag">giáo viên quá tải</span><span class="tag">nhóm GV không đủ năng lực</span>
-          <span class="tag">thiếu tài nguyên theo loại</span><span class="tag">thiếu theo ngưỡng sức chứa</span><span class="tag">không có phòng phù hợp</span>
-          <span class="tag">tiết khoá không hợp lệ</span><span class="tag">phòng đã khoá biến mất</span><span class="tag">mô-đun thiếu GV</span>
-          <span class="tag">trùng giờ trong lớp gốc</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="ch"><h3>Bộ giải chạy hai pha</h3><span class="sp"></span><span class="pill p-mu">Có lịch vẫn hơn không có</span></div>
-      <div class="cb">
-        <div class="g2">
-          <div class="box nu" style="display:block"><b style="font-size:13px">Pha 1 · tìm bất kỳ lời giải nào</b>
-            <div style="font-size:12.5px;color:var(--ink2);margin-top:4px">Tạm bỏ mọi tiêu chí "đẹp", chỉ cần <b>hợp lệ</b>. Dừng ngay khi tìm được phương án đầu tiên — thường vài chục giây.</div></div>
-          <div class="box nu" style="display:block"><b style="font-size:13px">Pha 2 · làm cho đẹp hơn</b>
-            <div style="font-size:12.5px;color:var(--ink2);margin-top:4px">Lấy nghiệm pha 1 làm điểm xuất phát rồi cải thiện dần theo trọng số. Dùng hết thời gian còn lại.</div></div>
-        </div>
-        <div class="box ok" style="margin-top:11px"><span class="i">✓</span><span class="x">
-          <b>Hết giờ ở pha 2 vẫn giữ nghiệm pha 1.</b> Bấm Dừng giữa chừng cũng vậy.
-          <span class="f">Nghĩa là chạy bao lâu cũng có kết quả dùng được — chạy lâu hơn chỉ để lịch đẹp hơn, không phải để có lịch.</span></span></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="ch"><h3>Vì sao không xếp cả trường một lần</h3></div>
-      <div class="cb">
-        <div class="box er"><span class="i">✕</span><span class="x">
-          Ba chương trình <b>dùng chung giáo viên và xưởng</b>. Xếp song song thì hai luồng cùng giành một thầy hoặc một xưởng, và không có cách nào phân xử.</span></div>
-        <div class="box ok" style="margin-top:10px"><span class="i">✓</span><span class="x">
-          Chia thành <b>4 lớp xếp tuần tự</b>, xong lớp nào thì <b>khoá lại</b> làm ràng buộc cho lớp sau. Lớp ít lựa chọn nhất đi trước.
-          <span class="f">Xem chi tiết ở màn hình Kế hoạch xếp.</span></span></div>
-      </div>
-    </div>
-  </section>
-
   <!-- ===== THỜI KHOÁ BIỂU ===== -->
   <section class="view" id="v-tkb">
     <div class="card">
@@ -382,10 +302,8 @@ input[type=range]{accent-color:var(--ng);width:110px}
         <span class="pill p-wn">Xếp theo lớp · khoá dần</span>
         <button class="btn sm" id="bPlanRun">▶ Chạy theo kế hoạch</button></div>
       <div class="cb">
-        <div class="box nu" style="margin-bottom:13px"><span class="i">◉</span><span class="x">
-          <b>Màn hình này không tự chạy gì</b> — nó là bản kế hoạch do người đặt, quyết định <b>thứ tự</b> mà màn hình Xếp lịch sẽ thực thi.
-          Không xếp cả trường một lần vì giáo viên và xưởng dùng chung giữa các chương trình, xếp song song sẽ tranh nhau.
-          <span class="f">Cách làm: xếp lớp có ít lựa chọn nhất trước, xong thì khoá lại làm ràng buộc cho lớp sau.</span></span></div>
+        <p style="margin:0 0 13px;color:var(--ink2);font-size:13px">
+          Thứ tự các lớp sẽ được xếp. Xong lớp nào thì <b>khoá lại</b> làm ràng buộc cho lớp sau, để các chương trình không tranh nhau giáo viên và xưởng.</p>
         <div id="planList"></div>
       </div>
     </div>
@@ -427,9 +345,8 @@ input[type=range]{accent-color:var(--ng);width:110px}
         <button class="btn pri" id="bRun">▶ Bắt đầu xếp</button>
         <button class="btn" id="bStop" disabled>■ Dừng</button></div>
       <div class="cb">
-        <div class="box nu" style="margin-bottom:13px"><span class="i">◉</span><span class="x">
-          <b>Đây là màn hình duy nhất thực sự gọi bộ giải.</b> Chạy hai pha: pha 1 tìm một phương án hợp lệ bất kỳ, pha 2 lấy đó làm gợi ý rồi tối ưu theo trọng số.
-          <span class="f">Hết giờ hoặc bấm Dừng ở pha 2 vẫn giữ nghiệm pha 1 — chạy bao lâu cũng có kết quả dùng được.</span></span></div>
+        <p style="margin:0 0 13px;color:var(--ink2);font-size:13px">
+          Thường mất 2–10 phút. Có thể bấm <b>Dừng</b> bất cứ lúc nào — phương án đã tìm được vẫn giữ nguyên.</p>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:13px">
           <label class="fld"><span>Phạm vi xếp</span><select id="sScope">
             <option>Theo kế hoạch · cả 4 lớp</option>
@@ -468,10 +385,9 @@ input[type=range]{accent-color:var(--ng);width:110px}
       <div class="ch"><h3>Kiểm tra khả thi</h3><span class="sp"></span>
         <span class="pill p-er" id="chkN">2 lỗi chặn</span><button class="btn" id="bChk">Kiểm tra lại</button></div>
       <div class="cb">
-        <div class="box nu" style="margin-bottom:12px"><span class="i">◉</span><span class="x">
-          <b>Màn hình này không gọi bộ giải</b> — chỉ làm phép đếm, nên trả lời trong vài giây.
-          Nó bắt những mâu thuẫn khiến <b>không lời giải nào tồn tại</b>, để bạn không phải chờ bộ giải chạy 10 phút rồi mới biết.
-          <span class="f">Lỗi đỏ = chắc chắn vô nghiệm, phải sửa. Cảnh báo vàng = vẫn giải được nhưng lịch sẽ kém.</span></span></div>
+        <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">
+          <b class="mono" style="color:var(--err)">✕ Lỗi</b> phải sửa trước khi xếp — còn lỗi thì chắc chắn không ra được lịch.
+          <b class="mono" style="color:var(--wn)">! Cảnh báo</b> vẫn xếp được nhưng lịch sẽ kém.</p>
         <div id="chkOut"></div>
       </div>
     </div>
@@ -663,7 +579,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
 "use strict";
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const VT={dash:["Tổng quan","Học kỳ I · 2026–2027"],
-  cochE:["Cách hệ thống hoạt động","Lập lịch bằng ràng buộc"],tkb:["Thời khoá biểu","Tuần 03 · 24–28/8/2026"],
+tkb:["Thời khoá biểu","Tuần 03 · 24–28/8/2026"],
   kehoach:["Kế hoạch xếp lịch","4 lớp xếp · khoá dần"],
   solve:["Xếp lịch tự động","Bộ giải CP-SAT"],check:["Kiểm tra khả thi","Tiền kiểm số học"],
   lop:["Lớp & nhóm nghề","14 nhóm · 11 lớp văn hoá"],gv:["Giáo viên","Định mức 550 tiết chuẩn"],

@@ -244,6 +244,46 @@ evo-scheduler-service/
 
 ---
 
+### 4.1 Cách hệ thống tìm ra thời khoá biểu
+
+Đây là bài toán **lập lịch bằng ràng buộc**: người dùng mô tả luật, hệ thống tự tìm phương án thoả mọi luật — không phải xếp tay có máy hỗ trợ.
+
+| Bước | Nội dung |
+|---|---|
+| **1. Biến** | Mỗi buổi học có hai ẩn số: *bắt đầu ở tiết nào* và *dùng phòng nào*. Toàn trường ~1.300 buổi/tuần → khoảng 2.600 ẩn số |
+| **2. Ràng buộc** | Mỗi luật nghiệp vụ (§7) được diễn đạt thành điều kiện toán học trên các ẩn số đó |
+| **3. Bộ giải** | OR-Tools CP-SAT dùng suy luận logic để loại hàng loạt phương án sai cùng lúc, thay vì duyệt từng phương án |
+| **4. Hàm mục tiêu** | Trong các phương án hợp lệ, chọn phương án có tổng điểm phạt thấp nhất theo trọng số ràng buộc mềm (§7.2) |
+
+**Phân vai ba chức năng vận hành** — điểm này quan trọng vì quyết định trải nghiệm người dùng:
+
+| Chức năng | Gọi bộ giải? | Thời gian | Vai trò |
+|---|---|---|---|
+| Kiểm tra khả thi (FR-5) | **Không** — chỉ tính số học | ~3 giây | Bắt mâu thuẫn trước, chỉ đúng thực thể gây lỗi |
+| Kế hoạch xếp (FR-6.10) | **Không** — người đặt thứ tự | — | Quyết định trình tự các lớp xếp |
+| Xếp lịch (FR-6) | **Có** | 2–10 phút | Thực sự tìm lời giải |
+
+> **Lý do tách Kiểm tra khỏi Xếp lịch:** CP-SAT khi gặp dữ liệu bất khả thi sẽ chạy hết thời gian cho phép rồi trả về `INFEASIBLE` mà **không nêu nguyên nhân**. Với dữ liệu một trường thật đó là 10 phút chờ để nhận một thông báo vô dụng. Tiền kiểm tra số học trả lời trong vài giây và chỉ đúng thực thể mâu thuẫn.
+
+**Giải hai pha** (đã có, cần giữ): pha 1 dựng mô hình không hàm mục tiêu nên dừng ngay khi có phương án đầu tiên; pha 2 dựng lại mô hình đầy đủ, lấy nghiệm pha 1 làm gợi ý rồi tối ưu. Hết giờ hoặc người dùng dừng ở pha 2 thì **nghiệm pha 1 vẫn được giữ**.
+
+### 4.2 Trình tự xếp nhiều chương trình **[ĐỀ XUẤT]**
+
+Ba chương trình dùng chung giáo viên và xưởng, nên không thể giải song song. Đề xuất chia thành **bốn lớp xếp tuần tự**, xong lớp nào thì khoá kết quả làm ràng buộc cho lớp sau:
+
+| Lớp | Nội dung | Bậc tự do | Bị khoá bởi |
+|---|---|---|---|
+| **0** | Ghim cố định: Chào cờ T2 tiết 1, tuần thực tập CĐ, tiết sinh hoạt | 0 | — |
+| **1** | Văn hoá theo khối (ca cố định, phòng gắn theo lớp) | Thấp | Lớp 0 |
+| **2** | Nghề hệ song bằng 9+ (nhận ca bù, chia ca trần 18, giành xưởng) | Cao | Lớp 0, 1 |
+| **3** | Trung cấp thường + Cao đẳng | Cao | Lớp 0, 1, 2 |
+
+**Nguyên tắc: lớp ít bậc tự do nhất xếp trước.** Văn hoá đi trước vì ca đã cố định và phòng gắn chết theo lớp; nếu xếp sau, giáo viên văn hoá đã bị khối nghề chiếm hết giờ.
+
+> **Cần trường xác nhận:** đây là trình tự đề xuất, chưa phải quy trình trường đang dùng. Một phương án thay thế đáng cân nhắc là đảo lớp 2 lên trước lớp 1 — xếp nghề trước để giành xưởng (nút thắt nặng nhất), rồi nhét văn hoá vào chỗ còn lại. Hệ thống nên **cho phép đổi thứ tự các lớp xếp** để thử cả hai rồi so kết quả.
+
+---
+
 ## 5. Mô hình dữ liệu
 
 ### 5.1 Thực thể hiện có **[ĐÃ CÓ]**
@@ -383,6 +423,8 @@ evo-scheduler-service/
 | FR-6.7 | **Xếp trước (pre-assignment)**: ghim Chào cờ, Sinh hoạt, tiết GVCN, tiết không học vào ô cố định trước khi chạy | **[ĐỀ XUẤT]** |
 | FR-6.8 | **Kế thừa lịch cũ**: giữ nguyên phần lớn lịch học kỳ trước, chỉ xếp lại giáo viên có thay đổi phân công | **[ĐỀ XUẤT]** — đây là tính năng khác biệt của FTKB, rất giá trị khi sang học kỳ 2 |
 | FR-6.9 | Lưu lịch sử các phiên chạy, so sánh và khôi phục phiên bản | **[ĐỀ XUẤT]** |
+| FR-6.10 | **Kế hoạch xếp nhiều lớp**: khai báo trình tự các lớp xếp (§4.2), đổi được thứ tự, chạy tuần tự và khoá dần | **[THIẾU]** — hiện chỉ xếp hai khối văn hoá/nghề cứng trong mã |
+| FR-6.11 | Chạy lại **một lớp xếp** mà không phá kết quả các lớp khác | **[ĐỀ XUẤT]** |
 
 ### FR-7. Xem và tinh chỉnh thời khoá biểu
 
