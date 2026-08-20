@@ -282,10 +282,13 @@ input[type=range]{accent-color:var(--ng);width:110px}
           <option value="k42">K42 · Song bằng 9+ · khối 12</option>
           <option value="k22">K22 · Cao đẳng</option></select></label>
         <label class="fld"><span>Chương trình</span><select id="fCt"></select></label>
-        <label class="fld"><span>Xem theo</span><select id="fMode"><option value="grp">Nhóm nghề</option><option value="gv">Giáo viên</option><option value="ph">Phòng</option></select></label>
+        <label class="fld"><span>Xem theo</span><select id="fMode"><option value="grp">Nhóm nghề</option><option value="gv">Giáo viên</option><option value="ph">Phòng</option><option value="lop">Lớp văn hoá</option></select></label>
+        <label class="fld"><span>Lớp văn hoá</span><select id="fLop"><option value="">Tất cả</option></select></label>
+        <label class="fld"><span>Nghề</span><select id="fNghe"><option value="">Tất cả</option></select></label>
         <label class="fld"><span>Giáo viên</span><select id="fGv"><option value="">Tất cả</option></select></label>
         <label class="fld"><span>Phòng</span><select id="fPh"><option value="">Tất cả</option></select></label>
-        <label class="fld"><span>Khối</span><select id="fTier"><option value="">Tất cả</option><option value="ng">Nghề</option><option value="vh">Văn hoá</option></select></label>
+        <label class="fld"><span>Loại buổi</span><select id="fTier"><option value="">Tất cả</option><option value="ng">Nghề</option><option value="vh">Văn hoá</option><option value="tt">Thực tập</option></select></label>
+        <label class="fld"><span>Buổi</span><select id="fBuoi"><option value="">Cả ngày</option><option value="S">Sáng</option><option value="C">Chiều</option></select></label>
         <button class="btn sm" id="fClr">Bỏ lọc</button>
         <span class="sp" style="flex:1"></span>
         <span class="pill p-mu" id="cntShow">316 buổi</span>
@@ -404,7 +407,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
   <section class="view" id="v-lop">
     <div class="card">
       <div class="ch"><h3>Lớp văn hoá và nhóm nghề</h3><span class="sp"></span>
-        <span class="pill p-wn">2 lớp tách nhóm</span><button class="btn sm" data-toast="Bản mẫu: mở biểu mẫu thêm lớp.">+ Thêm lớp</button></div>
+        <span class="pill p-wn">2 lớp tách nhóm</span><button class="btn sm" data-add="lop">+ Thêm nhóm nghề</button></div>
       <div class="tabs"><button class="on" data-lt="all">Tất cả</button><button data-lt="split">Lớp tách nhóm</button><button data-lt="vh">Theo lớp văn hoá</button></div>
       <div class="cb t0"><div class="scroll"><table class="d">
         <thead><tr><th>Nhóm nghề</th><th>Lớp VH</th><th class="n">Sĩ số</th><th>Nghề</th><th>Trạng thái</th><th></th></tr></thead>
@@ -421,9 +424,9 @@ input[type=range]{accent-color:var(--ng);width:110px}
     <div class="card">
       <div class="ch"><h3>Giáo viên</h3><span class="sp"></span>
         <span class="pill p-mu">Định mức 550 tiết chuẩn/năm</span>
-        <button class="btn sm" data-toast="Bản mẫu: mở biểu mẫu thêm giáo viên.">+ Thêm</button></div>
+        <button class="btn sm" data-add="gv">+ Thêm giáo viên</button></div>
       <div class="cb t0"><div class="scroll"><table class="d">
-        <thead><tr><th>Mã</th><th>Họ tên</th><th>Khối</th><th class="n">Tiết LT</th><th class="n">Tiết TH</th><th class="n">Giờ chuẩn</th><th style="width:130px">So định mức</th><th></th></tr></thead>
+        <thead><tr><th>Mã</th><th>Họ tên</th><th>Khối</th><th class="n">Tiết LT</th><th class="n">Tiết TH</th><th class="n">Giờ chuẩn</th><th style="width:130px">So định mức</th><th></th><th></th></tr></thead>
         <tbody id="tbGv"></tbody></table></div></div>
       <div class="lg"><span>Quy đổi: <b>45 phút lý thuyết = 1 giờ chuẩn</b> · <b>60 phút thực hành = 1 giờ chuẩn</b> (tiết TH 45 phút quy đổi 0,75)</span></div>
     </div>
@@ -434,10 +437,10 @@ input[type=range]{accent-color:var(--ng);width:110px}
     <div class="card">
       <div class="ch"><h3>Phòng học, xưởng và thiết bị</h3><span class="sp"></span>
         <span class="pill p-mu" id="phTot">59 phòng</span>
-        <button class="btn sm" data-toast="Bản mẫu: mở biểu mẫu thêm phòng.">+ Thêm</button></div>
+        <button class="btn sm" data-add="phong">+ Thêm phòng</button></div>
       <div class="tabs"><button class="on" data-pt="all">Tất cả</button><button data-pt="vh">Văn hoá</button><button data-pt="xuong">Xưởng</button><button data-pt="may">Phòng máy</button><button data-pt="lt">Lý thuyết nghề</button></div>
       <div class="cb t0"><div class="scroll"><table class="d">
-        <thead><tr><th>Nhóm phòng</th><th>Loại</th><th class="n">Số lượng</th><th class="n">Sức chứa</th><th>Dùng cho</th><th style="width:130px">Suất dùng</th></tr></thead>
+        <thead><tr><th>Nhóm phòng</th><th>Loại</th><th class="n">Số lượng</th><th class="n">Sức chứa</th><th>Dùng cho</th><th style="width:130px">Suất dùng</th><th></th></tr></thead>
         <tbody id="tbPh"></tbody></table></div></div>
     </div>
   </section>
@@ -446,9 +449,10 @@ input[type=range]{accent-color:var(--ng);width:110px}
   <section class="view" id="v-mon">
     <div class="card">
       <div class="ch"><h3>Mô-đun và môn học</h3><span class="sp"></span>
+        <button class="btn sm" data-add="mon">+ Thêm mô-đun</button>
         <button class="btn sm" id="bGen">⚙ Sinh buổi học từ số giờ</button></div>
       <div class="cb t0"><div class="scroll"><table class="d">
-        <thead><tr><th>Mã</th><th>Tên mô-đun</th><th>Khối</th><th class="n">Giờ LT</th><th class="n">Giờ TH</th><th class="n">Buổi/tuần</th><th>Loại phòng</th></tr></thead>
+        <thead><tr><th>Mã</th><th>Tên mô-đun</th><th>Khối</th><th class="n">Giờ LT</th><th class="n">Giờ TH</th><th class="n">Buổi/tuần</th><th>Loại phòng</th><th></th></tr></thead>
         <tbody id="tbMon"></tbody></table></div></div>
       <div class="lg"><span id="genNote">Số giờ chương trình chưa được bung thành buổi học — bấm <b>Sinh buổi học</b> để hệ thống tự tạo.</span></div>
     </div>
@@ -459,7 +463,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
     <div class="card">
       <div class="ch"><h3>Ba chương trình đào tạo</h3><span class="sp"></span>
         <span class="pill p-wn">Mỗi chương trình một cấu hình riêng</span>
-        <button class="btn sm" data-toast="Bản mẫu: mở biểu mẫu thêm chương trình đào tạo.">+ Thêm</button></div>
+        <button class="btn sm" data-add="ctdt">+ Thêm chương trình</button></div>
       <div class="cb">
         <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">Trường vận hành ba chương trình có <b>khung giờ, nhịp phát hành và mô hình phòng khác nhau</b>. Chọn một chương trình để xem và sửa cấu hình.</p>
         <div class="cb t0" style="padding:0"><table class="d">
@@ -474,7 +478,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
   <section class="view" id="v-hedt">
     <div class="card">
       <div class="ch"><h3>Hệ đào tạo và khoá học đang chạy</h3><span class="sp"></span>
-        <button class="btn sm" data-toast="Bản mẫu: mở biểu mẫu mở khoá học mới.">+ Mở khoá mới</button></div>
+        <button class="btn sm" data-add="khoa">+ Mở khoá mới</button></div>
       <div class="tabs"><button class="on" data-ht="all">Tất cả</button><button data-ht="cd">Cao đẳng</button><button data-ht="sb">Song bằng 9+</button><button data-ht="tc">Trung cấp</button></div>
       <div class="cb t0"><div class="scroll"><table class="d">
         <thead><tr><th>Khoá</th><th>Hệ đào tạo</th><th>Năm học</th><th class="n">Số lớp</th><th class="n">Sĩ số</th><th>Học văn hoá</th><th>Trạng thái</th><th></th></tr></thead>
@@ -841,15 +845,42 @@ function std(t){return Math.round(t.lt*1+t.th*0.75);}
 
 /* ================= LƯỚI TKB ================= */
 let sel=null,hist=[];
-function flt(x){
+function flt(x,cols){
   const gv=$("#fGv").value,ph=$("#fPh").value,ti=$("#fTier").value;
-  if(gv&&x.gvc!==gv)return false;
+  const lop=$("#fLop").value,ng=$("#fNghe").value,bu=$("#fBuoi").value;
+  if(gv&&x.gvc!==gv&&x.gv2!==gvName(gv))return false;
   if(ph&&x.r!==ph)return false;
   if(ti&&x.t!==ti)return false;
+  if(bu&&x.s!==bu)return false;
+  if(lop||ng){
+    const col=(cols||[]).find(c=>c.g===x.g);
+    if(!col)return false;
+    if(lop&&!String(col.vh).includes(lop))return false;
+    if(ng&&col.nghe!==ng)return false;
+  }
   return true;
 }
+function gvName(code){const t=TEACHERS.find(y=>y.c===code);return t?t.n:"";}
+/* Nạp lại các ô lọc theo luồng đang xem */
+function fillFilters(){
+  const st=STREAMS[stream]||STREAMS.sb;
+  const cols=stream==="sb"?COLS_SB():st.cols;
+  const data=stream==="sb"?SES:st.ses;
+  const keep=(id,v)=>{const el=$("#"+id);const old=el.value;el.innerHTML=v;
+    el.value=[...el.options].some(o=>o.value===old)?old:"";};
+  // lớp văn hoá: tách chuỗi "12A1 + 12A4" thành từng lớp
+  const lops=new Set();
+  cols.forEach(c=>String(c.vh).split("+").forEach(v=>lops.add(v.trim())));
+  keep("fLop",'<option value="">Tất cả</option>'+[...lops].sort().map(l=>`<option value="${l}">${l}</option>`).join(""));
+  const nghes=[...new Set(cols.map(c=>c.nghe))].sort((a,b)=>a.localeCompare(b,"vi"));
+  keep("fNghe",'<option value="">Tất cả</option>'+nghes.map(n=>`<option value="${n}">${n}</option>`).join(""));
+  const gset=new Map(),pset=new Set();
+  data.forEach(x=>{if(x.gvc)gset.set(x.gvc,x.gv);if(x.r)pset.add(x.r);});
+  keep("fGv",'<option value="">Tất cả</option>'+[...gset].sort((a,b)=>a[1].localeCompare(b[1],"vi")).map(([c,n])=>`<option value="${c}">${n}</option>`).join(""));
+  keep("fPh",'<option value="">Tất cả</option>'+[...pset].sort().map(r=>`<option value="${r}">${r}</option>`).join(""));
+}
 function ttRender(){
-  const st=STREAMS[stream];
+  const st=STREAMS[stream]||STREAMS.sb;
   const COLS=stream==="sb"?COLS_SB():st.cols;
   const DATA=stream==="sb"?SES:st.ses;
   const th=$("#tt thead"),tb=$("#tt tbody");
@@ -880,7 +911,7 @@ function ttRender(){
           const c=grid[d][ses.c][p][col.g];
           if(c==="cov")return;
           if(!c){h+=`<td><button class="cell e" data-drop="${d}|${ses.c}|${p}|${col.g}" title="Ô trống"></button></td>`;return;}
-          const x=c.s,vis=stream==="sb"?flt(x):true;shown+=vis?1:0;
+          const x=c.s,vis=flt(x,COLS);shown+=vis?1:0;
           const gv=x.gv2?`${x.gv} · ${x.gv2}`:x.gv;
           const cls=x.t==="ng"?"ng":x.t==="tt"?"tt2":"";
           h+=`<td rowspan="${x.len}"><button class="cell" data-id="${x.id}">
@@ -907,34 +938,27 @@ const CT_BY_KHOA={
   k22:[{v:"cd",l:"Cao đẳng"}]
 };
 function fillCt(){
-  const k=$("#fKhoa").value,opts=CT_BY_KHOA[k];
+  const k=$("#fKhoa").value,opts=CT_BY_KHOA[k]||CT_BY_KHOA.k43;
   $("#fCt").innerHTML=opts.map(o=>`<option value="${o.v}">${o.l}</option>`).join("");
   $("#fCt").disabled=opts.length<2;
   applyStream();
 }
 function applyStream(){
-  stream=$("#fCt").value;sel=null;
-  const dis=stream!=="sb";
-  ["fGv","fPh","fTier"].forEach(i=>{$("#"+i).disabled=dis;if(dis)$("#"+i).value="";});
+  stream=$("#fCt").value||"sb";sel=null;
+  fillFilters();
   ttRender();
 }
 $("#fKhoa").addEventListener("change",()=>{fillCt();
   toast($("#fKhoa").selectedOptions[0].textContent);});
 $("#fCt").addEventListener("change",()=>{applyStream();
   toast("Chương trình: "+$("#fCt").selectedOptions[0].textContent);});
-(function(){
-  const gset=new Map(),pset=new Set();
-  SES.forEach(x=>{gset.set(x.gvc,x.gv);pset.add(x.r);});
-  $("#fGv").innerHTML='<option value="">Tất cả</option>'+[...gset].sort((a,b)=>a[1].localeCompare(b[1],"vi")).map(([c,n])=>`<option value="${c}">${n}</option>`).join("");
-  $("#fPh").innerHTML='<option value="">Tất cả</option>'+[...pset].sort().map(r=>`<option value="${r}">${r}</option>`).join("");
-})();
-["fGv","fPh","fTier","fMode"].forEach(i=>$("#"+i).addEventListener("change",()=>{
+["fLop","fNghe","fGv","fPh","fTier","fBuoi","fMode"].forEach(i=>$("#"+i).addEventListener("change",()=>{
   if(i==="fMode")toast("Bản mẫu: đổi trục cột sang "+$("#fMode").selectedOptions[0].textContent.toLowerCase()+".");
   ttRender();}));
-$("#fClr").addEventListener("click",()=>{$("#fGv").value="";$("#fPh").value="";$("#fTier").value="";ttRender();});
+$("#fClr").addEventListener("click",()=>{["fLop","fNghe","fGv","fPh","fTier","fBuoi"].forEach(i=>$("#"+i).value="");ttRender();});
 $("#btnConf").addEventListener("click",()=>{const b=SES.find(x=>x.bad);
   if(!b){toast("Không còn xung đột.");return;}
-  $("#fGv").value="";$("#fPh").value="";$("#fTier").value="";ttRender();openSes(b.id);});
+  ["fLop","fNghe","fGv","fPh","fTier","fBuoi"].forEach(i=>$("#"+i).value="");ttRender();openSes(b.id);});
 $("#btnXlsx").addEventListener("click",()=>toast("Đang tạo tệp Excel: sheet Lịch + sheet Chi tiết…"));
 $("#btnPdf").addEventListener("click",()=>toast("Đang tạo PDF theo mẫu bản in của trường…"));
 $("#btnUndo").addEventListener("click",()=>{
@@ -1030,6 +1054,120 @@ function openSes(id){
 function closeDw(){$("#scrim").classList.remove("on");$("#dw").classList.remove("on");}
 $("#dwx").onclick=closeDw;$("#scrim").onclick=closeDw;
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){if($("#dw").classList.contains("on"))closeDw();else if(sel){sel=null;ttRender();}}});
+
+/* ================= BIỂU MẪU CRUD DÙNG CHUNG ================= */
+const FORMS={
+  lop:{t:"nhóm nghề",list:()=>GROUPS,key:"g",
+    f:[{k:"nghe",l:"Tên nghề",w:1},{k:"vh",l:"Lớp văn hoá",p:"11A3 hoặc 12A1 + 12A4"},
+       {k:"si",l:"Sĩ số",ty:"number"},{k:"g",l:"Mã nhóm",p:"G15"}],
+    row:x=>[x.nghe,x.vh,x.si+" HS"]},
+  gv:{t:"giáo viên",list:()=>TEACHERS,key:"c",
+    f:[{k:"n",l:"Họ tên",w:1},{k:"c",l:"Mã GV",p:"GV073"},
+       {k:"b",l:"Khối",ty:"select",o:["Nghề","Văn hoá","Cả hai"]},
+       {k:"mon",l:"Môn / mô-đun dạy",w:1},
+       {k:"lt",l:"Tiết lý thuyết/năm",ty:"number"},{k:"th",l:"Tiết thực hành/năm",ty:"number"}],
+    row:x=>[x.n,x.c,x.b]},
+  phong:{t:"nhóm phòng",list:()=>ROOMS,key:"n",
+    f:[{k:"n",l:"Tên nhóm phòng",w:1},{k:"lo",l:"Mã phòng",p:"A11-201, A11-206",w:1},
+       {k:"k",l:"Loại",ty:"select",o:[["vh","Văn hoá"],["xuong","Xưởng"],["may","Phòng máy"],["lt","LT nghề"]]},
+       {k:"q",l:"Số lượng",ty:"number"},{k:"cap",l:"Sức chứa",p:"18 hoặc 40–50"},
+       {k:"use",l:"Dùng cho",w:1}],
+    row:x=>[x.n,x.lo,x.q+" phòng"]},
+  mon:{t:"mô-đun",list:()=>MODULES,key:"c",
+    f:[{k:"n",l:"Tên mô-đun",w:1},{k:"c",l:"Mã",p:"MĐ50"},
+       {k:"t",l:"Khối",ty:"select",o:[["ng","Nghề"],["vh","Văn hoá"]]},
+       {k:"lt",l:"Giờ lý thuyết",ty:"number"},{k:"th",l:"Giờ thực hành",ty:"number"},
+       {k:"ph",l:"Phòng chuyên môn",p:"A11-204"}],
+    row:x=>[x.n,x.c,x.lt+"/"+x.th+"h"]},
+  ctdt:{t:"chương trình đào tạo",list:()=>PROGS,key:"k",
+    f:[{k:"n",l:"Tên chương trình",w:1},{k:"k",l:"Mã",p:"lt"},
+       {k:"tg",l:"Thời gian đào tạo",p:"2,5–3 năm"},{k:"lop",l:"Số lớp/nhóm",ty:"number"},
+       {k:"tiet",l:"Tiết mỗi ngày",ty:"number"},{k:"ca",l:"Ca học",p:"Cả ngày"},
+       {k:"ph",l:"Mô hình phòng",w:1},{k:"vh",l:"Học văn hoá",ty:"select",o:["Không","Có — GDTX cấp THPT"]}],
+    row:x=>[x.n,x.tg,x.lop+" lớp"]},
+  khoa:{t:"khoá học",list:()=>COURSES,key:"kh",
+    f:[{k:"kh",l:"Mã khoá",p:"K45"},{k:"hen",l:"Hệ đào tạo",w:1},
+       {k:"he",l:"Nhóm hệ",ty:"select",o:[["cd","Cao đẳng"],["sb","Song bằng 9+"],["tc","Trung cấp"]]},
+       {k:"nam",l:"Năm học",p:"2027–2030"},{k:"lop",l:"Số lớp",ty:"number"},
+       {k:"si",l:"Sĩ số",ty:"number"},{k:"vh",l:"Khối văn hoá",p:"Khối 10 hoặc —"},
+       {k:"st",l:"Trạng thái",ty:"select",o:["Đang chạy","Đã tốt nghiệp"]}],
+    row:x=>[x.kh,x.hen,x.nam]}
+};
+let formCtx=null;
+function openForm(kind,item){
+  const F=FORMS[kind];if(!F)return;
+  formCtx={kind,item:item||null};
+  const val=k=>item?(item[k]!==undefined?item[k]:""):"";
+  $("#dwt").textContent=(item?"Sửa ":"Thêm ")+F.t;
+  $("#dws").textContent=item?"Đang sửa: "+F.row(item)[0]:"Nhập thông tin rồi bấm Lưu";
+  $("#dwb").innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:11px">'+
+    F.f.map(f=>{
+      const id="ff_"+f.k;
+      let ctl;
+      if(f.ty==="select"){
+        const opts=f.o.map(o=>{const v=Array.isArray(o)?o[0]:o,l=Array.isArray(o)?o[1]:o;
+          return '<option value="'+v+'"'+(String(val(f.k))===String(v)?" selected":"")+'>'+l+'</option>';}).join("");
+        ctl='<select id="'+id+'" style="width:100%">'+opts+'</select>';
+      }else{
+        ctl='<input id="'+id+'" type="'+(f.ty||"text")+'" value="'+String(val(f.k)).replace(/"/g,"&quot;")+
+          '" placeholder="'+(f.p||"")+'" style="width:100%">';
+      }
+      return '<label class="fld"'+(f.w?' style="grid-column:1/-1"':"")+'><span>'+f.l+'</span>'+ctl+'</label>';
+    }).join("")+'</div>'+
+    '<div class="box nu" style="margin-top:13px"><span class="i">◈</span><span class="x">'+
+    'Bản mẫu: dữ liệu lưu trong phiên làm việc, tải lại trang sẽ trở về ban đầu.</span></div>';
+  $("#dwf").innerHTML='<button class="btn pri" id="ffSave">Lưu</button>'+
+    (item?'<button class="btn" id="ffDel" style="border-color:var(--err);color:var(--err)">Xoá</button>':"")+
+    '<button class="btn" id="ffCancel">Huỷ</button>';
+  $("#ffSave").onclick=saveForm;
+  $("#ffCancel").onclick=closeDw;
+  if(item)$("#ffDel").onclick=delForm;
+  $("#scrim").classList.add("on");$("#dw").classList.add("on");
+  const first=$("#dwb").querySelector("input,select");if(first)first.focus();
+}
+function saveForm(){
+  const {kind,item}=formCtx,F=FORMS[kind],arr=F.list();
+  const obj=item||{};
+  let missing=null;
+  F.f.forEach(f=>{
+    const el=$("#ff_"+f.k);if(!el)return;
+    let v=el.value;
+    if(f.ty==="number")v=parseInt(v||"0",10)||0;
+    if(!item&&!v&&f.k===F.key)missing=f.l;
+    obj[f.k]=v;
+  });
+  if(missing){toast("Chưa nhập "+missing+".");return;}
+  if(!item){
+    if(arr.some(x=>x[F.key]===obj[F.key])){toast("Mã \""+obj[F.key]+"\" đã tồn tại.");return;}
+    arr.push(obj);
+  }
+  closeDw();refreshAll();
+  toast((item?"Đã cập nhật ":"Đã thêm ")+F.t+": "+F.row(obj)[0]);
+}
+function delForm(){
+  const {kind,item}=formCtx,F=FORMS[kind],arr=F.list();
+  const i=arr.indexOf(item);
+  if(i<0)return;
+  arr.splice(i,1);closeDw();refreshAll();
+  toast("Đã xoá "+F.t+": "+F.row(item)[0]);
+}
+/* Vẽ lại mọi màn hình phụ thuộc dữ liệu */
+function refreshAll(){
+  lopRender();gvRender();phRender();monRender();ctRender();heRender();
+  fillFilters();ttRender();
+  $("#nLop").textContent=GROUPS.length;
+  $("#nGv").textContent=TEACHERS.length;
+  $("#nPh").textContent=ROOMS.reduce((n,r)=>n+r.q,0);
+  $("#nMon").textContent=MODULES.length;
+}
+document.addEventListener("click",e=>{
+  const a=e.target.closest("[data-add]");if(a){openForm(a.dataset.add);return;}
+  const ed=e.target.closest("[data-edit]");
+  if(ed){const[k,id]=ed.dataset.edit.split("|");
+    const F=FORMS[k];const it=F.list().find(x=>String(x[F.key])===id);
+    if(it)openForm(k,it);}
+});
+
 fillCt();
 
 /* ================= KIỂM TRA ================= */
@@ -1104,7 +1242,7 @@ function lopRender(){
       <td><span class="tag">${g.vh}</span>${multi?' <span class="pill p-wn">tách '+cnt[g.vh]+'</span>':""}</td>
       <td class="n">${g.si}</td><td>${g.nghe.split(" ").slice(0,2).join(" ")}</td>
       <td>${g.si>18?'<span class="pill p-er">TH cần chia '+Math.ceil(g.si/18)+' ca</span>':'<span class="pill p-ok">Đủ trần TH</span>'}</td>
-      <td><button class="btn sm" data-lop="${g.g}">Chi tiết</button></td></tr>`;}).join("");
+      <td><button class="btn sm" data-lop="${g.g}">Chi tiết</button> <button class="btn sm" data-edit="lop|${g.g}">Sửa</button></td></tr>`;}).join("");
   $$("#tbLop [data-lop]").forEach(b=>b.addEventListener("click",()=>{
     const g=GROUPS.find(x=>x.g===b.dataset.lop),sib=GROUPS.filter(x=>x.vh===g.vh&&x.g!==g.g);
     $("#dwt").textContent=g.nghe;$("#dws").textContent=`Nhóm ${g.g} · lớp văn hoá ${g.vh}`;
@@ -1130,13 +1268,16 @@ $$("#v-lop .tabs button").forEach(b=>b.addEventListener("click",()=>{
 lopRender();
 
 /* ================= GIÁO VIÊN ================= */
+function gvRender(){
 $("#tbGv").innerHTML=TEACHERS.map(t=>{const s=std(t),pct=Math.min(100,s/550*100),over=s>550;
   return `<tr class="${over?"bad":""}"><td class="mono">${t.c}</td><td><b>${t.n}</b></td>
   <td><span class="pill ${t.b==="Nghề"?"p-ng":t.b==="Văn hoá"?"p-vh":"p-mu"}">${t.b}</span></td>
   <td class="n">${t.lt}</td><td class="n">${t.th}</td><td class="n"><b>${s}</b></td>
   <td><div style="display:flex;gap:7px;align-items:center"><div class="mini" style="flex:1"><i class="${over?"e":pct>85?"w":""}" style="width:${pct}%"></i></div>
   <span class="mono" style="font-size:11px">${Math.round(pct)}%</span></div></td>
-  <td>${over?'<span class="pill p-er">Vượt '+(s-550)+'</span>':'<span class="pill p-ok">Đạt</span>'}</td></tr>`;}).join("");
+  <td>${over?'<span class="pill p-er">Vượt '+(s-550)+'</span>':'<span class="pill p-ok">Đạt</span>'}</td>
+  <td><button class="btn sm" data-edit="gv|${t.c}">Sửa</button></td></tr>`;}).join("");}
+gvRender();
 
 /* ================= PHÒNG ================= */
 let phTab="all";
@@ -1146,7 +1287,8 @@ function phRender(){
     <td><span class="pill ${r.k==="xuong"?"p-ng":r.k==="vh"?"p-vh":"p-mu"}">${{vh:"Văn hoá",xuong:"Xưởng",may:"Phòng máy",lt:"LT nghề"}[r.k]}</span></td>
     <td class="n">${r.q}</td><td class="n">${r.cap}</td><td>${r.use}</td>
     <td><div style="display:flex;gap:7px;align-items:center"><div class="mini" style="flex:1"><i class="${r.u>88?"e":r.u>80?"w":""}" style="width:${r.u}%"></i></div>
-    <span class="mono" style="font-size:11px">${r.u}%</span></div></td></tr>`).join("");
+    <span class="mono" style="font-size:11px">${r.u}%</span></div></td>
+    <td><button class="btn sm" data-edit="phong|${r.n}">Sửa</button></td></tr>`).join("");
   $("#phTot").textContent=rows.reduce((n,r)=>n+r.q,0)+" phòng";
 }
 $$("#v-phong .tabs button").forEach(b=>b.addEventListener("click",()=>{
@@ -1162,7 +1304,8 @@ function monRender(){
     return `<tr><td class="mono">${m.c}</td><td><b>${m.n}</b></td>
     <td><span class="pill ${m.t==="ng"?"p-ng":"p-vh"}">${m.t==="ng"?"Nghề":"Văn hoá"}</span></td>
     <td class="n">${m.lt}</td><td class="n">${m.th}</td>
-    <td class="n">${b?b:'<span class="pill p-er">chưa sinh</span>'}</td><td>${m.ph}</td></tr>`;}).join("");
+    <td class="n">${b?b:'<span class="pill p-er">chưa sinh</span>'}</td><td>${m.ph}</td>
+    <td><button class="btn sm" data-edit="mon|${m.c}">Sửa</button></td></tr>`;}).join("");
   $("#nMon").textContent=MODULES.length;
 }
 $("#bGen").addEventListener("click",()=>{
@@ -1330,7 +1473,7 @@ function heRender(){
     <td>${c.hen}</td><td>${c.nam}</td><td class="n">${c.lop||"—"}</td><td class="n">${c.si||"—"}</td>
     <td>${c.vh==="—"?'<span style="color:var(--ink3)">—</span>':'<span class="pill p-vh">'+c.vh+'</span>'}</td>
     <td>${c.st==="Đang chạy"?'<span class="pill p-ok">Đang chạy</span>':'<span class="pill p-mu">Đã tốt nghiệp</span>'}</td>
-    <td><button class="btn sm" data-toast="Bản mẫu: mở cấu hình khoá ${c.kh}.">Cấu hình</button></td></tr>`).join("");
+    <td><button class="btn sm" data-edit="khoa|${c.kh}">Sửa</button></td></tr>`).join("");
   $$("#tbHe [data-toast]").forEach(b=>b.addEventListener("click",()=>toast(b.dataset.toast)));
 }
 $$("#v-hedt .tabs button").forEach(b=>b.addEventListener("click",()=>{
