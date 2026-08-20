@@ -220,6 +220,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
     <a data-v="uutien"><i>▲</i>Độ ưu tiên RB</a>
     <a data-v="ghepnhom"><i>⊞</i>Lớp ghép &amp; đồng giảng</a>
     <a data-v="khung"><i>◷</i>Khung giờ</a>
+    <a data-v="mocgio"><i>🕐</i>Mốc giờ tiết học</a>
   </div>
   <div class="sfoot">Bản mẫu · dữ liệu thật<br>TC K43 · tuần 03</div>
 </nav>
@@ -330,11 +331,11 @@ input[type=range]{accent-color:var(--ng);width:110px}
         <thead><tr><th>Lớp xếp</th><th class="n">Bậc tự do</th><th>Bị khoá bởi</th><th>Nếu xếp sau thì hỏng gì</th></tr></thead>
         <tbody>
           <tr><td><b>0 · Ghim cố định</b></td><td class="n">0</td><td>—</td><td>Không có gì để giải — chỉ đặt rồi khoá</td></tr>
-          <tr><td><b>1 · Văn hoá</b></td><td class="n">Thấp</td><td>Lớp 0</td><td>Ca đã cố định, phòng gắn chết theo lớp. Xếp sau thì giáo viên văn hoá đã bị nghề chiếm hết giờ</td></tr>
-          <tr><td><b>2 · Nghề hệ 9+</b></td><td class="n">Cao</td><td>Lớp 0, 1</td><td>Đây là phần khó nhất, cần nhiều tự do nhất — phải để sau cùng trong nhóm ràng buộc chặt</td></tr>
-          <tr><td><b>3 · TC thường + CĐ</b></td><td class="n">Cao</td><td>Lớp 0, 1, 2</td><td>Không vướng văn hoá nên linh hoạt nhất, nhường xưởng cho hệ 9+ trước</td></tr>
+          <tr><td><b>1 · TC thường + CĐ</b></td><td class="n">Trung bình</td><td>Lớp 0</td><td>Học nghề toàn thời gian nên <b>cần xưởng nhiều nhất</b>. Xếp sau thì xưởng đã bị hệ 9+ chiếm, không còn chỗ</td></tr>
+          <tr><td><b>2 · Văn hoá</b></td><td class="n">Thấp</td><td>Lớp 0, 1</td><td>Ca đã cố định, phòng gắn chết theo lớp — gần như không có tự do. Không tranh xưởng nên xếp sau lớp 1 vẫn được</td></tr>
+          <tr><td><b>3 · Nghề hệ 9+</b></td><td class="n">Cao</td><td>Lớp 0, 1, 2</td><td>Nhận ca bù từ lớp 2, dùng xưởng còn lại sau lớp 1. Cần nhiều tự do nhất nên để sau cùng</td></tr>
         </tbody></table></div>
-      <div class="lg"><span><b>Nguyên tắc:</b> lớp có <b>ít lựa chọn</b> xếp trước. Xếp cái linh hoạt trước thì cái cứng sẽ không còn chỗ.</span></div>
+      <div class="lg"><span><b>Nguyên tắc:</b> nhóm tranh <b>tài nguyên khan hiếm nhất</b> xếp trước. Xưởng là nút thắt của trường, nên trung cấp và cao đẳng — vốn học nghề toàn thời gian — phải giành xưởng trước hệ song bằng.</span></div>
     </div>
 
     <div class="card">
@@ -620,7 +621,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
         <span class="pill p-mu">Định mức 550 tiết chuẩn/năm</span>
         <button class="btn sm" data-add="gv">+ Thêm giáo viên</button></div>
       <div class="cb t0"><div class="scroll"><table class="d">
-        <thead><tr><th>Mã</th><th>Họ tên</th><th>Khối</th><th class="n">Tiết LT</th><th class="n">Tiết TH</th><th class="n">Giờ chuẩn</th><th style="width:130px">So định mức</th><th></th><th></th></tr></thead>
+        <thead><tr><th>Mã</th><th>Họ tên</th><th>Khối</th><th>Khoa</th><th class="n">Tiết LT</th><th class="n">Tiết TH</th><th class="n">Giờ chuẩn</th><th style="width:130px">So định mức</th><th></th><th></th></tr></thead>
         <tbody id="tbGv"></tbody></table></div></div>
       <div class="lg"><span>Quy đổi: <b>45 phút lý thuyết = 1 giờ chuẩn</b> · <b>60 phút thực hành = 1 giờ chuẩn</b> (tiết TH 45 phút quy đổi 0,75)</span></div>
     </div>
@@ -725,6 +726,49 @@ input[type=range]{accent-color:var(--ng);width:110px}
     </div>
   </section>
 
+  <!-- ===== MỐC GIỜ TIẾT HỌC ===== -->
+  <section class="view" id="v-mocgio">
+    <div class="card">
+      <div class="ch"><h3>Mốc giờ từng tiết</h3><span class="sp"></span>
+        <span class="pill p-mu" id="mgTong"></span>
+        <button class="btn sm" id="mgAuto">⚙ Sinh tự động</button>
+        <button class="btn sm" id="mgDef">Mặc định</button></div>
+      <div class="cb">
+        <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">
+          Giờ bắt đầu và kết thúc của từng tiết. Dùng để in lên bản thời khoá biểu và tính ràng buộc di chuyển giữa các cơ sở.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:13px">
+          <label class="fld"><span>Tiết đầu buổi sáng</span><input type="text" id="mgS1" value="07:00"></label>
+          <label class="fld"><span>Tiết đầu buổi chiều</span><input type="text" id="mgC1" value="13:00"></label>
+          <label class="fld"><span>Độ dài tiết (phút)</span><input type="number" id="mgLen" value="45" min="30" max="60"></label>
+          <label class="fld"><span>Nghỉ giữa tiết (phút)</span><input type="number" id="mgNghi" value="5" min="0" max="20"></label>
+          <label class="fld"><span>Nghỉ giữa buổi sau tiết</span><input type="number" id="mgGiua" value="2" min="0" max="5"></label>
+          <label class="fld"><span>Dài nghỉ giữa buổi (phút)</span><input type="number" id="mgGiuaLen" value="15" min="0" max="60"></label>
+        </div>
+        <div class="cb t0" style="padding:0"><table class="d">
+          <thead><tr><th style="width:70px">Buổi</th><th style="width:56px">Tiết</th><th>Bắt đầu</th><th>Kết thúc</th><th>Ghi chú</th></tr></thead>
+          <tbody id="tbMg"></tbody></table></div>
+      </div>
+      <div class="lg">
+        <span>Chào cờ thứ Hai bắt đầu <b>7h25</b> — đã xác nhận từ thời khoá biểu của trường</span>
+        <span style="margin-left:auto;color:var(--ink3)">Sửa trực tiếp trong ô để đặt giờ riêng cho từng tiết</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><h3>Mốc giờ riêng theo cơ sở</h3><span class="sp"></span>
+        <span class="pill p-wn">2 cơ sở</span></div>
+      <div class="cb t0"><table class="d">
+        <thead><tr><th>Cơ sở</th><th>Địa chỉ</th><th>Tiết 1 sáng</th><th>Tiết 1 chiều</th><th class="n">Thời gian di chuyển</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><b>Cơ sở chính</b></td><td>328 Yên Thường, xã Phù Đổng, Hà Nội</td><td class="mono">07:00</td><td class="mono">13:00</td><td class="n">—</td>
+            <td><button class="btn sm" data-toast="Bản mẫu: sửa mốc giờ cơ sở chính.">Sửa</button></td></tr>
+          <tr><td><b>Phân hiệu Huế</b></td><td>1355 Nguyễn Tất Thành, phường Phú Bài, Huế</td><td class="mono">07:00</td><td class="mono">13:30</td><td class="n">—</td>
+            <td><button class="btn sm" data-toast="Bản mẫu: sửa mốc giờ phân hiệu Huế.">Sửa</button></td></tr>
+        </tbody></table></div>
+      <div class="lg"><span>Nếu giáo viên dạy chéo hai cơ sở trong cùng ngày, cần khai <b>thời gian di chuyển tối thiểu</b> để bộ giải chừa đủ khoảng nghỉ.</span></div>
+    </div>
+  </section>
+
   <!-- ===== KHUNG GIỜ ===== -->
   <section class="view" id="v-khung">
     <div class="card">
@@ -797,7 +841,7 @@ tkb:["Thời khoá biểu","Tuần 03 · 24–28/8/2026"],
   phong:["Phòng & xưởng","59 phòng"],mon:["Mô-đun","Chương trình khối 11"],
   ctdt:["Chương trình đào tạo","Cao đẳng · Song bằng · Trung cấp"],
   hedt:["Hệ & khoá học","7 khoá đang chạy"],
-  rb:["Ràng buộc","Cứng & mềm"],khung:["Khung giờ","T2–T6 · 10 tiết/ngày"]};
+  rb:["Ràng buộc","Cứng & mềm"],mocgio:["Mốc giờ tiết học","Giờ bắt đầu và kết thúc"],khung:["Khung giờ","T2–T6 · 10 tiết/ngày"]};
 function go(v){
   $$(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
   $$(".side a").forEach(a=>a.classList.toggle("on",a.dataset.v===v));
@@ -1263,9 +1307,16 @@ const FORMS={
     row:x=>[x.nghe,x.vh,x.si+" HS"]},
   gv:{t:"giáo viên",list:()=>TEACHERS,key:"c",
     f:[{k:"n",l:"Họ tên",w:1},{k:"c",l:"Mã GV",p:"GV073"},
+       {k:"bgd",l:"Mã định danh Bộ GD&ĐT",p:"không bắt buộc"},{k:"email",l:"Email",p:"không bắt buộc"},
        {k:"b",l:"Khối",ty:"select",o:["Nghề","Văn hoá","Cả hai"]},
+       {k:"khoa",l:"Khoa / tổ bộ môn",ty:"select",o:["Điện – Điện tử","Xây dựng và QL đô thị","Cơ khí","CNTT và Du lịch","GD Chính trị và KH Cơ bản"]},
        {k:"mon",l:"Môn / mô-đun dạy",w:1},
-       {k:"lt",l:"Tiết lý thuyết/năm",ty:"number"},{k:"th",l:"Tiết thực hành/năm",ty:"number"}],
+       {k:"cs",l:"Cơ sở",ty:"select",o:["Cơ sở chính","Phân hiệu Huế","Cả hai cơ sở"]},
+       {k:"cn",l:"Chủ nhiệm nhóm",p:"để trống nếu không chủ nhiệm"},
+       {k:"dm",l:"Định mức giờ chuẩn/năm",ty:"number",p:"550"},
+       {k:"lt",l:"Tiết lý thuyết/năm",ty:"number"},{k:"th",l:"Tiết thực hành/năm",ty:"number"},
+       {k:"maxb",l:"Tối đa tiết/buổi",ty:"number",p:"4"},{k:"minb",l:"Tối thiểu tiết/buổi",ty:"number",p:"2"},
+       {k:"nghi",l:"Số ngày nghỉ/tuần",ty:"number",p:"1"}],
     row:x=>[x.n,x.c,x.b]},
   phong:{t:"nhóm phòng",list:()=>ROOMS,key:"n",
     f:[{k:"n",l:"Tên nhóm phòng",w:1},{k:"lo",l:"Mã phòng",p:"A11-201, A11-206",w:1},
@@ -1713,6 +1764,68 @@ $("#bAddGhep").addEventListener("click",()=>toast("Bản mẫu: mở biểu mẫ
   ({dg:"đồng giảng",ghep:"lớp ghép giảng đường",tach:"tách nhóm trong lớp",luan:"giáo viên luân phiên"})[ghepTab]+"."));
 ghepRender();
 
+
+/* ================= MỐC GIỜ TIẾT HỌC ================= */
+const MG={S:[],C:[]};
+function hhmm(m){const h=Math.floor(m/60),q=m%60;return String(h).padStart(2,"0")+":"+String(q).padStart(2,"0");}
+function toMin(t){const m=String(t||"").match(/^(\d{1,2}):(\d{2})/);return m?(+m[1])*60+(+m[2]):null;}
+function mgAuto(){
+  const len=+$("#mgLen").value||45, ng=+$("#mgNghi").value||5;
+  const giua=+$("#mgGiua").value||0, giuaLen=+$("#mgGiuaLen").value||0;
+  [["S","#mgS1"],["C","#mgC1"]].forEach(([b,sel])=>{
+    let t=toMin($(sel).value);
+    if(t===null)t=(b==="S"?7*60:13*60);
+    MG[b]=[];
+    for(let q=1;q<=5;q++){
+      const bd=t, kt=t+len;
+      MG[b].push({p:q,bd:hhmm(bd),kt:hhmm(kt),
+        note:(b==="S"&&q===1)?"Thứ Hai: Chào cờ từ 7h25":(q===giua?"Nghỉ giữa buổi "+giuaLen+" phút":"")});
+      t=kt+ng+(q===giua?giuaLen:0);
+    }
+  });
+  mgRender();
+}
+function mgRender(){
+  const rows=[];
+  [["S","Sáng"],["C","Chiều"]].forEach(([b,l])=>MG[b].forEach((x,idx)=>rows.push([b,l,x,idx])));
+  $("#tbMg").innerHTML=rows.map(([b,l,x,idx])=>
+    `<tr><td>${idx===0?'<b>'+l+'</b>':''}</td><td class="n">${x.p}</td>
+      <td><input type="text" value="${x.bd}" data-mg="${b}|${idx}|bd" style="width:82px" class="mono"></td>
+      <td><input type="text" value="${x.kt}" data-mg="${b}|${idx}|kt" style="width:82px" class="mono"></td>
+      <td style="font-size:12px;color:var(--ink3)">${x.note||""}</td></tr>`).join("");
+  $$("#tbMg [data-mg]").forEach(el=>el.addEventListener("change",()=>{
+    const [b,idx,f]=el.dataset.mg.split("|");
+    if(toMin(el.value)===null){toast("Giờ không hợp lệ, cần dạng HH:MM.");el.value=MG[b][+idx][f];return;}
+    MG[b][+idx][f]=el.value;mgSum();toast("Đã đổi giờ tiết "+MG[b][+idx].p+" buổi "+(b==="S"?"sáng":"chiều")+".");
+  }));
+  mgSum();
+}
+function mgSum(){
+  const s1=MG.S[0],s5=MG.S[MG.S.length-1],c1=MG.C[0],c5=MG.C[MG.C.length-1];
+  if(!s1||!c5)return;
+  $("#mgTong").textContent="Sáng "+s1.bd+"–"+s5.kt+" · Chiều "+c1.bd+"–"+c5.kt;
+}
+["mgLen","mgNghi","mgGiua","mgGiuaLen","mgS1","mgC1"].forEach(id=>{
+  const el=$("#"+id);if(el)el.addEventListener("change",mgAuto);});
+$("#mgAuto").addEventListener("click",()=>{mgAuto();toast("Đã sinh lại mốc giờ theo tham số.");});
+$("#mgDef").addEventListener("click",()=>{
+  $("#mgS1").value="07:00";$("#mgC1").value="13:00";$("#mgLen").value=45;
+  $("#mgNghi").value=5;$("#mgGiua").value=2;$("#mgGiuaLen").value=15;
+  mgAuto();toast("Đã khôi phục mốc giờ mặc định.");});
+mgAuto();
+
+/* Gán khoa và định mức cho giáo viên hiện có (dữ liệu minh hoạ) */
+(function(){
+  const KHOA={"Nghề":["Điện – Điện tử","Cơ khí","CNTT và Du lịch","Xây dựng và QL đô thị"],
+              "Văn hoá":["GD Chính trị và KH Cơ bản"],"Cả hai":["CNTT và Du lịch"]};
+  TEACHERS.forEach((t,idx)=>{
+    if(!t.khoa){const ds=KHOA[t.b]||KHOA["Nghề"];t.khoa=ds[idx%ds.length];}
+    if(!t.dm)t.dm=550;
+    if(!t.cs)t.cs="Cơ sở chính";
+  });
+  if(typeof gvRender==="function")gvRender();
+})();
+
 fillCt();
 
 /* ================= KIỂM TRA ================= */
@@ -1814,13 +1927,14 @@ lopRender();
 
 /* ================= GIÁO VIÊN ================= */
 function gvRender(){
-$("#tbGv").innerHTML=TEACHERS.map(t=>{const s=std(t),pct=Math.min(100,s/550*100),over=s>550;
+$("#tbGv").innerHTML=TEACHERS.map(t=>{const s=std(t),dm=t.dm||550,pct=Math.min(100,s/dm*100),over=s>dm;
   return `<tr class="${over?"bad":""}"><td class="mono">${t.c}</td><td><b>${t.n}</b></td>
   <td><span class="pill ${t.b==="Nghề"?"p-ng":t.b==="Văn hoá"?"p-vh":"p-mu"}">${t.b}</span></td>
+  <td style="font-size:12px">${t.khoa||'<span style="color:var(--ink3)">—</span>'}</td>
   <td class="n">${t.lt}</td><td class="n">${t.th}</td><td class="n"><b>${s}</b></td>
   <td><div style="display:flex;gap:7px;align-items:center"><div class="mini" style="flex:1"><i class="${over?"e":pct>85?"w":""}" style="width:${pct}%"></i></div>
   <span class="mono" style="font-size:11px">${Math.round(pct)}%</span></div></td>
-  <td>${over?'<span class="pill p-er">Vượt '+(s-550)+'</span>':'<span class="pill p-ok">Đạt</span>'}</td>
+  <td>${over?'<span class="pill p-er">Vượt '+(s-dm)+'</span>':'<span class="pill p-ok">Đạt</span>'}</td>
   <td><button class="btn sm" data-edit="gv|${t.c}">Sửa</button></td></tr>`;}).join("");}
 gvRender();
 
@@ -1901,12 +2015,12 @@ $$("#tbRec .sw-toggle").forEach(b=>b.addEventListener("click",()=>{
 const PLAN=[
   {n:0,t:"Ghim cố định",d:"Chào cờ T2 tiết 1 toàn trường · tuần thực tập cao đẳng · tiết sinh hoạt",
    sl:"Toàn trường",bu:64,kh:"—",tn:"Không chiếm xưởng",st:"wait"},
-  {n:1,t:"Văn hoá theo khối",d:"Khối 12 sáng · khối 11 chiều · khối 10 sáng. Phòng cố định theo lớp",
-   sl:"33 lớp văn hoá",bu:495,kh:"Lớp 0",tn:"31 phòng văn hoá",st:"wait"},
-  {n:2,t:"Nghề hệ song bằng 9+",d:"Nhận ca bù của văn hoá · chia ca theo trần 18 · giành xưởng",
-   sl:"36 nhóm nghề",bu:612,kh:"Lớp 0, 1",tn:"11 xưởng · 5 phòng máy",st:"wait"},
-  {n:3,t:"Trung cấp thường + Cao đẳng",d:"Không vướng văn hoá · né xưởng và giáo viên đã bị chiếm",
-   sl:"11 lớp",bu:198,kh:"Lớp 0, 1, 2",tn:"Xưởng còn trống",st:"wait"}
+  {n:1,t:"Trung cấp thường + Cao đẳng",d:"Không vướng văn hoá nhưng cần xưởng nhiều nhất · giành xưởng trước",
+   sl:"11 lớp",bu:198,kh:"Lớp 0",tn:"11 xưởng · 5 phòng máy",st:"wait"},
+  {n:2,t:"Văn hoá theo khối",d:"Khối 10 sáng · khối 11 chiều · khối 12 cả ngày. Phòng cố định theo lớp",
+   sl:"35 lớp văn hoá",bu:495,kh:"Lớp 0, 1",tn:"31 phòng văn hoá",st:"wait"},
+  {n:3,t:"Nghề hệ song bằng 9+",d:"Nhận ca bù của văn hoá · chia ca theo trần 18 · dùng xưởng còn lại",
+   sl:"44 nhóm nghề",bu:612,kh:"Lớp 0, 1, 2",tn:"Xưởng còn trống",st:"wait"}
 ];
 let planRunning=false;
 function planRender(){

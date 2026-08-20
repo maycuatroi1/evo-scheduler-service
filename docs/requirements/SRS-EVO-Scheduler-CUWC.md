@@ -225,8 +225,8 @@ Hệ thống cần: khai báo ca theo khối (`shift_by_grade`), tự suy ca ngh
 
 ### 2.9 Thông tin còn cần trường cung cấp
 
-1. **Tổng số giáo viên** và phân bổ theo khoa.
-2. **Mốc giờ từng tiết 1–10** (mới chỉ biết Chào cờ 7h25).
+1. **Tổng số giáo viên** và phân bổ theo khoa — để nhập vào hồ sơ giáo viên (FR-2.10).
+2. **Mốc giờ từng tiết 1–10** — hệ thống đã có màn hình cấu hình (FR-3.4), chỉ cần trường cung cấp số liệu thực tế thay cho mốc mặc định 07:00 / 13:00.
 3. **Sĩ số thực tế** đang học (con số 2.000 là *chỉ tiêu*, không phải quy mô thực).
 4. **Phân hiệu Huế** xếp lịch độc lập hay chung, và **giáo viên có dạy chéo hai cơ sở không** — nếu có, đây là ràng buộc lớn với bộ giải.
 5. **Nghề nào thuộc diện nặng nhọc, độc hại** (trần thực hành 10 thay vì 18).
@@ -300,13 +300,15 @@ Ba chương trình dùng chung giáo viên và xưởng, nên không thể giả
 | Lớp | Nội dung | Bậc tự do | Bị khoá bởi |
 |---|---|---|---|
 | **0** | Ghim cố định: Chào cờ T2 tiết 1, tuần thực tập CĐ, tiết sinh hoạt | 0 | — |
-| **1** | Văn hoá theo khối (ca cố định, phòng gắn theo lớp) | Thấp | Lớp 0 |
-| **2** | Nghề hệ song bằng 9+ (nhận ca bù, chia ca trần 18, giành xưởng) | Cao | Lớp 0, 1 |
-| **3** | Trung cấp thường + Cao đẳng | Cao | Lớp 0, 1, 2 |
+| **1** | **Trung cấp thường + Cao đẳng** | Trung bình | Lớp 0 |
+| **2** | Văn hoá theo khối (ca cố định, phòng gắn theo lớp) | Thấp | Lớp 0, 1 |
+| **3** | Nghề hệ song bằng 9+ (nhận ca bù, chia ca trần 18, dùng xưởng còn lại) | Cao | Lớp 0, 1, 2 |
 
-**Nguyên tắc: lớp ít bậc tự do nhất xếp trước.** Văn hoá đi trước vì ca đã cố định và phòng gắn chết theo lớp; nếu xếp sau, giáo viên văn hoá đã bị khối nghề chiếm hết giờ.
+**Nguyên tắc: nhóm tranh tài nguyên khan hiếm nhất xếp trước.** Xưởng là nút thắt của trường (11 xưởng cho toàn bộ khối nghề). Trung cấp và cao đẳng học nghề **toàn thời gian** nên cần xưởng nhiều nhất — phải giành xưởng trước; nếu xếp sau, xưởng đã bị hệ song bằng chiếm hết.
 
-> **Cần trường xác nhận:** đây là trình tự đề xuất, chưa phải quy trình trường đang dùng. Một phương án thay thế đáng cân nhắc là đảo lớp 2 lên trước lớp 1 — xếp nghề trước để giành xưởng (nút thắt nặng nhất), rồi nhét văn hoá vào chỗ còn lại. Hệ thống nên **cho phép đổi thứ tự các lớp xếp** để thử cả hai rồi so kết quả.
+Văn hoá xếp ở lớp 2 vì **không tranh xưởng** — chỉ dùng phòng văn hoá riêng, và ca đã cố định nên gần như không có tự do. Hệ song bằng để sau cùng vì cần nhiều tự do nhất: vừa nhận ca bù từ văn hoá, vừa phải chia ca theo trần 18, vừa dùng phần xưởng còn lại.
+
+> *Trình tự này theo yêu cầu của trường (trung cấp đứng trước song bằng). Hệ thống vẫn nên **cho phép đổi thứ tự các lớp xếp** để thử phương án khác rồi so kết quả.*
 
 ---
 
@@ -406,6 +408,8 @@ Ba chương trình dùng chung giáo viên và xưởng, nên không thể giả
 | FR-2.7 | **Import không huỷ hoại**: hiện `import/commit` xoá sạch toàn bộ `Session`, `TeacherModule`, `Module`, `Resource`, `StudentGroup`, `Teacher` của tenant rồi ghi lại | **[THIẾU]** — cần chế độ cập nhật/bổ sung |
 | FR-2.8 | **Sinh buổi học từ số giờ chương trình** (giải quyết G-2): từ `theory_hours`/`practice_hours` và quy tắc gộp tiết, tự sinh `Session` | **[THIẾU]** |
 | FR-2.9 | Quản lý Khoa / Bộ môn / Ngành nghề / Cơ sở đào tạo | **[THIẾU]** (G-4, G-5) |
+| FR-2.10 | **Hồ sơ giáo viên đầy đủ, cấu hình được**: họ tên, mã GV, mã định danh Bộ GD&ĐT, email, khối, **khoa/tổ bộ môn**, môn/mô-đun dạy, **cơ sở công tác**, nhóm chủ nhiệm, **định mức giờ chuẩn riêng từng người**, tiết LT/TH, và các ràng buộc cá nhân (tối đa/tối thiểu tiết mỗi buổi, số ngày nghỉ trong tuần) | **[THIẾU]** |
+| FR-2.11 | Định mức giờ chuẩn **đặt riêng cho từng giáo viên**, không dùng một con số chung — mặc định 550 theo số liệu trường cung cấp | **[THIẾU]** |
 
 ### FR-3. Khung thời khoá biểu
 
@@ -414,7 +418,7 @@ Ba chương trình dùng chung giáo viên và xưởng, nên không thể giả
 | FR-3.1 | Cấu hình số tuần (1–8), số ngày/tuần (1–7), số tiết/ngày (1–16), số tiết buổi sáng | **[ĐÃ CÓ]** |
 | FR-3.2 | Xem trước tổng số tiết khả dụng mỗi tuần khi đang chỉnh | **[ĐÃ CÓ]** |
 | FR-3.3 | Cấu hình khung giờ riêng cho từng khối (`culture_horizon`, `vocational_horizon`) | **[ĐÃ CÓ]** ở tầng dữ liệu, **[THIẾU]** ở giao diện |
-| FR-3.4 | Khai báo mốc giờ thực tế của từng tiết (07:00–07:45…) để xuất lịch có giờ | **[ĐỀ XUẤT]** — trường mới công bố mốc Chào cờ 7h25 |
+| FR-3.4 | **Cấu hình mốc giờ từng tiết**: giờ bắt đầu/kết thúc mỗi tiết, sinh tự động từ tham số (giờ tiết đầu, độ dài tiết, nghỉ giữa tiết, nghỉ giữa buổi) hoặc nhập tay từng tiết. Cho phép **mốc giờ riêng theo cơ sở** và khai **thời gian di chuyển tối thiểu** giữa hai cơ sở | **[THIẾU]** |
 | FR-3.5 | Khung mặc định theo thực tế trường: **T2–T6, 10 tiết/ngày** (1–5 sáng, 6–10 chiều); cho phép mở tới T7/CN và 6:00–22:00 theo Điều 3.4.a quy chế | **[ĐỀ XUẤT]** |
 | FR-3.6 | **Đánh số tuần theo năm học (tuần 01–46)** và phát hành TKB theo từng tuần, song song với lịch gốc ổn định cả kỳ | **[THIẾU]** (G-15) |
 | FR-3.7 | Lịch nghỉ: nghỉ hè, lễ tết, khai giảng, bế giảng (Điều 5 quy chế) | **[ĐỀ XUẤT]** |
