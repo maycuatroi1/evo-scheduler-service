@@ -35,7 +35,7 @@ Toàn bộ giá trị của dự án nằm ở sáu bài toán dưới đây. Đ
 
 | # | Bài toán | Vì sao khó | Mức |
 |---|---|---|---|
-| **1** | **Lớp văn hoá tách nhiều nhóm nghề** — 11A3 → 3 nhóm (16/17/30 SV) | Quan hệ nhiều-nhiều, vô hình trên bản in. Xếp sai là học sinh trùng giờ với chính mình | **Chặn** |
+| **1** | **Lớp văn hoá và nhóm nghề không trùng nhau** — 11A3 tách 3 nhóm (16/17/30); ngược lại 12A1+12A4 gộp 1 nhóm (44) | Quan hệ nhiều-nhiều **cả hai chiều**, vô hình trên bản in. Xếp sai là học sinh trùng giờ với chính mình | **Chặn** |
 | **2** | **Trần sĩ số thực hành 18** trong khi lớp tới 44 SV | Nhân ba số buổi, nhu cầu xưởng và tải giáo viên. Là nguyên nhân gốc của bài toán 1 | **Chặn** |
 | **3** | **Ca học cố định theo khối + ba luồng TKB** | Khối 12 và 10 học văn hoá sáng, khối 11 chiều → hai khối dồn về 11 xưởng cùng buổi chiều. CĐ và TC phát hành theo tuần, văn hoá ổn định cả kỳ | **Chặn** |
 | **4** | **Đồng giảng và các kiểu ghép lớp** | Hai GV một buổi, ghép giảng đường, tách nhóm, luân phiên — bốn mô hình khác nhau | Cao |
@@ -182,11 +182,15 @@ Mô hình `StudentGroup` hiện tại **không diễn đạt được điều n�
 
 ### 2.7 Ca học văn hoá theo khối — ràng buộc cứng
 
-| Khối | Ca văn hoá | Ca học nghề |
-|---|---|---|
-| **Khối 12** | Sáng | Chiều |
-| **Khối 11** | Chiều | Sáng |
-| **Khối 10** | Sáng | Chiều |
+*Kiểm chứng từ 30 file TKB trường công bố (khối 10/11/12 văn hoá, K42/K43 nghề, K21/K22 cao đẳng).*
+
+| Khối | Ca văn hoá | Ca học nghề | Nguồn kiểm chứng |
+|---|---|---|---|
+| **Khối 12** | **Cả ngày** — sáng tiết 1–5 **và** chiều tiết 6–10 | Chiều, tiết 6–9 | 5/5 bản TKB khối 12 đều có hai trang *Buổi sáng* và *Buổi chiều* |
+| **Khối 11** | Chiều, tiết 6–10 | Sáng | 3/3 bản khối 11 chỉ có *Buổi chiều* |
+| **Khối 10** | Sáng, tiết 1–5 | Chiều | 2/2 bản khối 10 chỉ có *Buổi sáng* |
+
+> **Đính chính:** phiên bản trước của tài liệu ghi "khối 12 học sáng". Khảo sát cho thấy **khối 12 học cả hai ca** — ngoài chương trình chính còn có các tiết **bổ trợ ôn thi tốt nghiệp THPT** (Văn/Toán/Địa/Sử bổ trợ, Tiếng Anh và Sinh học tăng cường) xếp vào buổi chiều. Khối 12 vì thế là khối chiếm nhiều tài nguyên nhất.
 
 Học sinh hệ 9+ học văn hoá nửa ngày, học nghề nửa ngày còn lại. Ca của khối là **cố định**, nên ca học nghề được suy ra hoàn toàn — bộ giải không được tự chọn.
 
@@ -197,7 +201,29 @@ Học sinh hệ 9+ học văn hoá nửa ngày, học nghề nửa ngày còn l�
 
 Hệ thống cần: khai báo ca theo khối (`shift_by_grade`), tự suy ca nghề (`shift_complement`), và cảnh báo nghẽn xưởng khi hai khối cùng ca.
 
-### 2.8 Thông tin còn cần trường cung cấp
+### 2.8 Quy mô thực tế — khảo sát từ 30 file TKB
+
+| Hạng mục | Số lượng | Ghi chú |
+|---|---|---|
+| **Lớp văn hoá** | **35** | Khối 10: 11 lớp · khối 11: 12 lớp · khối 12: 12 lớp |
+| **Nhóm nghề** | **~44** | K43 khối 11: 14 nhóm · K42 khối 12: 16 nhóm · cao đẳng K21+K22: ~14 lớp |
+| **Giáo viên** | **~83–85** | ~51 khối nghề/CĐ + ~47 khối văn hoá, sau khi gộp các trường hợp trùng |
+| **Phòng** | **54 mã** xuất hiện trong TKB | Gồm cả `DN` (doanh nghiệp) và `P QLĐT` (phòng tổ chức thi) — không phải phòng học |
+| **Mô-đun nghề** | **~90** | Trải trên 16 nghề |
+| **Môn văn hoá** | **13** | 11 môn chính + Sinh hoạt + Chào cờ; khối 12 thêm 5 môn bổ trợ/tăng cường |
+
+**Ánh xạ khoá ↔ khối** (năm học mới bắt đầu tuần 01, ngày 10/8/2026 — mọi khoá lên một khối):
+
+| Khoá | Tuần 36–46 (tháng 6/2026) | Tuần 01–03 (tháng 8/2026) |
+|---|---|---|
+| K43 | Khối 10 | Khối 11 |
+| K42 | Khối 11 | Khối 12 |
+
+> Hệ thống phải mô hình hoá được **khoá học tiến lên khối** theo năm học, thay vì gắn cứng khoá với khối.
+
+**Phòng cố định của lớp văn hoá** — khối 10 và 11 dùng chung dãy `A6-501…507` và `A6-601…607` nhưng không xung đột vì khác ca. Khối 12 dùng dãy riêng `A6-3xx` và `A6-4xx`. Lưu ý hoán vị: `10A9→A6-603` nhưng `11A9→A6-605` (và ngược lại với A10).
+
+### 2.9 Thông tin còn cần trường cung cấp
 
 1. **Tổng số giáo viên** và phân bổ theo khoa.
 2. **Mốc giờ từng tiết 1–10** (mới chỉ biết Chào cờ 7h25).
@@ -320,7 +346,7 @@ Ba chương trình dùng chung giáo viên và xưởng, nên không thể giả
 
 | Khoảng trống | Thuộc bài toán |
 |---|---|
-| G-11 | ① Lớp tách nhóm |
+| G-11, **G-18** | ① Lớp tách nhóm và gộp nhóm |
 | G-14 | ② Trần sĩ số |
 | G-3, G-15, **G-16**, **G-17** | ③ Ca học theo khối + ba luồng lịch |
 | G-10 | ④ Đồng giảng |
@@ -346,8 +372,11 @@ Ba chương trình dùng chung giáo viên và xưởng, nên không thể giả
 | G-13 | Không phân biệt **giờ chuẩn** với **giờ thực dạy** | `quota_standard_hours` đang so trực tiếp với số tiết. Theo TT 07/2017, 45 phút lý thuyết = 1 giờ chuẩn nhưng 60 phút thực hành = 1 giờ chuẩn — hệ số khác nhau. Báo cáo tải giảng dạy hiện sẽ sai | Cao |
 | G-14 | Không có **trần sĩ số riêng cho lý thuyết và thực hành** | Quy định: lý thuyết ≤ 35, thực hành ≤ 18 (≤ 10 nghề độc hại). Lớp văn hoá thực tế tới 44 SV. `capacity_limit` chỉ so sức chứa phòng, không áp trần theo loại buổi — đây chính là lý do lớp 9+ phải tách nhóm | **Chặn** |
 | G-15 | Không có **nhịp phát hành theo tuần** song song với lịch gốc ổn định | Trường phát hành TKB cao đẳng và trung cấp **hằng tuần** (tuần 01–46) nhưng TKB văn hoá **ổn định cả kỳ**. Hệ thống chỉ có một khung `weeks` duy nhất | Cao |
-| G-16 | Không có **thuộc tính ca học của khối** | Khối 12 và 10 học văn hoá sáng, khối 11 chiều; ca nghề là phần bù. Không có ràng buộc này, bộ giải sẽ xếp tiết văn hoá khối 11 vào buổi sáng — sai hoàn toàn thực tế vận hành | **Chặn** |
+| G-16 | Không có **thuộc tính ca học của khối** | Khối 10 học văn hoá sáng, khối 11 chiều, khối 12 cả ngày; ca nghề là phần bù. Không có ràng buộc này, bộ giải sẽ xếp tiết văn hoá khối 11 vào buổi sáng — sai hoàn toàn thực tế vận hành | **Chặn** |
 | G-17 | Không diễn đạt được **phòng dùng chung giữa các khối** | 4 phòng lý thuyết to + 5 nhỏ dùng chung khối văn hoá và khối nghề. Không mô hình hoá thì bộ giải không thấy tranh chấp | Cao |
+| G-18 | **Không gộp được nhiều lớp văn hoá vào một nhóm nghề** | Đã xác nhận từ TKB K42: `12A1 + 12A4` → KT lắp đặt điện (44 HS); `12A1 + 12A2` → Thiết kế đồ hoạ (54 HS). Lớp 12A1 vừa gộp với 12A4 ở nghề này, vừa gộp với 12A2 ở nghề kia. Quan hệ lớp ↔ nhóm nghề là **nhiều-nhiều theo cả hai chiều**, không chỉ một chiều tách nhóm | **Chặn** |
+| G-19 | Không có **buổi học ngoài chương trình chính** (bổ trợ, tăng cường) | Khối 12 có Văn/Toán/Địa/Sử bổ trợ và Tiếng Anh, Sinh học tăng cường, xếp vào các tiết ngoài bảng chính. Đây là lý do khối 12 chiếm cả hai ca | Cao |
+| G-20 | Không có **địa điểm ngoài trường** | TKB dùng mã `DN` (doanh nghiệp) cho các buổi thực tập tại doanh nghiệp; Điều 4 quy chế công nhận doanh nghiệp là địa điểm đào tạo hợp lệ. Cũng cần `ONLINE` — đã xuất hiện một buổi trong TKB K42 | Trung bình |
 
 ---
 
@@ -487,6 +516,8 @@ Ba chương trình dùng chung giáo viên và xưởng, nên không thể giả
 | CT-19 | **Buổi học nghề nằm ở ca bù của ca văn hoá** | **[THIẾU]** — `shift_complement` |
 | CT-20 | **Trần sĩ số theo loại buổi** (LT 35 · TH 18 · độc hại 10), tách khỏi sức chứa phòng | **[THIẾU]** — `capacity_by_type` |
 | CT-21 | **Hai nhóm nghề cùng lớp văn hoá không trùng giờ** | **[THIẾU]** — `group_same_class` |
+| CT-22 | **Nhóm nghề gộp nhiều lớp thì chặn mọi lớp thành viên** | **[THIẾU]** — `group_multi_class` |
+| CT-23 | Buổi tại doanh nghiệp và buổi trực tuyến **không chiếm phòng** | **[THIẾU]** — `offsite_no_room` |
 
 ### 7.2 Ràng buộc mềm — mục tiêu tối ưu
 
@@ -519,6 +550,9 @@ Rút ra từ tài liệu *Dạy chung lớp* và thực tế trường nghề �
 | BR-12 | **Ca văn hoá cố định theo khối**: khối 12 sáng, khối 11 chiều, khối 10 sáng | Thuộc tính ca của khối; bộ giải không được tự chọn |
 | BR-13 | **Ca nghề là phần bù của ca văn hoá**: học sinh học văn hoá nửa ngày, nghề nửa ngày kia | Suy ra tự động từ BR-12, không khai báo riêng |
 | BR-14 | **Phòng lý thuyết nghề dùng chung khối văn hoá** (4 to + 5 nhỏ) | Một nhóm phòng phục vụ nhiều khối; bộ giải phải thấy tranh chấp |
+| BR-15 | **Nhiều lớp văn hoá gộp một nhóm nghề** *(đã xác nhận từ TKB K42)*: `12A1+12A4` → 44 HS; `12A1+12A2` → 54 HS | Nhóm nghề liên kết nhiều `StudentGroup`; sĩ số cộng dồn; khi nhóm học thì **mọi lớp thành viên** đều bị chặn (G-18) |
+| BR-16 | **Buổi bổ trợ, tăng cường ngoài chương trình chính** — khối 12 có Văn/Toán/Địa/Sử bổ trợ, Tiếng Anh và Sinh học tăng cường | Loại buổi riêng, xếp ngoài bảng chính, vẫn chiếm phòng và giáo viên (G-19) |
+| BR-17 | **Địa điểm ngoài trường**: thực tập tại doanh nghiệp (`DN`), buổi học trực tuyến (`ONLINE`) | Không chiếm phòng của trường; `ONLINE` cũng không chiếm phòng nhưng vẫn chặn lớp và tính tải GV (G-20) |
 
 ### 7.4 Bộ ràng buộc khuyến nghị **[ĐỀ XUẤT]**
 
@@ -604,8 +638,8 @@ Mẫu TKB thực tế của trường (tài liệu tham chiếu `img2.jpg` — *
 
 | Giai đoạn | Nội dung | Kết quả bàn giao |
 |---|---|---|
-| **GĐ 1 — Chặn** | G-1 (`Session`→`Schedule`), G-2 (sinh buổi học từ giờ chương trình), **G-11 (lớp văn hoá ↔ nhóm nghề)**, **G-14 (trần sĩ số theo loại buổi)**, **G-16 (ca học theo khối)**, G-7 (phân quyền), FR-1.4, FR-2.7 | Hệ thống dùng được cho dữ liệu thật của khối 9+ — khối lớn nhất và khó nhất |
-| **GĐ 2 — Nghiệp vụ** | Khoa/Bộ môn/Ngành (G-4), cơ sở đào tạo (G-5), **G-15 (nhịp phát hành tuần)**, **G-12 (tuần thực tập)**, CRUD dữ liệu nền (FR-2.6), giao diện ràng buộc (FR-4.2) | Triển khai thí điểm toàn trường, cả ba luồng TKB |
+| **GĐ 1 — Chặn** | G-1 (`Session`→`Schedule`), G-2 (sinh buổi học từ giờ chương trình), **G-11 + G-18 (lớp ↔ nhóm nghề, cả hai chiều)**, **G-14 (trần sĩ số theo loại buổi)**, **G-16 (ca học theo khối)**, G-7 (phân quyền), FR-1.4, FR-2.7 | Hệ thống dùng được cho dữ liệu thật của khối 9+ — khối lớn nhất và khó nhất |
+| **GĐ 2 — Nghiệp vụ** | Khoa/Bộ môn/Ngành (G-4), cơ sở đào tạo (G-5), **G-15 (nhịp phát hành tuần)**, **G-12 (tuần thực tập)**, **G-19 (buổi bổ trợ)**, **G-20 (địa điểm ngoài trường)**, CRUD dữ liệu nền (FR-2.6), giao diện ràng buộc (FR-4.2) | Triển khai thí điểm toàn trường, cả ba luồng TKB |
 | **GĐ 3 — Đặc thù** | Đồng giảng, lớp ghép, nhóm giáo viên (BR-1…BR-6), **G-13 (giờ chuẩn)** | Bao phủ các tình huống thực tế đã quan sát trong TKB |
 | **GĐ 4 — Hoàn thiện** | Xuất bản (FR-8.3), PDF đúng mẫu (FR-8.2), cổng giáo viên/sinh viên (FR-8.4), kế thừa lịch cũ (FR-6.8), báo cáo (FR-9.3…9.5) | Vận hành chính thức |
 | **GĐ 5 — Mở rộng** | Xếp lịch thi (Điều 12 quy chế: ≥2 tuần, ≤50 thí sinh/phòng, ≥2 giám thị, không ghép môn) | Bài toán xếp lịch thi — phạm vi riêng, cần đặc tả bổ sung |
@@ -648,9 +682,11 @@ Hệ thống được coi là đạt khi:
 |---|---|
 | Đề án tuyển sinh 2026 (QĐ 63/QĐ-CDT, 30/01/2026) | Định danh, chỉ tiêu, danh mục ngành nghề, thời gian đào tạo |
 | **Quy chế tổ chức đào tạo TC–CĐ** (QĐ 245/QĐ-CDT, 06/6/2024) | Ràng buộc pháp lý nội bộ: khung giờ, lịch thi, điểm danh (§2.5) |
-| TKB nghề khối 11 — TC khoá 43, tuần 02 (17–21/8/2026) | **Bằng chứng lớp tách nhóm, đồng giảng, sĩ số, mã phòng** |
-| TKB khối cao đẳng K22, tuần 02 | Nhịp phát hành tuần, tuần thực tập trọn gói |
-| TKB khối văn hoá khối 10 | Mô hình lịch ổn định theo kỳ |
+| **30 file TKB do trường công bố** (khảo sát toàn bộ) | Nguồn dữ liệu thật chính — xem chi tiết bên dưới |
+| TKB nghề K43 tuần 01/02/03 + tuần 36 | **Lớp tách nhóm**, đồng giảng, sĩ số, mã phòng |
+| TKB nghề K42 tuần 01/02/03 + tuần 45/46 | **Nhiều lớp gộp một nhóm**, ca nghề buổi chiều khối 12 |
+| TKB cao đẳng K21/K22 (10 file) | Nhịp phát hành tuần, tuần thực tập trọn gói, mã `DN` |
+| TKB văn hoá khối 10 (2), khối 11 (3), khối 12 (5) | Ca học theo khối, phòng cố định, môn bổ trợ khối 12 |
 | TT 01/2024, TT 07/2017 /TT-BLĐTBXH | Tỉ lệ LT/TH, giờ chuẩn, định mức, trần sĩ số |
 | Luật GDNN 124/2025/QH15 | Hiệu lực 01/01/2026 |
 

@@ -279,6 +279,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
       <div class="cb" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
         <label class="fld"><span>Khoá học</span><select id="fKhoa">
           <option value="k43">K43 · Song bằng 9+ · khối 11</option>
+          <option value="k42">K42 · Song bằng 9+ · khối 12</option>
           <option value="k22">K22 · Cao đẳng</option></select></label>
         <label class="fld"><span>Chương trình</span><select id="fCt"></select></label>
         <label class="fld"><span>Xem theo</span><select id="fMode"><option value="grp">Nhóm nghề</option><option value="gv">Giáo viên</option><option value="ph">Phòng</option></select></label>
@@ -294,6 +295,8 @@ input[type=range]{accent-color:var(--ng);width:110px}
         <span><i class="sw sw-n"></i>Nghề</span><span><i class="sw sw-v"></i>Văn hoá</span>
         <span><i class="sw sw-t"></i>Thực tập</span><span><i class="sw sw-e"></i>Xung đột</span>
         <span><span class="tag">🔒</span>Đã khoá</span>
+        <span><span class="tag">⚯</span>Lớp tách nhiều nhóm</span>
+        <span><span class="tag">⊕</span>Nhiều lớp gộp một nhóm</span>
         <span style="margin-left:auto;color:var(--ink3)">Bấm buổi để xem · bấm ô trống để chuyển buổi đang chọn</span>
       </div>
     </div>
@@ -668,7 +671,10 @@ const TEACHERS=[
   {c:"GV065",n:"Cô N.T.Trang",b:"Văn hoá",mon:"Địa lí",lt:360,th:0},
   {c:"GV066",n:"Cô L.Duyên",b:"Văn hoá",mon:"Lịch sử",lt:350,th:0},
   {c:"GV067",n:"Cô H.V.Uyên",b:"Văn hoá",mon:"GDKT&PL",lt:340,th:0},
-  {c:"GV068",n:"Cô N.Khuyên",b:"Văn hoá",mon:"Sinh học",lt:300,th:0}
+  {c:"GV068",n:"Cô N.Khuyên",b:"Văn hoá",mon:"Sinh học",lt:300,th:0},
+  {c:"GV070",n:"Thầy B.V.Thái",b:"Nghề",mon:"Dựng video, After Effects",lt:210,th:340},
+  {c:"GV071",n:"Cô P.Tròn",b:"Nghề",mon:"Chế biến món ăn Á",lt:150,th:400},
+  {c:"GV072",n:"Thầy N.Trí",b:"Nghề",mon:"Trắc địa",lt:180,th:300}
 ];
 /* Cơ sở vật chất — theo số liệu trường cung cấp */
 const ROOMS=[
@@ -782,8 +788,35 @@ const VH_SES=(()=>{
     });}});
   return out;})();
 
+/* --- luồng K42 khối 12: học nghề buổi CHIỀU, tiết 6–9.
+   Có cả lớp tách nhóm (12A3 → 2 nghề) lẫn nhiều lớp GỘP một nhóm
+   (12A1+12A4 → KT lắp đặt điện 44 HS; 12A1+12A2 → Thiết kế đồ hoạ 54 HS). --- */
+const K42_COLS=[
+  {g:"M1",vh:"12A3",si:22,nghe:"CNKT Điều khiển tự động"},
+  {g:"M2",vh:"12A3",si:22,nghe:"Kỹ thuật máy lạnh và ĐHKK"},
+  {g:"M3",vh:"12A1 + 12A4",si:44,nghe:"KT lắp đặt điện & điều khiển CN",gop:1},
+  {g:"M4",vh:"12A4",si:14,nghe:"Điện nước"},
+  {g:"M5",vh:"12A1 + 12A2",si:54,nghe:"Thiết kế đồ hoạ",gop:1}
+];
+const K42_SES=[
+  {id:"M01",d:0,s:"C",p:1,len:4,g:"M1",m:"Thực tập tốt nghiệp",gv:"— doanh nghiệp —",gvc:"",r:"A11-201",t:"tt"},
+  {id:"M02",d:0,s:"C",p:1,len:4,g:"M2",m:"Sửa chữa hệ thống lạnh ĐHKK",gv:"Thầy N.V.Hiện",gvc:"GV024",r:"A11-104",t:"ng"},
+  {id:"M03",d:0,s:"C",p:1,len:4,g:"M3",m:"Thực tập tốt nghiệp",gv:"— doanh nghiệp —",gvc:"",r:"",t:"tt"},
+  {id:"M04",d:0,s:"C",p:1,len:4,g:"M4",m:"Thực tập tốt nghiệp",gv:"Thầy T.H.Quỳnh",gvc:"GV056",r:"A11-103",t:"ng"},
+  {id:"M05",d:0,s:"C",p:1,len:4,g:"M5",m:"Biên tập chỉnh sửa video",gv:"Thầy B.V.Thái",gvc:"GV070",r:"A4-501",t:"ng"},
+  {id:"M06",d:1,s:"C",p:1,len:4,g:"M2",m:"Sửa chữa hệ thống lạnh ĐHKK",gv:"Thầy N.V.Hiện",gvc:"GV024",r:"A11-104",t:"ng"},
+  {id:"M07",d:1,s:"C",p:1,len:4,g:"M5",m:"Thiết kế dàn trang Adobe InDesign",gv:"Thầy N.M.Quang",gv2:"Cô B.Thảo",gvc:"GV054",r:"A4-501",t:"ng"},
+  {id:"M08",d:2,s:"C",p:1,len:4,g:"M1",m:"Thực tập tốt nghiệp",gv:"— doanh nghiệp —",gvc:"",r:"A11-201",t:"tt"},
+  {id:"M09",d:2,s:"C",p:1,len:4,g:"M5",m:"Thiết kế Web",gv:"Thầy B.Q.Quý",gv2:"Cô D.Chi",gvc:"GV053",r:"A4-502",t:"ng"},
+  {id:"M10",d:3,s:"C",p:1,len:4,g:"M2",m:"Sửa chữa hệ thống lạnh ĐHKK",gv:"Thầy N.V.Hiện",gvc:"GV024",r:"A11-104",t:"ng"},
+  {id:"M11",d:3,s:"C",p:1,len:4,g:"M5",m:"Lắp ráp cài đặt máy tính",gv:"Thầy N.V.Thắng",gv2:"Thầy Đ.Kiên",gvc:"GV055",r:"A4-402",t:"ng"},
+  {id:"M12",d:4,s:"C",p:1,len:4,g:"M3",m:"Thực tập tốt nghiệp",gv:"— doanh nghiệp —",gvc:"",r:"",t:"tt"},
+  {id:"M13",d:4,s:"C",p:1,len:4,g:"M4",m:"Thực tập tốt nghiệp",gv:"Thầy T.H.Quỳnh",gvc:"GV056",r:"A11-103",t:"ng"}
+];
+
 const STREAMS={
   sb:{cols:COLS_SB(),ses:null,per:5,lbl:"Song bằng 9+ · K43 khối 11",note:"5 nhóm nghề đầu · buổi sáng học nghề"},
+  k42:{cols:K42_COLS,ses:K42_SES,per:5,lbl:"Song bằng 9+ · K42 khối 12",note:"học nghề buổi chiều · nhiều lớp gộp một nhóm"},
   cd:{cols:CD_COLS,ses:CD_SES,per:5,lbl:"Cao đẳng · K22",note:"10 tiết/ngày · tuần 02 toàn thực tập"},
   vh:{cols:VH_COLS,ses:VH_SES,per:5,lbl:"Văn hoá · khối 11",note:"Phòng cố định theo lớp · khối 11 học chiều"}
 };
@@ -821,7 +854,10 @@ function ttRender(){
   const DATA=stream==="sb"?SES:st.ses;
   const th=$("#tt thead"),tb=$("#tt tbody");
   th.innerHTML="<tr><th class='ax'>Thứ</th><th class='ax'>Buổi</th><th class='ax'>Tiết</th>"+
-    COLS.map(c=>`<th><span class="cn">${c.nghe}</span><span class="cm">(${c.vh}) · ${c.si} ${stream==="cd"?"SV":"HS"}</span></th>`).join("")+"</tr>";
+    COLS.map(c=>{
+      const tach=COLS.filter(x=>x.vh===c.vh).length>1;
+      return `<th><span class="cn">${c.nghe}</span><span class="cm">(${c.vh})${tach?" ⚯":""}${c.gop?" ⊕":""} · ${c.si} ${stream==="cd"?"SV":"HS"}</span></th>`;
+    }).join("")+"</tr>";
   // lưới chiếm dụng
   const grid={};
   DAYS.forEach((_,d)=>{grid[d]={};["S","C"].forEach(s=>{grid[d][s]={};
@@ -867,6 +903,7 @@ function ttRender(){
    cao đẳng chỉ có một. */
 const CT_BY_KHOA={
   k43:[{v:"sb",l:"Nghề (trung cấp)"},{v:"vh",l:"Văn hoá (GDTX cấp THPT)"}],
+  k42:[{v:"k42",l:"Nghề (trung cấp)"}],
   k22:[{v:"cd",l:"Cao đẳng"}]
 };
 function fillCt(){
@@ -1301,30 +1338,36 @@ $$("#v-hedt .tabs button").forEach(b=>b.addEventListener("click",()=>{
 heRender();
 
 /* ================= CA HỌC THEO KHỐI ================= */
-const SHIFTS=[{k:"Khối 12",lop:11,vh:"S",ph:"A6-5xx, A6-6xx"},
-  {k:"Khối 11",lop:11,vh:"C",ph:"A6-5xx, A6-6xx"},
-  {k:"Khối 10",lop:11,vh:"S",ph:"A6-5xx, A6-6xx"}];
+/* Kiểm chứng từ 30 file TKB trường công bố:
+   - Khối 10: văn hoá SÁNG (tiết 1–5) · nghề chiều
+   - Khối 11: văn hoá CHIỀU (tiết 6–10) · nghề sáng
+   - Khối 12: văn hoá CẢ NGÀY (sáng 1–5 + chiều 6–10) · nghề chiều tiết 6–9 */
+const SHIFTS=[{k:"Khối 12",lop:12,vh:"SC",ng:"C",ph:"A6-3xx, A6-4xx"},
+  {k:"Khối 11",lop:12,vh:"C",ng:"S",ph:"A6-501…507, A6-601…607"},
+  {k:"Khối 10",lop:11,vh:"S",ng:"C",ph:"A6-501…507, A6-601…605"}];
 (function(){
   const VHROOMS=26+5; // 26 phòng lớn + 5 phòng nhỏ
-  $("#tbShift").innerHTML=SHIFTS.map(s=>{
-    const ngc=s.vh==="S"?"C":"S";
-    return `<tr><td><b>${s.k}</b></td><td class="n">${s.lop}</td>
-      <td><span class="pill ${s.vh==="S"?"p-wn":"p-vh"}">${s.vh==="S"?"Sáng":"Chiều"}</span></td>
-      <td><span class="pill p-ng">${ngc==="S"?"Sáng":"Chiều"}</span></td>
-      <td class="mono" style="font-size:11.5px">${s.ph}</td></tr>`;}).join("");
-  // điểm nghẽn: khối nào cùng ca
-  const sang=SHIFTS.filter(s=>s.vh==="S"),chieu=SHIFTS.filter(s=>s.vh==="C");
-  const lopS=sang.reduce((n,s)=>n+s.lop,0),lopC=chieu.reduce((n,s)=>n+s.lop,0);
-  const okS=lopS<=VHROOMS;
+  const LBL={S:"Sáng",C:"Chiều",SC:"Cả ngày"};
+  $("#tbShift").innerHTML=SHIFTS.map(s=>
+    `<tr><td><b>${s.k}</b></td><td class="n">${s.lop}</td>
+      <td><span class="pill ${s.vh==="SC"?"p-er":s.vh==="S"?"p-wn":"p-vh"}">${LBL[s.vh]}</span></td>
+      <td><span class="pill p-ng">${LBL[s.ng]}</span></td>
+      <td class="mono" style="font-size:11.5px">${s.ph}</td></tr>`).join("");
+  // Lớp dùng phòng văn hoá theo ca — khối 12 chiếm cả hai ca
+  const vhS=SHIFTS.filter(s=>s.vh.includes("S")),vhC=SHIFTS.filter(s=>s.vh.includes("C"));
+  const lopVhS=vhS.reduce((n,s)=>n+s.lop,0),lopVhC=vhC.reduce((n,s)=>n+s.lop,0);
+  // Lớp đổ về xưởng theo ca
+  const ngS=SHIFTS.filter(s=>s.ng==="S"),ngC=SHIFTS.filter(s=>s.ng==="C");
+  const lopNgS=ngS.reduce((n,s)=>n+s.lop,0),lopNgC=ngC.reduce((n,s)=>n+s.lop,0);
+  const XUONG=11;
   $("#shiftOut").innerHTML=
-    `<div class="box ${okS?"ok":"er"}"><span class="i">${okS?"✓":"✕"}</span><span class="x">
-      <b>Ca sáng:</b> ${sang.map(s=>s.k).join(" + ")} = <b>${lopS} lớp</b> cần phòng văn hoá, trường có <b>${VHROOMS} phòng</b> (26 lớn + 5 nhỏ).
-      ${okS?`Còn dư ${VHROOMS-lopS} phòng.`:`<b>Thiếu ${lopS-VHROOMS} phòng.</b>`}
-      <span class="f">Cùng lúc đó ${lopS} lớp này cũng cần xưởng và phòng máy cho ca chiều — đây mới là ràng buộc chặt.</span></span></div>
-     <div class="box nu"><span class="i">◑</span><span class="x">
-      <b>Ca chiều:</b> ${chieu.map(s=>s.k).join(", ")} = ${lopC} lớp dùng phòng văn hoá, dư <b>${VHROOMS-lopC} phòng</b>.
-      Trong khi đó ${lopS} lớp khối 10 và 12 đổ về xưởng — <b>11 xưởng</b> phải gánh ${lopS} lớp, mỗi lớp còn phải chia ca theo trần 18 HS.
-      <span class="f">Gợi ý: cân nhắc chuyển một khối sang ca chiều để san tải xưởng, hoặc mở thêm T7 theo quy chế cho phép.</span></span></div>`;
+    `<div class="box ${lopVhS<=VHROOMS?"ok":"er"}"><span class="i">${lopVhS<=VHROOMS?"✓":"✕"}</span><span class="x">
+      <b>Phòng văn hoá ca sáng:</b> ${vhS.map(s=>s.k).join(" + ")} = <b>${lopVhS} lớp</b> / ${VHROOMS} phòng.
+      ${lopVhS<=VHROOMS?"Dư "+(VHROOMS-lopVhS)+" phòng.":"<b>Thiếu "+(lopVhS-VHROOMS)+" phòng.</b>"}
+      <span class="f">Ca chiều: ${vhC.map(s=>s.k).join(" + ")} = ${lopVhC} lớp / ${VHROOMS} phòng — dư ${VHROOMS-lopVhC}.</span></span></div>
+     <div class="box er"><span class="i">⚠</span><span class="x">
+      <b>Nghẽn xưởng ca chiều:</b> ${ngC.map(s=>s.k).join(" + ")} = <b>${lopNgC} lớp</b> đổ về <b>${XUONG} xưởng</b>, trong khi ca sáng chỉ ${lopNgS} lớp.
+      <span class="f">Mỗi lớp còn phải chia ca theo trần 18 HS nên nhu cầu thực tế còn nhân lên. Gợi ý: chuyển khối 10 sang học văn hoá ca chiều để san tải, hoặc mở thêm thứ 7 — quy chế cho phép dạy tới 22:00 kể cả T7 và CN.</span></span></div>`;
 })();
 
 /* ================= KHUNG GIỜ ================= */
