@@ -450,7 +450,8 @@ Ba chương trình dùng chung giáo viên và xưởng, nên không thể giả
 | FR-6.5 | Giữ nghiệm pha 1 khi pha 2 hết giờ | **[ĐÃ CÓ]** |
 | FR-6.6 | **Dừng bộ giải giữa chừng** | **[THIẾU]** — FTKB có nút "Dừng" |
 | FR-6.7 | **Xếp trước (ghim tiết)**: ghim Chào cờ, Sinh hoạt, tiết không học, tiết GVCN, hoặc một mô-đun cụ thể vào ô cố định trước khi chạy. Phạm vi áp dụng: toàn trường / theo khối / theo nhóm | **[ĐỀ XUẤT]** |
-| FR-6.8 | **Kế thừa lịch cũ**: giữ nguyên phần lớn lịch học kỳ trước, chỉ xếp lại giáo viên có thay đổi phân công | **[ĐỀ XUẤT]** — đây là tính năng khác biệt của FTKB, rất giá trị khi sang học kỳ 2 |
+| FR-6.8 | **Kế thừa lịch cũ** (xem §7.6): chọn phiên bản gốc → dò giáo viên có thay đổi phân công → chỉ xếp lại phần của họ, hạn chế xáo trộn tiết của người khác | **[ĐỀ XUẤT]** — tính năng khác biệt của FTKB, giá trị nhất khi sang học kỳ 2 |
+| FR-6.12 | **Độ ưu tiên ràng buộc** (Cao / Trung bình / Thấp) kèm trọng số 1–5 cho từng ràng buộc, theo 4 nhóm: giáo viên, nhóm giáo viên, môn học, phòng. Có nút khôi phục mặc định | **[ĐỀ XUẤT]** |
 | FR-6.9 | Lưu lịch sử các phiên chạy, so sánh và khôi phục phiên bản | **[ĐỀ XUẤT]** |
 | FR-6.10 | **Kế hoạch xếp nhiều lớp**: khai báo trình tự các lớp xếp (§4.2), đổi được thứ tự, chạy tuần tự và khoá dần | **[THIẾU]** — hiện chỉ xếp hai khối văn hoá/nghề cứng trong mã |
 | FR-6.11 | Chạy lại **một lớp xếp** mà không phá kết quả các lớp khác | **[ĐỀ XUẤT]** |
@@ -537,7 +538,7 @@ Ba chương trình dùng chung giáo viên và xưởng, nên không thể giả
 
 ### 7.3 Tình huống nghiệp vụ đặc thù cần hỗ trợ **[ĐỀ XUẤT]**
 
-Rút ra từ tài liệu *Dạy chung lớp* và thực tế trường nghề — hiện hệ thống **chưa diễn đạt được** các tình huống này (G-10):
+Rút ra từ tài liệu *Dạy chung lớp* và thực tế trường nghề — hiện hệ thống **chưa diễn đạt được** các tình huống này (G-10). Bốn tình huống đầu đã được minh hoạ trong bản mẫu ở màn hình **Lớp ghép & đồng giảng**, kèm dữ liệu thật trích từ TKB của trường:
 
 | Mã | Tình huống | Yêu cầu mô hình |
 |---|---|---|
@@ -600,6 +601,27 @@ Xếp tự động không bao giờ thay thế hoàn toàn con người: cán b�
 | Da cam | Vi phạm ràng buộc "hạn chế xếp" của giáo viên hoặc nhóm giáo viên |
 
 **An toàn khi thao tác:** mọi thay đổi được lưu tự động; phải có **lùi từng bước** và **khôi phục TKB gốc**; tiết đã khoá không bị di chuyển.
+
+---
+
+### 7.6 Kế thừa thời khoá biểu cũ **[ĐỀ XUẤT]**
+
+Đây là tính năng có giá trị thực tế cao nhất trong bộ tài liệu FTKB. Hai tình huống dùng đến:
+
+1. **Trường thay đổi phân công vài giáo viên** giữa kỳ — không lý do gì phải xếp lại cả trường.
+2. **Sang học kỳ 2** — phần lớn thời khoá biểu học kỳ 1 vẫn dùng được.
+
+**Cơ chế:** người dùng chọn **phiên bản TKB gốc** để kế thừa. Hệ thống **so sánh phân công giảng dạy** giữa phiên bản đó và dữ liệu hiện tại, tìm ra những giáo viên có thay đổi, rồi **chỉ xếp lại phần của họ** — các giáo viên khác giữ nguyên vị trí tiết.
+
+| Mức giữ nguyên | Hành vi |
+|---|---|
+| **Tối đa** | Chỉ đổi tiết của giáo viên có thay đổi phân công |
+| **Vừa** | Cho phép dịch tiết lân cận của giáo viên khác nếu cần |
+| **Ít** | Dùng lịch cũ làm gợi ý, bộ giải tự do hơn |
+
+**Yêu cầu đi kèm:** hệ thống phải quản lý **lịch sử phiên bản**, phân biệt *TKB gốc* (do bộ giải sinh) và *TKB đã tinh chỉnh* (do người sửa tay), ghi rõ phiên bản nào **kế thừa từ** phiên bản nào, và số buổi chưa xếp được của từng phiên bản.
+
+> **Phụ thuộc:** tính năng này chỉ làm được sau khi xử lý khoảng trống **G-1** — hiện `Session` chưa gắn với `Schedule` nên mọi phiên bản dùng chung một trạng thái xếp lịch, không thể so sánh hai phiên bản với nhau.
 
 ---
 

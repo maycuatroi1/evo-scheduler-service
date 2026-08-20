@@ -203,6 +203,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
     <a data-v="ghim"><i>📌</i>Xếp trước môn<span class="cnt" id="nGhim">3</span></a>
     <a data-v="solve"><i>▶</i>Xếp lịch</a>
     <a data-v="tinhchinh"><i>✋</i>Tinh chỉnh tay</a>
+    <a data-v="kethua"><i>♻</i>Kế thừa lịch cũ</a>
     <a data-v="banggv"><i>▥</i>Bảng giáo viên</a>
     <a data-v="check"><i>⚑</i>Kiểm tra<span class="cnt al" id="nChk">3</span></a>
   </div>
@@ -216,6 +217,8 @@ input[type=range]{accent-color:var(--ng);width:110px}
     <a data-v="ctdt"><i>◈</i>Chương trình ĐT<span class="cnt">3</span></a>
     <a data-v="hedt"><i>⊞</i>Hệ &amp; khoá học<span class="cnt">7</span></a>
     <a data-v="rb"><i>⚖</i>Ràng buộc</a>
+    <a data-v="uutien"><i>▲</i>Độ ưu tiên RB</a>
+    <a data-v="ghepnhom"><i>⊞</i>Lớp ghép &amp; đồng giảng</a>
     <a data-v="khung"><i>◷</i>Khung giờ</a>
   </div>
   <div class="sfoot">Bản mẫu · dữ liệu thật<br>TC K43 · tuần 03</div>
@@ -434,6 +437,92 @@ input[type=range]{accent-color:var(--ng);width:110px}
       <div class="cb t0"><table class="d">
         <thead><tr><th style="width:38px">STT</th><th>Đối tượng</th><th>Danh sách ràng buộc</th><th style="width:130px">Trạng thái</th></tr></thead>
         <tbody id="tbRbChk"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ===== KẾ THỪA LỊCH CŨ ===== -->
+  <section class="view" id="v-kethua">
+    <div class="card">
+      <div class="ch"><h3>Kế thừa thời khoá biểu cũ</h3><span class="sp"></span>
+        <span class="pill p-mu">Giữ phần lớn lịch đã xếp</span></div>
+      <div class="cb">
+        <p style="margin:0 0 13px;color:var(--ink2);font-size:13px">
+          Khi sang học kỳ mới hoặc chỉ thay đổi phân công vài giáo viên, không cần xếp lại từ đầu.
+          Hệ thống dò xem <b>giáo viên nào có thay đổi</b> rồi chỉ xếp lại phần của họ, hạn chế xáo trộn tiết của người khác.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:14px">
+          <label class="fld"><span>Phiên bản gốc để kế thừa</span><select id="ktVer"></select></label>
+          <label class="fld"><span>Mức giữ nguyên</span><select id="ktMuc">
+            <option value="max">Tối đa — chỉ đổi GV có thay đổi</option>
+            <option value="vua">Vừa — cho phép dịch tiết lân cận</option>
+            <option value="it">Ít — chỉ dùng làm gợi ý</option></select></label>
+          <button class="btn pri" id="ktScan">Dò thay đổi</button>
+          <button class="btn go" id="ktRun" disabled>▶ Xếp lại phần thay đổi</button>
+        </div>
+        <div id="ktOut"></div>
+      </div>
+    </div>
+
+    <div class="card" id="ktCard" style="display:none">
+      <div class="ch"><h3>Giáo viên có thay đổi phân công</h3><span class="sp"></span>
+        <span class="pill p-wn" id="ktN">0 giáo viên</span></div>
+      <div class="cb t0"><table class="d">
+        <thead><tr><th>Giáo viên</th><th>Thay đổi</th><th class="n">Tiết cũ</th><th class="n">Tiết mới</th><th>Xử lý</th></tr></thead>
+        <tbody id="tbKt"></tbody></table></div>
+      <div class="lg"><span>Chỉ những dòng này được xếp lại. Các giáo viên khác giữ nguyên vị trí tiết.</span></div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><h3>Lịch sử phiên bản</h3><span class="sp"></span>
+        <span class="pill p-mu">TKB gốc và bản đã tinh chỉnh</span></div>
+      <div class="cb t0"><table class="d">
+        <thead><tr><th class="n">Phiên bản</th><th>Loại</th><th>Thời gian xếp</th><th class="n">Đã xếp</th><th class="n">Chưa xếp</th><th>Kế thừa từ</th><th></th></tr></thead>
+        <tbody id="tbVer"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ===== ĐỘ ƯU TIÊN RÀNG BUỘC ===== -->
+  <section class="view" id="v-uutien">
+    <div class="card">
+      <div class="ch"><h3>Độ ưu tiên ràng buộc</h3><span class="sp"></span>
+        <button class="btn sm" id="utDef">Mặc định</button></div>
+      <div class="cb">
+        <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">
+          Trường có quá nhiều ràng buộc thì bộ giải không thể thoả hết. Đặt độ ưu tiên để hệ thống biết
+          <b>cái nào phải giữ bằng mọi giá, cái nào có thể bỏ qua</b> khi bí.</p>
+        <div class="tabs" id="utTabs">
+          <button class="on" data-ut="gv">Giáo viên</button>
+          <button data-ut="nhom">Nhóm giáo viên</button>
+          <button data-ut="mon">Môn học</button>
+          <button data-ut="phong">Phòng</button></div>
+        <div class="cb t0" style="padding:0"><table class="d">
+          <thead><tr><th style="width:38px">STT</th><th>Tên ràng buộc</th><th style="width:120px">Độ ưu tiên</th><th style="width:90px">Trọng số</th></tr></thead>
+          <tbody id="tbUt"></tbody></table></div>
+      </div>
+      <div class="lg">
+        <span><b>Cao</b> = cố giữ bằng mọi giá · <b>Trung bình</b> = ưu tiên vừa · <b>Thấp</b> = bỏ được khi bí</span>
+        <span style="margin-left:auto;color:var(--ink3)">Trọng số 1–5 quyết định mức phạt khi vi phạm</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== LỚP GHÉP & ĐỒNG GIẢNG ===== -->
+  <section class="view" id="v-ghepnhom">
+    <div class="card">
+      <div class="ch"><h3>Lớp ghép, tách nhóm và đồng giảng</h3><span class="sp"></span>
+        <button class="btn sm" id="bAddGhep">+ Khai báo mới</button></div>
+      <div class="cb">
+        <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">
+          Bốn tình huống mà mô hình "một lớp — một giáo viên — một phòng" không diễn đạt được.
+          Mỗi loại cần ràng buộc riêng để bộ giải không xếp sai.</p>
+        <div class="tabs" id="ghepTabs">
+          <button class="on" data-gh="dg">Đồng giảng</button>
+          <button data-gh="ghep">Ghép giảng đường</button>
+          <button data-gh="tach">Tách nhóm trong lớp</button>
+          <button data-gh="luan">Luân phiên</button></div>
+        <div id="ghepDesc" style="padding:13px 0"></div>
+        <div class="cb t0" style="padding:0"><table class="d">
+          <thead id="thGhep"></thead><tbody id="tbGhep"></tbody></table></div>
+      </div>
     </div>
   </section>
 
@@ -697,6 +786,9 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const VT={dash:["Tổng quan","Học kỳ I · 2026–2027"],
 tkb:["Thời khoá biểu","Tuần 03 · 24–28/8/2026"],
   kehoach:["Kế hoạch xếp lịch","4 lớp xếp · khoá dần"],
+  kethua:["Kế thừa lịch cũ","Giữ phần lớn TKB đã xếp"],
+  uutien:["Độ ưu tiên ràng buộc","Cao · Trung bình · Thấp"],
+  ghepnhom:["Lớp ghép & đồng giảng","4 tình huống đặc thù"],
   ghim:["Xếp trước môn học","Ghim tiết cố định"],
   tinhchinh:["Tinh chỉnh thủ công","4 phương pháp đổi tiết"],
   banggv:["Bảng giáo viên","Toàn tuần · theo ca"],
@@ -1480,6 +1572,146 @@ function bgRender(){
 /* Bản gốc để khôi phục */
 const SES_GOC=JSON.parse(JSON.stringify(SES));
 tcRender();trayRender();bgRender();
+
+
+/* ================= KẾ THỪA LỊCH CŨ ================= */
+const VERS=[
+  {v:7,loai:"Đã tinh chỉnh",tg:"20/8/2026 14:22",xep:316,chua:3,ke:5},
+  {v:6,loai:"Đã tinh chỉnh",tg:"20/8/2026 11:40",xep:314,chua:5,ke:5},
+  {v:5,loai:"TKB gốc",tg:"20/8/2026 09:15",xep:319,chua:0,ke:null},
+  {v:3,loai:"TKB gốc",tg:"12/8/2026 16:05",xep:312,chua:7,ke:null},
+  {v:1,loai:"TKB gốc · học kỳ I",tg:"05/8/2026 08:30",xep:319,chua:0,ke:null}
+];
+/* Giáo viên đổi phân công so với phiên bản được chọn */
+const KTDIFF=[
+  {gv:"Thầy L.N.Khanh",td:"Thêm mô-đun Khí cụ điện cho nhóm Điện CN&DD",cu:24,moi:30,xl:"Xếp lại"},
+  {gv:"Cô N.Thủy",td:"Chuyển Kỹ thuật cảm biến sang GV khác",cu:18,moi:12,xl:"Xếp lại"},
+  {gv:"Thầy N.K.Thụ",td:"Nhận thêm nhóm Công nghệ ô tô 1",cu:15,moi:21,xl:"Xếp lại"},
+  {gv:"Thầy Đ.K.Huynh",td:"Không đổi",cu:27,moi:27,xl:"Giữ nguyên"}
+];
+function verRender(){
+  $("#ktVer").innerHTML=VERS.map(v=>
+    `<option value="${v.v}">Phiên bản ${v.v} · ${v.loai} · ${v.tg}</option>`).join("");
+  $("#tbVer").innerHTML=VERS.map(v=>
+    `<tr><td class="mono">#${v.v}</td>
+      <td>${v.loai.includes("gốc")?'<span class="pill p-mu">'+v.loai+'</span>':'<span class="pill p-vh">'+v.loai+'</span>'}</td>
+      <td>${v.tg}</td><td class="n">${v.xep}</td>
+      <td class="n">${v.chua?'<span class="pill p-er">'+v.chua+'</span>':'—'}</td>
+      <td>${v.ke?'<span class="tag">từ #'+v.ke+'</span>':'—'}</td>
+      <td><button class="btn sm" data-vver="${v.v}">Xem</button></td></tr>`).join("");
+  $$("#tbVer [data-vver]").forEach(b=>b.addEventListener("click",()=>{
+    toast("Bản mẫu: mở thời khoá biểu phiên bản #"+b.dataset.vver);}));
+}
+verRender();
+$("#ktScan").addEventListener("click",()=>{
+  const v=$("#ktVer").value;
+  const doi=KTDIFF.filter(x=>x.xl==="Xếp lại");
+  $("#ktCard").style.display="";
+  $("#ktN").textContent=doi.length+" giáo viên";
+  $("#tbKt").innerHTML=KTDIFF.map(x=>
+    `<tr class="${x.xl==="Xếp lại"?"bad":""}"><td><b>${x.gv}</b></td><td style="font-size:12.5px">${x.td}</td>
+      <td class="n">${x.cu}</td><td class="n">${x.moi}</td>
+      <td>${x.xl==="Xếp lại"?'<span class="pill p-wn">Xếp lại</span>':'<span class="pill p-ok">Giữ nguyên</span>'}</td></tr>`).join("");
+  const giu=Math.round((TEACHERS.length-doi.length)/TEACHERS.length*100);
+  $("#ktOut").innerHTML=
+    `<div class="box ok"><span class="i">✓</span><span class="x">
+      Đã dò xong phiên bản <b>#${v}</b>: <b>${doi.length} giáo viên</b> có thay đổi phân công,
+      <b>${TEACHERS.length-doi.length} giáo viên</b> giữ nguyên.
+      <span class="f">Ước tính giữ được <b>${giu}%</b> thời khoá biểu cũ. Chỉ phần của ${doi.length} giáo viên trên được xếp lại.</span></span></div>`;
+  $("#ktRun").disabled=false;
+  toast("Đã dò xong: "+doi.length+" giáo viên cần xếp lại.");
+});
+$("#ktRun").addEventListener("click",()=>{
+  const muc=$("#ktMuc").selectedOptions[0].textContent;
+  $("#ktOut").innerHTML+=
+    `<div class="box nu" style="margin-top:10px"><span class="i">▶</span><span class="x">
+      Đang xếp lại với mức giữ nguyên: <b>${muc}</b>.
+      <span class="f">Bản mẫu: kết quả sẽ tạo phiên bản mới, ghi rõ kế thừa từ phiên bản ${$("#ktVer").value}.</span></span></div>`;
+  toast("Đang xếp lại 3 giáo viên có thay đổi, giữ nguyên phần còn lại.");
+});
+
+/* ================= ĐỘ ƯU TIÊN RÀNG BUỘC ================= */
+const UT={
+  gv:[["Không dạy","Cao",3],["Số buổi nghỉ trong tuần ít nhất (sáng hoặc chiều)","Thấp",1],
+      ["Số ngày nghỉ trong tuần ít nhất","Thấp",1],["Số tiết dạy ít nhất trong một buổi","Thấp",1],
+      ["Số tiết dạy lớn nhất trong một buổi","Thấp",1],["Không xếp cách quá 1 tiết/1 buổi học","Thấp",1],
+      ["Dạy tiết 5 buổi sáng thì không dạy tiết 1 buổi chiều và ngược lại","Thấp",1],
+      ["Chỉ dạy 1 cơ sở trong 1 buổi","Trung bình",2],["Dạy 1 môn cùng khối trong 1 buổi","Thấp",1],
+      ["Số tiết cách tối đa trong ngày","Thấp",1],["Số tiết tối thiểu để thay đổi cơ sở (liên cấp)","Trung bình",2]],
+  nhom:[["Nghỉ 1 ngày cố định","Trung bình",2],["Số tiết dạy ít nhất trong 1 buổi","Thấp",1],
+      ["Số tiết dạy lớn nhất trong một buổi","Thấp",1],["Không xếp cách quá 1 tiết/1 buổi học","Thấp",1],
+      ["Có ít nhất 1 tiết dạy trong ngày","Thấp",1]],
+  mon:[["Các cặp tiết xếp liền","Cao",3],["1 cặp xếp liền 2,1,1…","Trung bình",2],
+      ["Không học tiết 5","Cao",3],["Không học tiết 1","Trung bình",2],
+      ["Chỉ học 1 tiết trong 1 buổi","Cao",3],["Xếp cách ít nhất 1 ngày","Trung bình",2],
+      ["Tối đa có 2 môn từ 3 môn trong 1 buổi","Thấp",1],["Không học quá 2 tiết trong 1 buổi","Trung bình",2]],
+  phong:[["Số phòng học theo môn","Cao",3],["Trần sĩ số theo loại buổi","Cao",3],
+      ["Phòng cố định theo lớp văn hoá","Cao",3],["Hạn chế đổi phòng trong ngày","Thấp",1]]
+};
+const UTDEF=JSON.parse(JSON.stringify(UT));
+let utTab="gv";
+function utRender(){
+  const rows=UT[utTab]||[];
+  $("#tbUt").innerHTML=rows.map(([n,uu,ts],idx)=>
+    `<tr><td class="n">${idx+1}</td><td>${n}</td>
+      <td><select data-ut-p="${idx}" style="width:100%">
+        ${["Cao","Trung bình","Thấp"].map(o=>'<option'+(o===uu?" selected":"")+'>'+o+'</option>').join("")}</select></td>
+      <td><select data-ut-w="${idx}" style="width:100%">
+        ${[1,2,3,4,5].map(o=>'<option'+(o===ts?" selected":"")+'>'+o+'</option>').join("")}</select></td></tr>`).join("");
+  $$("#tbUt [data-ut-p]").forEach(el=>el.addEventListener("change",()=>{
+    UT[utTab][+el.dataset.utP][1]=el.value;toast("Đã đổi độ ưu tiên: "+UT[utTab][+el.dataset.utP][0]);}));
+  $$("#tbUt [data-ut-w]").forEach(el=>el.addEventListener("change",()=>{
+    UT[utTab][+el.dataset.utW][2]=+el.value;}));
+}
+$$("#utTabs button").forEach(b=>b.addEventListener("click",()=>{
+  $$("#utTabs button").forEach(x=>x.classList.toggle("on",x===b));
+  utTab=b.dataset.ut;utRender();}));
+$("#utDef").addEventListener("click",()=>{
+  Object.keys(UT).forEach(k=>{UT[k]=JSON.parse(JSON.stringify(UTDEF[k]));});
+  utRender();toast("Đã khôi phục độ ưu tiên mặc định.");});
+utRender();
+
+/* ================= LỚP GHÉP & ĐỒNG GIẢNG ================= */
+const GHEP={
+  dg:{d:"Hai giáo viên cùng đứng một nhóm, một tiết. <b>Cả hai phải bị chặn khỏi mọi nhóm khác</b> trong khung giờ đó, và cả hai đều được tính tải giảng dạy.",
+    th:["Nhóm nghề","Mô-đun","Giáo viên chính","Giáo viên đồng giảng","Phòng"],
+    r:[["KT máy lạnh và ĐHKK (11A2)","KT gia công ống kim loại","Thầy Đ.K.Huynh","Thầy N.V.Hiện","A11-104"],
+       ["Điện CN và dân dụng (11A1)","Máy điện và TB điện gia dụng","Thầy L.N.Khanh","Cô N.P.Thúy","A11-104"],
+       ["Điện CN và dân dụng (11A1)","Vẽ điện bằng AutoCAD","Thầy N.Q.Tâm","Cô N.Thủy","A4-504"],
+       ["Thiết kế đồ hoạ (11A6)","Adobe Illustrator cơ bản","Thầy N.M.Quang","Cô B.Thảo","A4-501"],
+       ["Nhà hàng khách sạn 3","Nghiệp vụ lễ tân","Cô P.H.Nhung","Cô N.H.Nhung","A7-T1"]]},
+  ghep:{d:"Nhiều lớp văn hoá học chung một tiết, một giáo viên, một phòng lớn. <b>Sĩ số cộng dồn</b>; khi nhóm học thì <b>mọi lớp thành viên</b> đều bị chặn.",
+    th:["Nhóm nghề","Các lớp gộp","Tổng sĩ số","Khoá","Ghi chú"],
+    r:[["KT lắp đặt điện & điều khiển CN","12A1 + 12A4","44","K42","Vượt trần thực hành 18 → chia 3 ca"],
+       ["Thiết kế đồ hoạ","12A1 + 12A2","54","K42","Vượt trần thực hành 18 → chia 3 ca"],
+       ["Tin học ứng dụng 1","12A5 + 12A7","31","K42","Vượt trần thực hành 18 → chia 2 ca"]]},
+  tach:{d:"Một lớp văn hoá chia thành nhiều nhóm nghề học <b>cùng khung giờ, khác phòng, khác giáo viên</b>. Các nhóm cùng lớp gốc <b>không được trùng giờ</b> nhau.",
+    th:["Lớp văn hoá","Số nhóm","Các nhóm nghề","Tổng sĩ số","Ràng buộc"],
+    r:[["11A3","3","CNKT Điều khiển tự động (16) · Thiết kế nội thất (17) · Công nghệ ô tô 1 (30)","63","Không trùng giờ nhau"],
+       ["11A11","2","KT chế biến món ăn 2 (25) · Kế toán doanh nghiệp (14)","39","Không trùng giờ nhau"],
+       ["12A3","2","CNKT Điều khiển tự động (22) · KT máy lạnh và ĐHKK (22)","44","Không trùng giờ nhau"]]},
+  luan:{d:"Một mô-đun nhiều tiết do <b>hai giáo viên thay nhau dạy</b>, trong đó có tiết cả hai cùng dạy. Cần tách thành các buổi có giáo viên khác nhau, riêng tiết chung thì khai đồng giảng.",
+    th:["Mô-đun","Tổng tiết","Giáo viên A","Giáo viên B","Tiết dạy chung"],
+    r:[["Khoa học xã hội (ví dụ điển hình)","3","Dạy phần Lịch sử","Dạy phần Địa lí","1 tiết — cả hai cùng dạy"],
+       ["Thiết kế Web","4","Thầy B.Q.Quý","Cô D.Chi","1 tiết — cả hai cùng dạy"]]}
+};
+let ghepTab="dg";
+function ghepRender(){
+  const g=GHEP[ghepTab];
+  $("#ghepDesc").innerHTML='<div class="box nu"><span class="i">⊞</span><span class="x">'+g.d+'</span></div>';
+  $("#thGhep").innerHTML="<tr>"+g.th.map(h=>"<th>"+h+"</th>").join("")+"<th></th></tr>";
+  $("#tbGhep").innerHTML=g.r.map(r=>"<tr>"+r.map((c,idx)=>
+    idx===0?"<td><b>"+c+"</b></td>":"<td>"+c+"</td>").join("")+
+    '<td><button class="btn sm" data-ghsua="1">Sửa</button></td></tr>').join("");
+  $$("#tbGhep [data-ghsua]").forEach(b=>b.addEventListener("click",()=>
+    toast("Bản mẫu: mở biểu mẫu sửa khai báo.")));
+}
+$$("#ghepTabs button").forEach(b=>b.addEventListener("click",()=>{
+  $$("#ghepTabs button").forEach(x=>x.classList.toggle("on",x===b));
+  ghepTab=b.dataset.gh;ghepRender();}));
+$("#bAddGhep").addEventListener("click",()=>toast("Bản mẫu: mở biểu mẫu khai báo "+
+  ({dg:"đồng giảng",ghep:"lớp ghép giảng đường",tach:"tách nhóm trong lớp",luan:"giáo viên luân phiên"})[ghepTab]+"."));
+ghepRender();
 
 fillCt();
 
