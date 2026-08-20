@@ -200,7 +200,10 @@ input[type=range]{accent-color:var(--ng);width:110px}
     <a data-v="dash" class="on"><i>▤</i>Tổng quan</a>
     <a data-v="tkb"><i>▦</i>Thời khoá biểu<span class="cnt" id="nTkb">319</span></a>
     <a data-v="kehoach"><i>⇉</i>Kế hoạch xếp<span class="cnt">4</span></a>
+    <a data-v="ghim"><i>📌</i>Xếp trước môn<span class="cnt" id="nGhim">3</span></a>
     <a data-v="solve"><i>▶</i>Xếp lịch</a>
+    <a data-v="tinhchinh"><i>✋</i>Tinh chỉnh tay</a>
+    <a data-v="banggv"><i>▥</i>Bảng giáo viên</a>
     <a data-v="check"><i>⚑</i>Kiểm tra<span class="cnt al" id="nChk">3</span></a>
   </div>
   <div class="navg"><p>Dữ liệu</p>
@@ -344,6 +347,108 @@ input[type=range]{accent-color:var(--ng);width:110px}
             <tr><td class="n">4</td><td><b>Lý thuyết nghề</b></td><td>Dùng chung phòng với khối văn hoá</td><td><span class="pill p-wn">9 phòng chung</span></td></tr>
             <tr><td class="n">5</td><td><b>Lý thuyết phòng thường</b></td><td>Linh hoạt nhất, xếp lấp chỗ trống</td><td><span class="pill p-ok">dư phòng</span></td></tr>
           </tbody></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== XẾP TRƯỚC MÔN HỌC ===== -->
+  <section class="view" id="v-ghim">
+    <div class="card">
+      <div class="ch"><h3>Xếp trước môn học</h3><span class="sp"></span>
+        <span class="pill p-mu">Ghim trước khi chạy bộ giải</span>
+        <button class="btn sm" id="bAddGhim">+ Thêm ghim</button></div>
+      <div class="cb">
+        <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">
+          Những tiết cố định hằng tuần được ghim vào ô cụ thể trước, bộ giải sẽ giữ nguyên và xếp phần còn lại xung quanh.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:13px">
+          <label class="fld"><span>Loại ghim</span><select id="gLoai">
+            <option value="cc">Chào cờ</option><option value="sh">Sinh hoạt</option>
+            <option value="kh">Tiết không học</option><option value="cn">Tiết giáo viên chủ nhiệm</option>
+            <option value="mon">Mô-đun cụ thể</option></select></label>
+          <label class="fld"><span>Áp dụng cho</span><select id="gPham">
+            <option value="all">Toàn trường</option><option value="khoi">Theo khối</option><option value="lop">Theo nhóm</option></select></label>
+          <label class="fld"><span>Buổi</span><select id="gBuoi"><option value="S">Sáng</option><option value="C">Chiều</option></select></label>
+          <label class="fld"><span>Ngày</span><select id="gNgay"><option>Thứ 2</option><option>Thứ 3</option><option>Thứ 4</option><option>Thứ 5</option><option>Thứ 6</option></select></label>
+          <label class="fld"><span>Tiết</span><select id="gTiet"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label>
+          <button class="btn pri" id="bGhim">Ghim</button>
+        </div>
+        <div class="cb t0" style="padding:0"><table class="d">
+          <thead><tr><th>Loại</th><th>Áp dụng</th><th>Thời điểm</th><th>Trạng thái</th><th></th></tr></thead>
+          <tbody id="tbGhim"></tbody></table></div>
+      </div>
+      <div class="lg"><span>Chào cờ thứ Hai 7h25 là sự kiện chặn toàn trường — bắt buộc ghim trước.</span></div>
+    </div>
+  </section>
+
+  <!-- ===== TINH CHỈNH TAY ===== -->
+  <section class="view" id="v-tinhchinh">
+    <div class="card">
+      <div class="ch"><h3>Tinh chỉnh thủ công</h3><span class="sp"></span>
+        <button class="btn sm" id="bBack1">↩ Lùi 1 bước</button>
+        <button class="btn sm" id="bOrig">⟲ Khôi phục TKB gốc</button>
+        <button class="btn sm" id="bChkRb">✓ Kiểm tra ràng buộc</button></div>
+      <div class="cb">
+        <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:end;margin-bottom:12px">
+          <label class="fld"><span>Phương pháp</span><select id="tcCach">
+            <option value="1">Cách 1 · Đổi tiết giữa 2 GV cùng nhóm</option>
+            <option value="2">Cách 2 · Đổi qua GV trung gian (tối ưu)</option>
+            <option value="3">Cách 3 · Đổi giữa 2 hàng giáo viên</option>
+            <option value="4">Cách 4 · Xếp tay từ khay chờ</option></select></label>
+          <span class="sp" style="flex:1"></span>
+          <span class="pill p-mu" id="tcHint"></span>
+        </div>
+        <div id="tcDesc"></div>
+      </div>
+      <div class="ttw"><table class="tt" id="tcTt"><thead></thead><tbody></tbody></table></div>
+      <div class="lg">
+        <span><i class="sw" style="background:var(--ok-bg);border-left-color:var(--ok)"></i>Đổi được — thoả mọi ràng buộc</span>
+        <span><i class="sw" style="background:var(--wn-bg);border-left-color:var(--wn)"></i>Vi phạm ràng buộc mềm</span>
+        <span><i class="sw sw-e"></i>Trùng tiết — không cho đổi</span>
+        <span><i class="sw" style="background:var(--ng-bg);border-left-color:var(--ng)"></i>Vi phạm "hạn chế xếp"</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch"><h3>Khay tiết chờ xếp</h3><span class="sp"></span>
+        <span class="pill p-wn" id="trayN">0 tiết chờ</span></div>
+      <div class="cb">
+        <p style="margin:0 0 11px;color:var(--ink2);font-size:13px">
+          Kéo tiết ra khỏi lưới để đó, xếp lại sau. Chỉ thả được vào ô trống.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><div style="font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Buổi sáng</div>
+            <div id="trayS" style="min-height:52px;border:1.5px dashed var(--line2);border-radius:6px;padding:8px;display:flex;gap:7px;flex-wrap:wrap"></div></div>
+          <div><div style="font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Buổi chiều</div>
+            <div id="trayC" style="min-height:52px;border:1.5px dashed var(--line2);border-radius:6px;padding:8px;display:flex;gap:7px;flex-wrap:wrap"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="cardRb" style="display:none">
+      <div class="ch"><h3>Chi tiết ràng buộc sau khi xếp</h3><span class="sp"></span>
+        <button class="btn sm" id="bCloseRb">Đóng</button></div>
+      <div class="tabs" id="rbTabs">
+        <button class="on" data-rb="gv">Ràng buộc giáo viên</button>
+        <button data-rb="nhom">Nhóm giáo viên</button>
+        <button data-rb="mon">Môn học phổ biến</button>
+        <button data-rb="khac">Môn học khác</button></div>
+      <div class="cb t0"><table class="d">
+        <thead><tr><th style="width:38px">STT</th><th>Đối tượng</th><th>Danh sách ràng buộc</th><th style="width:130px">Trạng thái</th></tr></thead>
+        <tbody id="tbRbChk"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ===== BẢNG GIÁO VIÊN ===== -->
+  <section class="view" id="v-banggv">
+    <div class="card">
+      <div class="ch"><h3>Bảng giáo viên toàn tuần</h3><span class="sp"></span>
+        <label style="font-size:12.5px;display:flex;gap:5px;align-items:center"><input type="checkbox" id="bgRb"> Hiện ràng buộc không dạy</label>
+        <label style="font-size:12.5px;display:flex;gap:5px;align-items:center"><input type="checkbox" id="bgTrong"> Chỉ GV có tiết trống</label>
+        <select id="bgBuoi"><option value="S">TKB Sáng</option><option value="C">TKB Chiều</option><option value="A">Cả ngày</option></select></div>
+      <div class="cb t0"><div class="ttw" style="max-height:560px"><table class="tt" id="bgTt"><thead></thead><tbody></tbody></table></div></div>
+      <div class="lg">
+        <span>Ô ghi <b>mã nhóm</b> mà giáo viên đang dạy tiết đó</span>
+        <span><i class="sw" style="background:var(--ok-bg);border-left-color:var(--ok)"></i>Không dạy — theo ràng buộc</span>
+        <span style="margin-left:auto;color:var(--ink3)">Cột cuối là tổng tiết trong tuần</span>
       </div>
     </div>
   </section>
@@ -592,6 +697,9 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const VT={dash:["Tổng quan","Học kỳ I · 2026–2027"],
 tkb:["Thời khoá biểu","Tuần 03 · 24–28/8/2026"],
   kehoach:["Kế hoạch xếp lịch","4 lớp xếp · khoá dần"],
+  ghim:["Xếp trước môn học","Ghim tiết cố định"],
+  tinhchinh:["Tinh chỉnh thủ công","4 phương pháp đổi tiết"],
+  banggv:["Bảng giáo viên","Toàn tuần · theo ca"],
   solve:["Xếp lịch tự động","Bộ giải CP-SAT"],check:["Kiểm tra khả thi","Tiền kiểm số học"],
   lop:["Lớp & nhóm nghề","14 nhóm · 445 HS · 11 lớp VH"],gv:["Giáo viên","41 giáo viên · định mức 550"],
   phong:["Phòng & xưởng","59 phòng"],mon:["Mô-đun","Chương trình khối 11"],
@@ -1167,6 +1275,211 @@ document.addEventListener("click",e=>{
     const F=FORMS[k];const it=F.list().find(x=>String(x[F.key])===id);
     if(it)openForm(k,it);}
 });
+
+
+/* ================= XẾP TRƯỚC MÔN HỌC ================= */
+const GHIM=[
+  {loai:"Chào cờ",pham:"Toàn trường",tg:"Thứ 2 · Sáng · tiết 1",ok:1,fix:1},
+  {loai:"Sinh hoạt",pham:"Toàn trường",tg:"Thứ 6 · Chiều · tiết 5",ok:1},
+  {loai:"Tiết không học",pham:"Khối 11",tg:"Thứ 4 · Sáng · tiết 5",ok:1}
+];
+const GLBL={cc:"Chào cờ",sh:"Sinh hoạt",kh:"Tiết không học",cn:"Tiết giáo viên chủ nhiệm",mon:"Mô-đun cụ thể"};
+const GPHAM={all:"Toàn trường",khoi:"Theo khối",lop:"Theo nhóm"};
+function ghimRender(){
+  $("#tbGhim").innerHTML=GHIM.map((g,idx)=>
+    `<tr><td><b>${g.loai}</b></td><td>${g.pham}</td><td class="mono" style="font-size:12px">${g.tg}</td>
+      <td><span class="pill p-ok">Đã ghim</span></td>
+      <td>${g.fix?'<span class="pill p-mu">Bắt buộc</span>':'<button class="btn sm" data-delghim="'+idx+'">Xoá</button>'}</td></tr>`).join("");
+  $("#nGhim").textContent=GHIM.length;
+  $$("#tbGhim [data-delghim]").forEach(b=>b.addEventListener("click",()=>{
+    const g=GHIM[+b.dataset.delghim];GHIM.splice(+b.dataset.delghim,1);ghimRender();
+    toast("Đã bỏ ghim: "+g.loai);}));
+}
+function addGhim(){
+  const l=$("#gLoai").value,ph=$("#gPham").value;
+  const tg=$("#gNgay").value+" · "+($("#gBuoi").value==="S"?"Sáng":"Chiều")+" · tiết "+$("#gTiet").value;
+  if(GHIM.some(g=>g.loai===GLBL[l]&&g.tg===tg&&g.pham===GPHAM[ph])){toast("Ghim này đã tồn tại.");return;}
+  GHIM.push({loai:GLBL[l],pham:GPHAM[ph],tg,ok:1});
+  ghimRender();toast("Đã ghim "+GLBL[l]+" vào "+tg);
+}
+$("#bGhim").addEventListener("click",addGhim);
+$("#bAddGhim").addEventListener("click",()=>{$("#gLoai").focus();toast("Chọn loại ghim và thời điểm rồi bấm Ghim.");});
+ghimRender();
+
+/* ================= TINH CHỈNH THỦ CÔNG ================= */
+const CACH={
+  "1":{h:"Chọn một buổi, hệ thống tô màu các ô nên/không nên đổi",
+    d:"Đổi trực tiếp giữa hai giáo viên trong cùng một nhóm. Ô <b>xanh</b> là lựa chọn tốt nhất — thoả mọi ràng buộc. Ô <b>đỏ</b> bị trùng tiết nên không cho đổi."},
+  "2":{h:"Tìm giáo viên trung gian khi không đổi trực tiếp được",
+    d:"Cách 1 là trường hợp riêng của cách 2: hệ thống thử đổi trực tiếp trước, không được mới đi tìm <b>giáo viên trung gian</b> để đổi vòng. Kết quả hiện số giáo viên phải đổi chỗ."},
+  "3":{h:"Làm nổi bật toàn bộ phân công cùng tiết trên toàn trường",
+    d:"Chọn một buổi, hệ thống <b>tô sáng mọi phân công cùng khung giờ đó ở tất cả các nhóm</b>, giúp tìm chỗ đổi ngoài phạm vi một nhóm."},
+  "4":{h:"Kéo buổi vào khay chờ rồi thả lại vào ô trống",
+    d:"Xếp tay hoàn toàn: kéo buổi ra <b>khay chờ xếp</b> bên dưới, rồi thả vào ô trống mong muốn. Chỉ thả được vào ô trống, không đè lên buổi khác."}
+};
+function tcRender(){
+  const c=$("#tcCach").value||"1",k=CACH[c]||CACH["1"];
+  $("#tcHint").textContent=k.h;
+  $("#tcDesc").innerHTML='<div class="box nu"><span class="i">'+c+'</span><span class="x">'+k.d+'</span></div>';
+  // lưới rút gọn: 5 nhóm đầu, buổi sáng
+  const cols=COLS_SB();
+  const th=$("#tcTt thead"),tb=$("#tcTt tbody");
+  th.innerHTML="<tr><th class='ax'>Thứ</th><th class='ax'>Tiết</th>"+
+    cols.map(x=>`<th><span class="cn">${x.nghe}</span><span class="cm">(${x.vh}) · ${x.si} HS</span></th>`).join("")+"</tr>";
+  const grid={};
+  DAYS.forEach((_,d)=>{grid[d]={};for(let q=1;q<=5;q++){grid[d][q]={};cols.forEach(x=>grid[d][q][x.g]=null);}});
+  SES.filter(x=>x.s==="S").forEach(x=>{
+    if(!cols.some(y=>y.g===x.g))return;
+    if(!grid[x.d]||!grid[x.d][x.p])return;
+    grid[x.d][x.p][x.g]={s:x};
+    for(let k2=1;k2<x.len;k2++)if(x.p+k2<=5)grid[x.d][x.p+k2][x.g]="cov";
+  });
+  let h="";
+  DAYS.forEach((day,d)=>{
+    for(let q=1;q<=5;q++){
+      h+=`<tr${q===1?" class='dsep'":""}>`;
+      if(q===1)h+=`<td class="ax" rowspan="5"><div class="axd">${day.c}</div></td>`;
+      h+=`<td class="ax">${q}</td>`;
+      cols.forEach(col=>{
+        const cell=grid[d][q][col.g];
+        if(cell==="cov")return;
+        if(!cell){h+='<td><span class="cell e"></span></td>';return;}
+        const x=cell.s;
+        // màu minh hoạ theo cách tinh chỉnh
+        let bg="",bd="";
+        if(tcSel){
+          if(x.id===tcSel){bg="var(--panel2)";bd="var(--ink)";}
+          else if(c==="3"&&x.d===SES.find(y=>y.id===tcSel).d&&x.p===SES.find(y=>y.id===tcSel).p){bg="var(--wn-bg)";bd="var(--wn)";}
+          else if(x.gvc===SES.find(y=>y.id===tcSel).gvc){bg="var(--err-bg)";bd="var(--err)";}
+          else if(x.len===SES.find(y=>y.id===tcSel).len){bg="var(--ok-bg)";bd="var(--ok)";}
+          else {bg="var(--wn-bg)";bd="var(--wn)";}
+        }
+        h+=`<td rowspan="${x.len}"><button class="cell" data-tc="${x.id}">
+          <span class="blk ${x.t==="ng"?"ng":""}" style="${bg?"background:"+bg+";border-left-color:"+bd:""}">
+          <span class="t"><span class="m">${x.m}</span><span class="g">${x.gv}</span></span>
+          ${x.r?'<span class="r">'+x.r+'</span>':""}</span></button></td>`;
+      });
+      h+="</tr>";
+    }
+  });
+  tb.innerHTML=h;
+  $$("#tcTt [data-tc]").forEach(b=>b.addEventListener("click",()=>{
+    const id=b.dataset.tc;
+    if(tcSel===id){tcSel=null;tcRender();return;}
+    tcSel=id;tcRender();
+    const x=SES.find(y=>y.id===id);
+    const c2=$("#tcCach").value;
+    if(c2==="4"){moveToTray(id);return;}
+    toast("Đã chọn "+x.m+". "+(c2==="3"?"Đã tô sáng mọi phân công cùng tiết toàn trường.":"Ô xanh là chỗ đổi được."));
+  }));
+}
+let tcSel=null;
+const TRAY=[];
+function moveToTray(id){
+  const idx=SES.findIndex(y=>y.id===id);if(idx<0)return;
+  const x=SES[idx];
+  hist.push(JSON.parse(JSON.stringify(SES)));
+  $("#btnUndo").disabled=false;
+  TRAY.push(x);SES.splice(idx,1);
+  tcSel=null;trayRender();tcRender();ttRender();
+  toast("Đã đưa "+x.m+" vào khay chờ. Bấm ô trống để xếp lại.");
+}
+function trayRender(){
+  const mk=list=>list.length?list.map(x=>
+    `<button class="btn sm" data-tray="${x.id}" style="border-color:var(--ng);color:var(--ng)">${x.m} · ${x.gv}</button>`).join("")
+    :'<span style="font-size:12px;color:var(--ink3)">Kéo tiết vào đây</span>';
+  $("#trayS").innerHTML=mk(TRAY.filter(x=>x.s==="S"));
+  $("#trayC").innerHTML=mk(TRAY.filter(x=>x.s==="C"));
+  $("#trayN").textContent=TRAY.length+" tiết chờ";
+  $$("[data-tray]").forEach(b=>b.addEventListener("click",()=>{
+    const x=TRAY.find(y=>y.id===b.dataset.tray);
+    toast("Đã chọn "+x.m+" từ khay. Sang lưới Thời khoá biểu, bấm ô trống để xếp vào.");
+    traySel=x.id;go("tkb");
+  }));
+}
+let traySel=null;
+$("#tcCach").addEventListener("change",()=>{tcSel=null;tcRender();});
+$("#bBack1").addEventListener("click",()=>{
+  if(!hist.length){toast("Không còn bước nào để lùi.");return;}
+  SES.length=0;JSON.parse(JSON.stringify(hist.pop())).forEach(x=>SES.push(x));
+  tcSel=null;tcRender();ttRender();toast("Đã lùi 1 bước.");
+});
+$("#bOrig").addEventListener("click",()=>{
+  SES.length=0;JSON.parse(JSON.stringify(SES_GOC)).forEach(x=>SES.push(x));
+  TRAY.length=0;hist.length=0;tcSel=null;
+  trayRender();tcRender();ttRender();toast("Đã khôi phục thời khoá biểu gốc.");
+});
+$("#bChkRb").addEventListener("click",()=>{$("#cardRb").style.display="";rbChkRender();
+  $("#cardRb").scrollIntoView({behavior:"smooth",block:"nearest"});});
+$("#bCloseRb").addEventListener("click",()=>{$("#cardRb").style.display="none";});
+
+/* Chi tiết ràng buộc thoả / vi phạm */
+const RBCHK={
+  gv:[["Thầy L.N.Khanh",["Không dạy: <b>Tiết 1 Thứ 2 Sáng</b>","Số tiết dạy ít nhất trong 1 buổi: 2","Không xếp cách quá 1 tiết/buổi"],0],
+      ["Cô N.Thủy",["Số tiết dạy nhiều nhất trong 1 buổi: 4","Số ngày nghỉ trong tuần: 1"],1],
+      ["Thầy Đ.K.Huynh",["Dạy tiết 5 sáng thì không dạy tiết 1 chiều"],1]],
+  nhom:[["Tổ Điện - Điện tử",["Số ngày nghỉ trong tuần chính xác: 1"],1],
+      ["Tổ Cơ khí",["Số tiết dạy ít nhất trong 1 buổi: 2"],1]],
+  mon:[["Ngữ văn",["Có 1 cặp tiết xếp liền (toàn trường)","Chỉ học 1 tiết trong 1 buổi"],1],
+      ["Giáo dục thể chất",["Không học tiết 5 (toàn trường)"],0]],
+  khac:[["Toán",["Không học tiết 3 chiều Thứ 2–Thứ 5"],1]]
+};
+let rbTab="gv";
+function rbChkRender(){
+  const rows=RBCHK[rbTab]||[];
+  $("#tbRbChk").innerHTML=rows.map(([n,list,ok],idx)=>
+    `<tr><td class="n">${idx+1}</td><td><b>${n}</b></td>
+      <td style="font-size:12.5px">${list.map(l=>'<div style="color:'+(ok?"var(--ink2)":"var(--err)")+'">'+l+'</div>').join("")}</td>
+      <td>${ok?'<span class="pill p-ok">Thoả mãn</span>':'<span class="pill p-er">Không thoả mãn</span>'}</td></tr>`).join("");
+}
+$$("#rbTabs button").forEach(b=>b.addEventListener("click",()=>{
+  $$("#rbTabs button").forEach(x=>x.classList.toggle("on",x===b));
+  rbTab=b.dataset.rb;rbChkRender();}));
+
+/* ================= BẢNG GIÁO VIÊN ================= */
+function bgRender(){
+  const buoi=$("#bgBuoi").value;
+  const showRb=$("#bgRb").checked, onlyGap=$("#bgTrong").checked;
+  const cols=COLS_SB();
+  const gvs=[...new Map(SES.filter(x=>x.gvc).map(x=>[x.gvc,x.gv])).entries()];
+  const th=$("#bgTt thead"),tb=$("#bgTt tbody");
+  const buois=buoi==="A"?["S","C"]:[buoi];
+  let head="<tr><th class='ax' style='width:130px;text-align:left;padding-left:9px'>Giáo viên</th>";
+  DAYS.forEach(d=>buois.forEach(b=>{for(let q=1;q<=5;q++)head+=`<th style="min-width:34px">${q===1?d.c+(buois.length>1?" "+(b==="S"?"S":"C"):""):""}<div style="font-weight:400;font-size:9.5px;color:var(--ink3)">${q}</div></th>`;}));
+  head+="<th style='min-width:44px'>Tổng</th></tr>";
+  th.innerHTML=head;
+  let h="";
+  gvs.sort((a,b)=>a[1].localeCompare(b[1],"vi")).forEach(([code,name])=>{
+    const mine=SES.filter(x=>x.gvc===code);
+    if(onlyGap){ // chỉ GV có khoảng trống giữa các tiết trong ngày
+      let hasGap=false;
+      DAYS.forEach((_,d)=>{const ps=mine.filter(x=>x.d===d&&x.s==="S").map(x=>x.p).sort();
+        if(ps.length>1&&ps[ps.length-1]-ps[0]+1>ps.length)hasGap=true;});
+      if(!hasGap)return;
+    }
+    let row=`<tr><td class="ax" style="text-align:left;padding-left:9px;font-family:'Source Sans 3';font-weight:500;font-size:11.5px">${name}</td>`;
+    let tong=0;
+    DAYS.forEach((day,d)=>buois.forEach(b=>{
+      for(let q=1;q<=5;q++){
+        const hit=mine.find(x=>x.d===d&&x.s===b&&q>=x.p&&q<x.p+x.len);
+        if(hit){tong++;
+          const col=cols.find(c=>c.g===hit.g);
+          row+=`<td style="text-align:center;font-family:'Roboto Mono';font-size:9px;background:var(--ng-bg)">${col?col.vh:hit.g}</td>`;
+        } else if(showRb&&d===1&&q>=3){
+          row+='<td style="text-align:center;font-size:8.5px;color:var(--ok);background:var(--ok-bg)">Không dạy</td>';
+        } else row+="<td></td>";
+      }
+    }));
+    row+=`<td class="ax" style="font-weight:600">${tong}</td></tr>`;
+    h+=row;
+  });
+  tb.innerHTML=h||'<tr><td colspan="40" style="padding:14px;text-align:center;color:var(--ink3)">Không có giáo viên nào khớp bộ lọc.</td></tr>';
+}
+["bgBuoi","bgRb","bgTrong"].forEach(id=>$("#"+id).addEventListener("change",bgRender));
+
+/* Bản gốc để khôi phục */
+const SES_GOC=JSON.parse(JSON.stringify(SES));
+tcRender();trayRender();bgRender();
 
 fillCt();
 

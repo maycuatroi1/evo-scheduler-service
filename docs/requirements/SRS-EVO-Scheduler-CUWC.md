@@ -449,7 +449,7 @@ Ba chương trình dùng chung giáo viên và xưởng, nên không thể giả
 | FR-6.4 | Tự động phân công giáo viên khi buổi học chưa có người dạy | **[ĐÃ CÓ]** |
 | FR-6.5 | Giữ nghiệm pha 1 khi pha 2 hết giờ | **[ĐÃ CÓ]** |
 | FR-6.6 | **Dừng bộ giải giữa chừng** | **[THIẾU]** — FTKB có nút "Dừng" |
-| FR-6.7 | **Xếp trước (pre-assignment)**: ghim Chào cờ, Sinh hoạt, tiết GVCN, tiết không học vào ô cố định trước khi chạy | **[ĐỀ XUẤT]** |
+| FR-6.7 | **Xếp trước (ghim tiết)**: ghim Chào cờ, Sinh hoạt, tiết không học, tiết GVCN, hoặc một mô-đun cụ thể vào ô cố định trước khi chạy. Phạm vi áp dụng: toàn trường / theo khối / theo nhóm | **[ĐỀ XUẤT]** |
 | FR-6.8 | **Kế thừa lịch cũ**: giữ nguyên phần lớn lịch học kỳ trước, chỉ xếp lại giáo viên có thay đổi phân công | **[ĐỀ XUẤT]** — đây là tính năng khác biệt của FTKB, rất giá trị khi sang học kỳ 2 |
 | FR-6.9 | Lưu lịch sử các phiên chạy, so sánh và khôi phục phiên bản | **[ĐỀ XUẤT]** |
 | FR-6.10 | **Kế hoạch xếp nhiều lớp**: khai báo trình tự các lớp xếp (§4.2), đổi được thứ tự, chạy tuần tự và khoá dần | **[THIẾU]** — hiện chỉ xếp hai khối văn hoá/nghề cứng trong mã |
@@ -466,8 +466,13 @@ Ba chương trình dùng chung giáo viên và xưởng, nên không thể giả
 | FR-7.5 | Cảnh báo xung đột ngay khi rê chuột lên ô đích | **[ĐÃ CÓ]** |
 | FR-7.6 | Xem chi tiết buổi học trong hộp thoại | **[ĐÃ CÓ]** |
 | FR-7.7 | Thẻ thống kê: tổng tiết, đã xếp, văn hoá, nghề, xung đột | **[ĐÃ CÓ]** |
-| FR-7.8 | **Đổi tiết giữa hai giáo viên** với gợi ý ô nên/không nên đổi, tô màu theo mức vi phạm | **[ĐỀ XUẤT]** — 4 cách tinh chỉnh của FTKB |
-| FR-7.9 | **Khay tiết chờ xếp**: kéo tiết ra khỏi lưới, để đó, xếp lại sau | **[ĐỀ XUẤT]** |
+| FR-7.8 | **Bốn phương pháp tinh chỉnh thủ công** (xem §7.5) | **[ĐỀ XUẤT]** |
+| FR-7.9 | **Khay tiết chờ xếp**: kéo tiết ra khỏi lưới, để đó, xếp lại sau; chỉ thả được vào ô trống | **[ĐỀ XUẤT]** |
+| FR-7.12 | **Bảng màu vi phạm** khi tinh chỉnh: xanh = đổi được, hồng nhạt = vi phạm ràng buộc, hồng đậm = trùng tiết (chặn), da cam = vi phạm "hạn chế xếp" | **[ĐỀ XUẤT]** |
+| FR-7.13 | **Khôi phục TKB gốc** và **lùi từng bước** sau khi tinh chỉnh | **[ĐỀ XUẤT]** |
+| FR-7.14 | **Kiểm tra ràng buộc sau khi xếp**: bảng theo 4 nhóm (GV, nhóm GV, môn phổ biến, môn khác), tô xanh/đỏ theo thoả/vi phạm | **[ĐỀ XUẤT]** |
+| FR-7.15 | **Bảng giáo viên toàn tuần**: mỗi dòng một GV, mỗi cột một tiết, ô ghi nhóm đang dạy; lọc theo ca; hiện ô "Không dạy" theo ràng buộc; cột tổng tiết | **[ĐỀ XUẤT]** |
+| FR-7.16 | Lưu **mọi thao tác tinh chỉnh** tự động, quản lý theo phiên bản, đối chiếu được với phiên bản gốc | **[ĐỀ XUẤT]** |
 | FR-7.10 | Khoá/mở khoá từng tiết ngay trên lưới | **[THIẾU]** — `is_locked` có trong dữ liệu nhưng không bật/tắt được từ giao diện |
 | FR-7.11 | Phát hiện xung đột phải tính cả độ dài buổi học | **[THIẾU]** — hiện chỉ so tiết bắt đầu, bỏ sót chồng lấn của buổi nhiều tiết |
 
@@ -569,6 +574,32 @@ Theo tài liệu *Các ràng buộc nên sử dụng*, cấu hình mặc định
 - Môn nhiều tiết nên có cặp tiết xếp liền (ví dụ Toán, Ngữ văn)
 - Xếp cách ngày chỉ nên áp dụng cho môn 2 tiết; từ 3–4 tiết trở lên sẽ phá vỡ ràng buộc ngày nghỉ
 - Không xếp môn Giáo dục thể chất vào tiết 5 (tiết cuối buổi sáng)
+
+---
+
+### 7.5 Bốn phương pháp tinh chỉnh thủ công **[ĐỀ XUẤT]**
+
+Xếp tự động không bao giờ thay thế hoàn toàn con người: cán bộ đào tạo luôn cần sửa vài chỗ theo tình huống thực tế mà hệ thống không biết. Theo tài liệu FTKB, cần **bốn phương pháp**, tăng dần độ phức tạp:
+
+| Cách | Tên | Cơ chế | Khi nào dùng |
+|---|---|---|---|
+| **1** | Đổi tiết giữa hai giáo viên cùng nhóm | Chọn một buổi → hệ thống tô màu các ô đổi được → kéo thả → xác nhận | Trường hợp đơn giản nhất, đổi trực tiếp |
+| **2** | Đổi qua giáo viên trung gian | Thử cách 1 trước; không được thì tìm **giáo viên trung gian** để đổi vòng, báo số người phải đổi chỗ | Khi không có cặp đổi trực tiếp nào hợp lệ |
+| **3** | Đổi giữa hai hàng giáo viên | Chọn một buổi → **tô sáng mọi phân công cùng khung giờ trên toàn trường** → kéo thả | Cần tìm chỗ đổi ngoài phạm vi một nhóm |
+| **4** | Xếp tay từ khay chờ | Kéo buổi ra **khay chờ xếp**, rồi thả vào ô trống mong muốn | Khi muốn tự quyết định hoàn toàn |
+
+> **Cách 1 là trường hợp riêng của cách 2** — hệ thống luôn thử đổi trực tiếp trước rồi mới tìm trung gian.
+
+**Bảng màu bắt buộc** khi tinh chỉnh (FR-7.12):
+
+| Màu | Ý nghĩa |
+|---|---|
+| Xanh | Lựa chọn tốt nhất — thoả mọi ràng buộc |
+| Hồng nhạt | Vi phạm ràng buộc cứng hoặc mềm |
+| Hồng đậm | **Trùng tiết — không cho phép đổi** |
+| Da cam | Vi phạm ràng buộc "hạn chế xếp" của giáo viên hoặc nhóm giáo viên |
+
+**An toàn khi thao tác:** mọi thay đổi được lưu tự động; phải có **lùi từng bước** và **khôi phục TKB gốc**; tiết đã khoá không bị di chuyển.
 
 ---
 
