@@ -47,14 +47,6 @@ button,input,select{font:inherit}
 .side a i{width:15px;text-align:center;font-style:normal;opacity:.8;font-size:13px}
 .side a .cnt{margin-left:auto;font-family:"Roboto Mono",monospace;font-size:10px;background:rgba(255,255,255,.13);padding:1px 5px;border-radius:8px}
 .side a .cnt.al{background:var(--err);color:#fff}
-.ghead{display:flex;align-items:center;gap:7px;width:100%;background:none;border:0;cursor:pointer;
-  color:var(--side-ink);opacity:.62;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
-  padding:9px 16px 5px;text-align:left;font-weight:600}
-.ghead:hover{opacity:1}
-.ghead .cv{font-size:8px;transition:transform .18s;display:inline-block}
-.navg.shut .ghead .cv{transform:rotate(-90deg)}
-.navg.shut .gbody{display:none}
-@media(prefers-reduced-motion:reduce){.ghead .cv{transition:none}}
 .sfoot{margin-top:auto;padding:12px 16px;border-top:1px solid rgba(255,255,255,.09);font-size:11px;opacity:.6}
 
 .main{min-width:0;display:flex;flex-direction:column}
@@ -204,57 +196,32 @@ input[type=range]{accent-color:var(--ng);width:110px}
 <div class="app">
 <nav class="side">
   <div class="logo"><b>EVO Scheduler</b><span>CĐ Xây dựng CTĐT</span></div>
-
-  <div class="navg">
+  <div class="navg"><p>Vận hành</p>
     <a data-v="dash" class="on"><i>▤</i>Tổng quan</a>
     <a data-v="tkb"><i>▦</i>Thời khoá biểu<span class="cnt" id="nTkb">319</span></a>
+    <a data-v="kehoach"><i>⇉</i>Kế hoạch xếp<span class="cnt">4</span></a>
+    <a data-v="ghim"><i>📌</i>Xếp trước môn<span class="cnt" id="nGhim">3</span></a>
+    <a data-v="solve"><i>▶</i>Xếp lịch</a>
+    <a data-v="tinhchinh"><i>✋</i>Tinh chỉnh tay</a>
+    <a data-v="kethua"><i>♻</i>Kế thừa lịch cũ</a>
+    <a data-v="banggv"><i>▥</i>Bảng giáo viên</a>
+    <a data-v="check"><i>⚑</i>Kiểm tra<span class="cnt al" id="nChk">3</span></a>
   </div>
-
-  <div class="navg" data-grp="xep">
-    <button class="ghead" data-tog="xep"><span class="cv">▾</span>Xếp thời khoá biểu</button>
-    <div class="gbody">
-      <a data-v="kehoach"><i>⇉</i>Kế hoạch xếp<span class="cnt">4</span></a>
-      <a data-v="ghim"><i>📌</i>Xếp trước môn<span class="cnt" id="nGhim">3</span></a>
-      <a data-v="check"><i>⚑</i>Kiểm tra khả thi<span class="cnt al" id="nChk">3</span></a>
-      <a data-v="solve"><i>▶</i>Chạy bộ giải</a>
-      <a data-v="kethua"><i>♻</i>Kế thừa lịch cũ</a>
-    </div>
+  <div class="navg"><p>Dữ liệu</p>
+    <a data-v="lop"><i>◫</i>Lớp &amp; nhóm nghề<span class="cnt" id="nLop">14</span></a>
+    <a data-v="gv"><i>☺</i>Giáo viên<span class="cnt" id="nGv">41</span></a>
+    <a data-v="phong"><i>⌗</i>Phòng &amp; xưởng<span class="cnt" id="nPh">59</span></a>
+    <a data-v="mon"><i>≡</i>Mô-đun<span class="cnt" id="nMon">29</span></a>
   </div>
-
-  <div class="navg" data-grp="tay">
-    <button class="ghead" data-tog="tay"><span class="cv">▾</span>Tinh chỉnh &amp; rà soát</button>
-    <div class="gbody">
-      <a data-v="tinhchinh"><i>✋</i>Tinh chỉnh tay</a>
-      <a data-v="banggv"><i>▥</i>Bảng giáo viên</a>
-    </div>
+  <div class="navg"><p>Cấu hình</p>
+    <a data-v="ctdt"><i>◈</i>Chương trình ĐT<span class="cnt">3</span></a>
+    <a data-v="hedt"><i>⊞</i>Hệ &amp; khoá học<span class="cnt">7</span></a>
+    <a data-v="rb"><i>⚖</i>Ràng buộc</a>
+    <a data-v="uutien"><i>▲</i>Độ ưu tiên RB</a>
+    <a data-v="ghepnhom"><i>⊞</i>Lớp ghép &amp; đồng giảng</a>
+    <a data-v="khung"><i>◷</i>Khung giờ</a>
+    <a data-v="mocgio"><i>🕐</i>Mốc giờ tiết học</a>
   </div>
-
-  <div class="navg" data-grp="dl">
-    <button class="ghead" data-tog="dl"><span class="cv">▾</span>Dữ liệu nền</button>
-    <div class="gbody">
-      <a data-v="lop"><i>◫</i>Lớp &amp; nhóm nghề<span class="cnt" id="nLop">14</span></a>
-      <a data-v="gv"><i>☺</i>Giáo viên<span class="cnt" id="nGv">41</span></a>
-      <a data-v="phong"><i>⌗</i>Phòng &amp; xưởng<span class="cnt" id="nPh">59</span></a>
-      <a data-v="mon"><i>≡</i>Mô-đun<span class="cnt" id="nMon">29</span></a>
-      <a data-v="ghepnhom"><i>⊞</i>Lớp ghép &amp; đồng giảng</a>
-    </div>
-  </div>
-
-  <div class="navg" data-grp="ct">
-    <button class="ghead" data-tog="ct"><span class="cv">▾</span>Chương trình đào tạo</button>
-    <div class="gbody">
-      <a data-v="ctdt"><i>◈</i>Chương trình &amp; khoá học<span class="cnt">3</span></a>
-    </div>
-  </div>
-
-  <div class="navg" data-grp="cf">
-    <button class="ghead" data-tog="cf"><span class="cv">▾</span>Cấu hình xếp lịch</button>
-    <div class="gbody">
-      <a data-v="rb"><i>⚖</i>Ràng buộc &amp; ưu tiên</a>
-      <a data-v="khung"><i>◷</i>Khung giờ &amp; mốc giờ</a>
-    </div>
-  </div>
-
   <div class="sfoot">Bản mẫu · dữ liệu thật<br>TC K43 · tuần 03</div>
 </nav>
 
@@ -515,7 +482,29 @@ input[type=range]{accent-color:var(--ng);width:110px}
   </section>
 
   <!-- ===== ĐỘ ƯU TIÊN RÀNG BUỘC ===== -->
-  
+  <section class="view" id="v-uutien">
+    <div class="card">
+      <div class="ch"><h3>Độ ưu tiên ràng buộc</h3><span class="sp"></span>
+        <button class="btn sm" id="utDef">Mặc định</button></div>
+      <div class="cb">
+        <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">
+          Trường có quá nhiều ràng buộc thì bộ giải không thể thoả hết. Đặt độ ưu tiên để hệ thống biết
+          <b>cái nào phải giữ bằng mọi giá, cái nào có thể bỏ qua</b> khi bí.</p>
+        <div class="tabs" id="utTabs">
+          <button class="on" data-ut="gv">Giáo viên</button>
+          <button data-ut="nhom">Nhóm giáo viên</button>
+          <button data-ut="mon">Môn học</button>
+          <button data-ut="phong">Phòng</button></div>
+        <div class="cb t0" style="padding:0"><table class="d">
+          <thead><tr><th style="width:38px">STT</th><th>Tên ràng buộc</th><th style="width:120px">Độ ưu tiên</th><th style="width:90px">Trọng số</th></tr></thead>
+          <tbody id="tbUt"></tbody></table></div>
+      </div>
+      <div class="lg">
+        <span><b>Cao</b> = cố giữ bằng mọi giá · <b>Trung bình</b> = ưu tiên vừa · <b>Thấp</b> = bỏ được khi bí</span>
+        <span style="margin-left:auto;color:var(--ink3)">Trọng số 1–5 quyết định mức phạt khi vi phạm</span>
+      </div>
+    </div>
+  </section>
 
   <!-- ===== LỚP GHÉP & ĐỒNG GIẢNG ===== -->
   <section class="view" id="v-ghepnhom">
@@ -666,8 +655,6 @@ input[type=range]{accent-color:var(--ng);width:110px}
 
   <!-- ===== CHƯƠNG TRÌNH ĐÀO TẠO ===== -->
   <section class="view" id="v-ctdt">
-    <div class="tabs" id="ctTop" style="border-radius:7px 7px 0 0;border:1px solid var(--line);border-bottom:0;margin-bottom:0"><button class="on" data-cttop="ctdt">Chương trình đào tạo</button><button data-cttop="hedt">Hệ &amp; khoá học</button></div>
-    <div id="ctPane-ctdt">
     <div class="card">
       <div class="ch"><h3>Ba chương trình đào tạo</h3><span class="sp"></span>
         <span class="pill p-wn">Mỗi chương trình một cấu hình riêng</span>
@@ -680,8 +667,10 @@ input[type=range]{accent-color:var(--ng);width:110px}
       </div>
     </div>
     <div class="card" id="ctDetail"></div>
-  </div>
-    <div id="ctPane-hedt" style="display:none">
+  </section>
+
+  <!-- ===== HỆ & KHOÁ HỌC ===== -->
+  <section class="view" id="v-hedt">
     <div class="card">
       <div class="ch"><h3>Hệ đào tạo và khoá học đang chạy</h3><span class="sp"></span>
         <button class="btn sm" data-add="khoa">+ Mở khoá mới</button></div>
@@ -717,16 +706,10 @@ input[type=range]{accent-color:var(--ng);width:110px}
           <span class="f">Đây là lý do phải có ràng buộc <span class="tag">group_same_class</span>: khi bất kỳ nhóm nghề nào của lớp đang học, cả lớp không thể có tiết văn hoá.</span></span></div>
       </div>
     </div>
-  </div>
   </section>
-
-  <!-- ===== HỆ & KHOÁ HỌC ===== -->
-  
 
   <!-- ===== RÀNG BUỘC ===== -->
   <section class="view" id="v-rb">
-    <div class="tabs" id="rbTop" style="border-radius:7px 7px 0 0;border:1px solid var(--line);border-bottom:0;margin-bottom:0"><button class="on" data-rbtop="dsach">Danh sách ràng buộc</button><button data-rbtop="uutien">Độ ưu tiên &amp; trọng số</button></div>
-    <div id="rbPane-dsach">
     <div class="card">
       <div class="ch"><h3>Ràng buộc cứng</h3><span class="sp"></span><span class="pill p-vh">Bắt buộc</span></div>
       <div class="cb t0"><table class="d"><tbody id="tbHard"></tbody></table></div>
@@ -741,79 +724,10 @@ input[type=range]{accent-color:var(--ng);width:110px}
         <thead><tr><th>Ràng buộc</th><th>Áp dụng cho</th><th class="n">Giá trị</th><th style="width:60px">Bật</th></tr></thead>
         <tbody id="tbRec"></tbody></table></div>
     </div>
-  </div>
-    <div id="rbPane-uutien" style="display:none">
-    <div class="card">
-      <div class="ch"><h3>Độ ưu tiên ràng buộc</h3><span class="sp"></span>
-        <button class="btn sm" id="utDef">Mặc định</button></div>
-      <div class="cb">
-        <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">
-          Trường có quá nhiều ràng buộc thì bộ giải không thể thoả hết. Đặt độ ưu tiên để hệ thống biết
-          <b>cái nào phải giữ bằng mọi giá, cái nào có thể bỏ qua</b> khi bí.</p>
-        <div class="tabs" id="utTabs">
-          <button class="on" data-ut="gv">Giáo viên</button>
-          <button data-ut="nhom">Nhóm giáo viên</button>
-          <button data-ut="mon">Môn học</button>
-          <button data-ut="phong">Phòng</button></div>
-        <div class="cb t0" style="padding:0"><table class="d">
-          <thead><tr><th style="width:38px">STT</th><th>Tên ràng buộc</th><th style="width:120px">Độ ưu tiên</th><th style="width:90px">Trọng số</th></tr></thead>
-          <tbody id="tbUt"></tbody></table></div>
-      </div>
-      <div class="lg">
-        <span><b>Cao</b> = cố giữ bằng mọi giá · <b>Trung bình</b> = ưu tiên vừa · <b>Thấp</b> = bỏ được khi bí</span>
-        <span style="margin-left:auto;color:var(--ink3)">Trọng số 1–5 quyết định mức phạt khi vi phạm</span>
-      </div>
-    </div>
-  </div>
   </section>
 
   <!-- ===== MỐC GIỜ TIẾT HỌC ===== -->
-  
-
-  <!-- ===== KHUNG GIỜ ===== -->
-  <section class="view" id="v-khung">
-    <div class="tabs" id="khTop" style="border-radius:7px 7px 0 0;border:1px solid var(--line);border-bottom:0;margin-bottom:0"><button class="on" data-khtop="khung">Khung thời khoá biểu</button><button data-khtop="mocgio">Mốc giờ tiết học</button></div>
-    <div id="khPane-khung">
-    <div class="card">
-      <div class="ch"><h3>Khung thời khoá biểu</h3><span class="sp"></span><span class="pill p-mu" id="hzT">50 tiết/tuần</span></div>
-      <div class="cb">
-        <div style="display:flex;gap:11px;flex-wrap:wrap">
-          <label class="fld"><span>Số ngày/tuần</span><input type="number" id="hD" value="5" min="1" max="7"></label>
-          <label class="fld"><span>Tiết/ngày</span><input type="number" id="hP" value="10" min="1" max="16"></label>
-          <label class="fld"><span>Tiết buổi sáng</span><input type="number" id="hM" value="5" min="0" max="16"></label>
-          <label class="fld"><span>Số tuần</span><input type="number" id="hW" value="1" min="1" max="8"></label>
-        </div>
-        <div id="hzOut" style="margin-top:13px"></div>
-        <div class="box nu" style="margin-top:11px"><span class="i">§</span><span class="x">
-          Quy chế trường (Điều 3.4.a) cho phép dạy <b>6:00–22:00, kể cả T7 và CN</b>. Hiện trường chỉ dùng T2–T6 — còn dư địa mở rộng khi thiếu phòng.</span></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="ch"><h3>Ca học văn hoá theo khối</h3><span class="sp"></span>
-        <span class="pill p-er">Ràng buộc cứng</span></div>
-      <div class="cb">
-        <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">Mỗi khối văn hoá học cố định một ca. <b>Khối nghề tự động nhận ca còn lại</b> — học sinh 9+ học văn hoá nửa ngày, học nghề nửa ngày kia.</p>
-        <div class="cb t0" style="padding:0"><table class="d">
-          <thead><tr><th>Khối</th><th class="n">Số lớp</th><th>Ca văn hoá</th><th>Ca học nghề</th><th>Phòng văn hoá</th></tr></thead>
-          <tbody id="tbShift"></tbody></table></div>
-        <div class="box wn" style="margin-top:12px"><span class="i">!</span><span class="x">
-          <b>Khối 10 và khối 12 cùng học sáng</b> — hai khối tranh nhau phòng văn hoá buổi sáng, và tranh xưởng buổi chiều.
-          <span class="f">Đây là điểm nghẽn tài nguyên nặng nhất trong tuần. Buổi chiều chỉ còn khối 11 dùng phòng văn hoá, nên phòng dư nhiều.</span></span></div>
-        <div id="shiftOut"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="ch"><h3>Khung riêng theo luồng</h3><span class="sp"></span><span class="pill p-wn">3 luồng độc lập</span></div>
-      <div class="cb t0"><table class="d">
-        <thead><tr><th>Luồng</th><th>Nhịp phát hành</th><th class="n">Tiết/ngày</th><th>Mô hình phòng</th></tr></thead>
-        <tbody>
-          <tr><td><span class="pill p-mu">Cao đẳng</span></td><td>Hằng tuần · tuần 01–46</td><td class="n">10</td><td>Theo mô-đun</td></tr>
-          <tr><td><span class="pill p-ng">Trung cấp nghề</span></td><td>Hằng tuần · tuần 01–46</td><td class="n">5, chủ yếu sáng</td><td>Xưởng, phòng chuyên môn</td></tr>
-          <tr><td><span class="pill p-vh">Văn hoá</span></td><td>Ổn định cả kỳ</td><td class="n">5 sáng + 5 chiều</td><td>Phòng cố định theo lớp</td></tr>
-        </tbody></table></div>
-    </div>
-  </div>
-    <div id="khPane-mocgio" style="display:none">
+  <section class="view" id="v-mocgio">
     <div class="card">
       <div class="ch"><h3>Mốc giờ từng tiết</h3><span class="sp"></span>
         <span class="pill p-mu" id="mgTong"></span>
@@ -853,7 +767,48 @@ input[type=range]{accent-color:var(--ng);width:110px}
         </tbody></table></div>
       <div class="lg"><span>Nếu giáo viên dạy chéo hai cơ sở trong cùng ngày, cần khai <b>thời gian di chuyển tối thiểu</b> để bộ giải chừa đủ khoảng nghỉ.</span></div>
     </div>
-  </div>
+  </section>
+
+  <!-- ===== KHUNG GIỜ ===== -->
+  <section class="view" id="v-khung">
+    <div class="card">
+      <div class="ch"><h3>Khung thời khoá biểu</h3><span class="sp"></span><span class="pill p-mu" id="hzT">50 tiết/tuần</span></div>
+      <div class="cb">
+        <div style="display:flex;gap:11px;flex-wrap:wrap">
+          <label class="fld"><span>Số ngày/tuần</span><input type="number" id="hD" value="5" min="1" max="7"></label>
+          <label class="fld"><span>Tiết/ngày</span><input type="number" id="hP" value="10" min="1" max="16"></label>
+          <label class="fld"><span>Tiết buổi sáng</span><input type="number" id="hM" value="5" min="0" max="16"></label>
+          <label class="fld"><span>Số tuần</span><input type="number" id="hW" value="1" min="1" max="8"></label>
+        </div>
+        <div id="hzOut" style="margin-top:13px"></div>
+        <div class="box nu" style="margin-top:11px"><span class="i">§</span><span class="x">
+          Quy chế trường (Điều 3.4.a) cho phép dạy <b>6:00–22:00, kể cả T7 và CN</b>. Hiện trường chỉ dùng T2–T6 — còn dư địa mở rộng khi thiếu phòng.</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Ca học văn hoá theo khối</h3><span class="sp"></span>
+        <span class="pill p-er">Ràng buộc cứng</span></div>
+      <div class="cb">
+        <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">Mỗi khối văn hoá học cố định một ca. <b>Khối nghề tự động nhận ca còn lại</b> — học sinh 9+ học văn hoá nửa ngày, học nghề nửa ngày kia.</p>
+        <div class="cb t0" style="padding:0"><table class="d">
+          <thead><tr><th>Khối</th><th class="n">Số lớp</th><th>Ca văn hoá</th><th>Ca học nghề</th><th>Phòng văn hoá</th></tr></thead>
+          <tbody id="tbShift"></tbody></table></div>
+        <div class="box wn" style="margin-top:12px"><span class="i">!</span><span class="x">
+          <b>Khối 10 và khối 12 cùng học sáng</b> — hai khối tranh nhau phòng văn hoá buổi sáng, và tranh xưởng buổi chiều.
+          <span class="f">Đây là điểm nghẽn tài nguyên nặng nhất trong tuần. Buổi chiều chỉ còn khối 11 dùng phòng văn hoá, nên phòng dư nhiều.</span></span></div>
+        <div id="shiftOut"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Khung riêng theo luồng</h3><span class="sp"></span><span class="pill p-wn">3 luồng độc lập</span></div>
+      <div class="cb t0"><table class="d">
+        <thead><tr><th>Luồng</th><th>Nhịp phát hành</th><th class="n">Tiết/ngày</th><th>Mô hình phòng</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill p-mu">Cao đẳng</span></td><td>Hằng tuần · tuần 01–46</td><td class="n">10</td><td>Theo mô-đun</td></tr>
+          <tr><td><span class="pill p-ng">Trung cấp nghề</span></td><td>Hằng tuần · tuần 01–46</td><td class="n">5, chủ yếu sáng</td><td>Xưởng, phòng chuyên môn</td></tr>
+          <tr><td><span class="pill p-vh">Văn hoá</span></td><td>Ổn định cả kỳ</td><td class="n">5 sáng + 5 chiều</td><td>Phòng cố định theo lớp</td></tr>
+        </tbody></table></div>
+    </div>
   </section>
 
   </div>
@@ -876,6 +831,7 @@ const VT={dash:["Tổng quan","Học kỳ I · 2026–2027"],
 tkb:["Thời khoá biểu","Tuần 03 · 24–28/8/2026"],
   kehoach:["Kế hoạch xếp lịch","4 lớp xếp · khoá dần"],
   kethua:["Kế thừa lịch cũ","Giữ phần lớn TKB đã xếp"],
+  uutien:["Độ ưu tiên ràng buộc","Cao · Trung bình · Thấp"],
   ghepnhom:["Lớp ghép & đồng giảng","4 tình huống đặc thù"],
   ghim:["Xếp trước môn học","Ghim tiết cố định"],
   tinhchinh:["Tinh chỉnh thủ công","4 phương pháp đổi tiết"],
@@ -883,12 +839,12 @@ tkb:["Thời khoá biểu","Tuần 03 · 24–28/8/2026"],
   solve:["Xếp lịch tự động","Bộ giải CP-SAT"],check:["Kiểm tra khả thi","Tiền kiểm số học"],
   lop:["Lớp & nhóm nghề","14 nhóm · 445 HS · 11 lớp VH"],gv:["Giáo viên","41 giáo viên · định mức 550"],
   phong:["Phòng & xưởng","59 phòng"],mon:["Mô-đun","Chương trình khối 11"],
-  ctdt:["Chương trình đào tạo","Chương trình · hệ · khoá học"],
-  rb:["Ràng buộc xếp lịch","Danh sách · độ ưu tiên"],khung:["Khung giờ & mốc giờ","T2–T6 · 10 tiết/ngày"]};
+  ctdt:["Chương trình đào tạo","Cao đẳng · Song bằng · Trung cấp"],
+  hedt:["Hệ & khoá học","7 khoá đang chạy"],
+  rb:["Ràng buộc","Cứng & mềm"],mocgio:["Mốc giờ tiết học","Giờ bắt đầu và kết thúc"],khung:["Khung giờ","T2–T6 · 10 tiết/ngày"]};
 function go(v){
   $$(".view").forEach(x=>x.classList.toggle("on",x.id==="v-"+v));
   $$(".side a").forEach(a=>a.classList.toggle("on",a.dataset.v===v));
-  openGroupOf(v);
   $("#tTitle").textContent=VT[v][0];$("#tCrumb").textContent=VT[v][1];
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -1869,33 +1825,6 @@ mgAuto();
   });
   if(typeof gvRender==="function")gvRender();
 })();
-
-
-/* ================= NHÓM ĐIỀU HƯỚNG GẬP ================= */
-$$(".ghead").forEach(b=>b.addEventListener("click",()=>{
-  b.closest(".navg").classList.toggle("shut");
-}));
-/* Mở nhóm chứa màn hình đang xem */
-function openGroupOf(v){
-  const a=document.querySelector('.side a[data-v="'+v+'"]');
-  if(!a)return;
-  const g=a.closest(".navg");
-  if(g)g.classList.remove("shut");
-}
-
-/* ================= TAB BÊN TRONG MÀN HÌNH GỘP ================= */
-function pairTabs(barId,attr,prefix){
-  const bar=$("#"+barId);if(!bar)return;
-  bar.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
-    const key=b.dataset[attr];
-    bar.querySelectorAll("button").forEach(x=>x.classList.toggle("on",x===b));
-    bar.parentElement.querySelectorAll('[id^="'+prefix+'"]').forEach(pane=>{
-      pane.style.display=pane.id===prefix+key?"":"none";});
-  }));
-}
-pairTabs("rbTop","rbtop","rbPane-");
-pairTabs("khTop","khtop","khPane-");
-pairTabs("ctTop","cttop","ctPane-");
 
 fillCt();
 
