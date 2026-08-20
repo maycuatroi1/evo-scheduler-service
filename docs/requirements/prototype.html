@@ -205,9 +205,9 @@ input[type=range]{accent-color:var(--ng);width:110px}
   </div>
   <div class="navg"><p>Dữ liệu</p>
     <a data-v="lop"><i>◫</i>Lớp &amp; nhóm nghề<span class="cnt" id="nLop">14</span></a>
-    <a data-v="gv"><i>☺</i>Giáo viên<span class="cnt" id="nGv">12</span></a>
-    <a data-v="phong"><i>⌗</i>Phòng &amp; xưởng<span class="cnt" id="nPh">54</span></a>
-    <a data-v="mon"><i>≡</i>Mô-đun<span class="cnt" id="nMon">18</span></a>
+    <a data-v="gv"><i>☺</i>Giáo viên<span class="cnt" id="nGv">41</span></a>
+    <a data-v="phong"><i>⌗</i>Phòng &amp; xưởng<span class="cnt" id="nPh">59</span></a>
+    <a data-v="mon"><i>≡</i>Mô-đun<span class="cnt" id="nMon">29</span></a>
   </div>
   <div class="navg"><p>Cấu hình</p>
     <a data-v="ctdt"><i>◈</i>Chương trình ĐT<span class="cnt">3</span></a>
@@ -237,9 +237,9 @@ input[type=range]{accent-color:var(--ng);width:110px}
     <div class="kpis">
       <div class="kpi b"><div class="k">Buổi cần xếp</div><div class="v">319</div><div class="d">tuần 03</div></div>
       <div class="kpi g"><div class="k">Đã xếp</div><div class="v" id="kDone">316</div><div class="d" id="kPct">99% phủ lịch</div></div>
-      <div class="kpi a"><div class="k">Nhóm nghề</div><div class="v">14</div><div class="d">5 nghề · 11 lớp VH</div></div>
+      <div class="kpi a"><div class="k">Nhóm nghề</div><div class="v">14</div><div class="d">445 HS · 11 lớp VH</div></div>
       <div class="kpi r"><div class="k">Vấn đề</div><div class="v" id="kIss">3</div><div class="d">cần xử lý</div></div>
-      <div class="kpi"><div class="k">Suất dùng xưởng</div><div class="v">78%</div><div class="d">11 xưởng</div></div>
+      <div class="kpi"><div class="k">Suất dùng xưởng</div><div class="v">78%</div><div class="d">11 xưởng · 41 GV</div></div>
     </div>
     <div class="g2">
       <div class="card">
@@ -397,7 +397,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
   <section class="view" id="v-lop">
     <div class="card">
       <div class="ch"><h3>Lớp văn hoá và nhóm nghề</h3><span class="sp"></span>
-        <span class="pill p-wn">3 lớp tách nhóm</span><button class="btn sm" data-toast="Bản mẫu: mở biểu mẫu thêm lớp.">+ Thêm lớp</button></div>
+        <span class="pill p-wn">2 lớp tách nhóm</span><button class="btn sm" data-toast="Bản mẫu: mở biểu mẫu thêm lớp.">+ Thêm lớp</button></div>
       <div class="tabs"><button class="on" data-lt="all">Tất cả</button><button data-lt="split">Lớp tách nhóm</button><button data-lt="vh">Theo lớp văn hoá</button></div>
       <div class="cb t0"><div class="scroll"><table class="d">
         <thead><tr><th>Nhóm nghề</th><th>Lớp VH</th><th class="n">Sĩ số</th><th>Nghề</th><th>Trạng thái</th><th></th></tr></thead>
@@ -426,7 +426,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
   <section class="view" id="v-phong">
     <div class="card">
       <div class="ch"><h3>Phòng học, xưởng và thiết bị</h3><span class="sp"></span>
-        <span class="pill p-mu" id="phTot">54 phòng</span>
+        <span class="pill p-mu" id="phTot">59 phòng</span>
         <button class="btn sm" data-toast="Bản mẫu: mở biểu mẫu thêm phòng.">+ Thêm</button></div>
       <div class="tabs"><button class="on" data-pt="all">Tất cả</button><button data-pt="vh">Văn hoá</button><button data-pt="xuong">Xưởng</button><button data-pt="may">Phòng máy</button><button data-pt="lt">Lý thuyết nghề</button></div>
       <div class="cb t0"><div class="scroll"><table class="d">
@@ -582,8 +582,8 @@ const VT={dash:["Tổng quan","Học kỳ I · 2026–2027"],
 tkb:["Thời khoá biểu","Tuần 03 · 24–28/8/2026"],
   kehoach:["Kế hoạch xếp lịch","4 lớp xếp · khoá dần"],
   solve:["Xếp lịch tự động","Bộ giải CP-SAT"],check:["Kiểm tra khả thi","Tiền kiểm số học"],
-  lop:["Lớp & nhóm nghề","14 nhóm · 11 lớp văn hoá"],gv:["Giáo viên","Định mức 550 tiết chuẩn"],
-  phong:["Phòng & xưởng","54 phòng"],mon:["Mô-đun","Chương trình khối 11"],
+  lop:["Lớp & nhóm nghề","14 nhóm · 445 HS · 11 lớp VH"],gv:["Giáo viên","41 giáo viên · định mức 550"],
+  phong:["Phòng & xưởng","59 phòng"],mon:["Mô-đun","Chương trình khối 11"],
   ctdt:["Chương trình đào tạo","Cao đẳng · Song bằng · Trung cấp"],
   hedt:["Hệ & khoá học","7 khoá đang chạy"],
   rb:["Ràng buộc","Cứng & mềm"],khung:["Khung giờ","T2–T6 · 10 tiết/ngày"]};
@@ -603,59 +603,103 @@ let tmo;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("o
 $$("[data-toast]").forEach(b=>b.addEventListener("click",()=>toast(b.dataset.toast)));
 
 /* ================= DỮ LIỆU (từ TKB thật + note cơ sở vật chất) ================= */
+/* 14 nhóm nghề — trích nguyên văn từ TKB nghề khối 11 (TC khoá 43) tuần 02 */
 const GROUPS=[
   {g:"G1",vh:"11A3",si:16,nghe:"CNKT Điều khiển tự động"},
-  {g:"G2",vh:"11A2",si:38,nghe:"KT Máy lạnh & ĐHKK"},
-  {g:"G3",vh:"11A1",si:38,nghe:"Điện công nghiệp & dân dụng"},
+  {g:"G2",vh:"11A2",si:38,nghe:"Kỹ thuật máy lạnh và ĐHKK"},
+  {g:"G3",vh:"11A1",si:38,nghe:"Điện công nghiệp và dân dụng"},
   {g:"G4",vh:"11A3",si:17,nghe:"Thiết kế nội thất"},
   {g:"G5",vh:"11A3",si:30,nghe:"Công nghệ ô tô 1"},
-  {g:"G6",vh:"11A11",si:14,nghe:"Điện tử công nghiệp"},
-  {g:"G7",vh:"11A11",si:25,nghe:"Kỹ thuật lắp đặt điện"},
-  {g:"G8",vh:"11A4",si:31,nghe:"Công nghệ ô tô 2"},
-  {g:"G9",vh:"11A5",si:44,nghe:"Tin học ứng dụng"},
-  {g:"G10",vh:"11A6",si:40,nghe:"Kế toán doanh nghiệp"},
-  {g:"G11",vh:"11A7",si:40,nghe:"Nghiệp vụ nhà hàng"},
-  {g:"G12",vh:"11A8",si:38,nghe:"Kỹ thuật chế biến món ăn"},
-  {g:"G13",vh:"11A9",si:40,nghe:"Kỹ thuật xây dựng"},
-  {g:"G14",vh:"11A10",si:34,nghe:"Cấp thoát nước"}
+  {g:"G6",vh:"11A4",si:31,nghe:"Công nghệ ô tô 2"},
+  {g:"G7",vh:"11A5",si:44,nghe:"Tin học ứng dụng"},
+  {g:"G8",vh:"11A6",si:40,nghe:"Thiết kế đồ hoạ"},
+  {g:"G9",vh:"11A7",si:40,nghe:"Nhà hàng khách sạn 1"},
+  {g:"G10",vh:"11A8",si:38,nghe:"Nhà hàng khách sạn 2"},
+  {g:"G11",vh:"11A9",si:40,nghe:"Nhà hàng khách sạn 3"},
+  {g:"G12",vh:"11A10",si:34,nghe:"Kỹ thuật chế biến món ăn 1"},
+  {g:"G13",vh:"11A11",si:25,nghe:"Kỹ thuật chế biến món ăn 2"},
+  {g:"G14",vh:"11A11",si:14,nghe:"Kế toán doanh nghiệp"}
 ];
+/* 29 giáo viên khối nghề — trích nguyên văn từ TKB K43. Số tiết là ước tính
+   minh hoạ (trường chưa công bố), định mức 550 theo số liệu trường cung cấp. */
 const TEACHERS=[
-  {c:"GV011",n:"Thầy L.N.Khanh",b:"Nghề",lt:280,th:398},
-  {c:"GV022",n:"Thầy Đ.K.Huynh",b:"Nghề",lt:240,th:360},
-  {c:"GV018",n:"Cô N.Thuỷ",b:"Nghề",lt:300,th:280},
-  {c:"GV024",n:"Thầy N.V.Hiện",b:"Nghề",lt:180,th:400},
-  {c:"GV015",n:"Thầy N.Q.Tâm",b:"Nghề",lt:260,th:300},
-  {c:"GV021",n:"Thầy N.T.Anh",b:"Nghề",lt:200,th:340},
-  {c:"GV027",n:"Thầy N.V.Thiệu",b:"Nghề",lt:290,th:240},
-  {c:"GV031",n:"Thầy Đ.A.Vũ",b:"Nghề",lt:310,th:180},
-  {c:"GV004",n:"Cô T.T.Mai",b:"Văn hoá",lt:470,th:0},
-  {c:"GV002",n:"Thầy N.V.Bình",b:"Văn hoá",lt:520,th:0},
-  {c:"GV007",n:"Cô P.T.Hà",b:"Văn hoá",lt:430,th:0},
-  {c:"GV009",n:"Cô L.T.Vân",b:"Cả hai",lt:210,th:220}
+  {c:"GV011",n:"Thầy L.N.Khanh",b:"Nghề",mon:"Máy điện, Khí cụ điện",lt:280,th:398},
+  {c:"GV022",n:"Thầy Đ.K.Huynh",b:"Nghề",mon:"KT gia công ống kim loại",lt:240,th:360},
+  {c:"GV018",n:"Cô N.Thủy",b:"Nghề",mon:"Kỹ thuật cảm biến",lt:300,th:280},
+  {c:"GV024",n:"Thầy N.V.Hiện",b:"Nghề",mon:"KT gia công ống kim loại",lt:180,th:400},
+  {c:"GV015",n:"Thầy N.Q.Tâm",b:"Nghề",mon:"Vẽ điện bằng AutoCAD",lt:260,th:300},
+  {c:"GV021",n:"Thầy N.T.Anh",b:"Nghề",mon:"Kỹ thuật cơ khí cơ bản",lt:200,th:340},
+  {c:"GV027",n:"Thầy N.V.Thiệu",b:"Nghề",mon:"Vật liệu nội thất",lt:290,th:240},
+  {c:"GV031",n:"Thầy Đ.A.Vũ",b:"Nghề",mon:"Luật phối cảnh",lt:310,th:180},
+  {c:"GV013",n:"Cô N.P.Thúy",b:"Nghề",mon:"Máy điện (đồng giảng)",lt:220,th:290},
+  {c:"GV035",n:"Thầy N.K.Thụ",b:"Nghề",mon:"KT điện - điện tử cơ bản",lt:270,th:310},
+  {c:"GV029",n:"Cô N.H.Minh",b:"Nghề",mon:"Nhân trắc học",lt:330,th:150},
+  {c:"GV040",n:"Thầy H.V.Thu",b:"Nghề",mon:"Sửa chữa thân vỏ xe",lt:170,th:420},
+  {c:"GV041",n:"Cô T.Quyên",b:"Nghề",mon:"Tiếng Anh chuyên ngành",lt:390,th:60},
+  {c:"GV042",n:"Cô T.A.Tuyết",b:"Nghề",mon:"Tiếng Anh chuyên ngành",lt:400,th:40},
+  {c:"GV043",n:"Cô N.H.Nhung",b:"Nghề",mon:"Nghiệp vụ lễ tân",lt:190,th:350},
+  {c:"GV044",n:"Cô N.L.Anh",b:"Nghề",mon:"Tiếng Anh chuyên ngành",lt:380,th:70},
+  {c:"GV045",n:"Thầy N.Quyết",b:"Nghề",mon:"Nghiệp vụ bar",lt:150,th:400},
+  {c:"GV046",n:"Cô N.Huyên",b:"Nghề",mon:"Soạn thảo văn bản",lt:340,th:180},
+  {c:"GV047",n:"Cô Đ.Thùy",b:"Nghề",mon:"Kế toán doanh nghiệp",lt:360,th:170},
+  {c:"GV048",n:"Cô B.Thảo",b:"Nghề",mon:"Chế biến món ăn",lt:160,th:390},
+  {c:"GV049",n:"Cô D.Chi",b:"Nghề",mon:"Chế biến món ăn",lt:180,th:360},
+  {c:"GV050",n:"Cô H.Trà",b:"Nghề",mon:"Tiếng Anh chuyên ngành",lt:370,th:80},
+  {c:"GV051",n:"Cô P.B.Hạnh",b:"Nghề",mon:"Nghiệp vụ nhà hàng",lt:200,th:330},
+  {c:"GV052",n:"Cô Đ.Nga",b:"Nghề",mon:"Kế toán doanh nghiệp",lt:350,th:160},
+  {c:"GV053",n:"Thầy B.Q.Quý",b:"Nghề",mon:"Công nghệ ô tô",lt:190,th:380},
+  {c:"GV054",n:"Thầy N.M.Quang",b:"Nghề",mon:"Điện công nghiệp",lt:230,th:320},
+  {c:"GV055",n:"Thầy N.V.Thắng",b:"Nghề",mon:"Công nghệ ô tô",lt:210,th:350},
+  {c:"GV056",n:"Thầy T.H.Quỳnh",b:"Nghề",mon:"Thiết kế đồ hoạ",lt:250,th:300},
+  {c:"GV057",n:"Thầy Đ.Kiên",b:"Nghề",mon:"Tin học ứng dụng",lt:280,th:260},
+  /* Giáo viên khối văn hoá — trích từ TKB khối 10 */
+  {c:"GV004",n:"Cô T.T.Mai",b:"Văn hoá",mon:"Ngữ văn",lt:470,th:0},
+  {c:"GV002",n:"Thầy N.V.Bình",b:"Văn hoá",mon:"Toán",lt:520,th:0},
+  {c:"GV007",n:"Cô P.T.Hà",b:"Văn hoá",mon:"Tiếng Anh",lt:430,th:0},
+  {c:"GV060",n:"Thầy V.H.Sơn",b:"Văn hoá",mon:"Giáo dục thể chất",lt:0,th:380},
+  {c:"GV061",n:"Cô N.Phượng",b:"Văn hoá",mon:"Ngữ văn",lt:480,th:0},
+  {c:"GV062",n:"Cô H.Phương",b:"Văn hoá",mon:"Toán",lt:510,th:0},
+  {c:"GV063",n:"Thầy N.V.Long",b:"Văn hoá",mon:"Vật lí",lt:390,th:0},
+  {c:"GV064",n:"Cô Đ.N.Tú",b:"Văn hoá",mon:"Hoá học",lt:400,th:0},
+  {c:"GV065",n:"Cô N.T.Trang",b:"Văn hoá",mon:"Địa lí",lt:360,th:0},
+  {c:"GV066",n:"Cô L.Duyên",b:"Văn hoá",mon:"Lịch sử",lt:350,th:0},
+  {c:"GV067",n:"Cô H.V.Uyên",b:"Văn hoá",mon:"GDKT&PL",lt:340,th:0},
+  {c:"GV068",n:"Cô N.Khuyên",b:"Văn hoá",mon:"Sinh học",lt:300,th:0}
 ];
 /* Cơ sở vật chất — theo số liệu trường cung cấp */
 const ROOMS=[
-  {k:"vh",n:"Phòng văn hoá lớn",lo:"A6-5xx, A6-6xx",q:26,cap:"40–50",use:"Lớp văn hoá cố định",u:86},
+  {k:"vh",n:"Phòng văn hoá lớn",lo:"A6-501…507, A6-601…605",q:26,cap:"40–50",use:"Lớp văn hoá cố định",u:86},
   {k:"vh",n:"Phòng văn hoá nhỏ",lo:"A6-3xx",q:5,cap:"< 30",use:"Lớp văn hoá sĩ số nhỏ",u:64},
-  {k:"xuong",n:"Xưởng ô tô",lo:"A10-XTH",q:3,cap:"18",use:"Công nghệ ô tô",u:92},
-  {k:"xuong",n:"Xưởng điện T1 · Máy lạnh",lo:"A11-1xx",q:4,cap:"18",use:"Điện, Máy lạnh & ĐHKK",u:88},
-  {k:"xuong",n:"Xưởng điện T2 · Điện tử",lo:"A11-2xx",q:2,cap:"18",use:"Điện tử công nghiệp",u:71},
-  {k:"xuong",n:"Xưởng điện T2 · Điện dân dụng",lo:"A11-2xx",q:2,cap:"18",use:"Điện dân dụng",u:76},
-  {k:"may",n:"Phòng máy tính",lo:"A4-5xx",q:5,cap:"18–24 máy",use:"Tin học, AutoCAD, đồ hoạ",u:81},
-  {k:"lt",n:"Phòng lý thuyết to",lo:"A6-30x",q:4,cap:"40–50",use:"LT nghề · chung khối VH",u:69},
-  {k:"lt",n:"Phòng lý thuyết nhỏ",lo:"A6-30x",q:5,cap:"< 30",use:"LT nghề · chung khối VH",u:58},
-  {k:"xuong",n:"Khu thực hành khác",lo:"B3, SÂN A6, A7-T1",q:3,cap:"—",use:"Chế biến, trắc địa, lễ tân",u:44}
+  {k:"xuong",n:"Xưởng ô tô",lo:"A10-XTH",q:3,cap:"18",use:"Sửa chữa thân vỏ xe, KT cơ khí cơ bản",u:92},
+  {k:"xuong",n:"Xưởng điện T1 · Máy lạnh",lo:"A11-103, A11-104, A11-105",q:4,cap:"18",use:"KT gia công ống kim loại, Máy điện",u:88},
+  {k:"xuong",n:"Xưởng điện T2 · Điện tử",lo:"A11-203, A11-204",q:2,cap:"18",use:"KT cảm biến, KT điện - điện tử",u:71},
+  {k:"xuong",n:"Xưởng điện T2 · Điện dân dụng",lo:"A11-201, A11-206",q:2,cap:"18",use:"Khí cụ điện, trang bị điện",u:76},
+  {k:"may",n:"Phòng máy tính",lo:"A4-402, A4-501…504",q:5,cap:"18–24 máy",use:"Vẽ điện AutoCAD, Tin học, Kế toán",u:81},
+  {k:"lt",n:"Phòng lý thuyết to",lo:"A6-301, A6-302, A6-303, A6-306",q:4,cap:"40–50",use:"LT nghề · chung khối VH",u:69},
+  {k:"lt",n:"Phòng lý thuyết nhỏ",lo:"A6-309, A6-310",q:5,cap:"< 30",use:"LT nghề · chung khối VH",u:58},
+  {k:"xuong",n:"Khu thực hành chuyên biệt",lo:"B3, A7-T1, A7-405, SÂN A6",q:3,cap:"—",use:"Chế biến món ăn, lễ tân, trắc địa",u:44}
 ];
 const MODULES=[
-  {c:"MĐ11",n:"Khí cụ điện & trang bị điện",t:"ng",lt:45,th:75,ph:"Xưởng điện"},
-  {c:"MĐ12",n:"Máy điện & thiết bị điện gia dụng",t:"ng",lt:30,th:90,ph:"Xưởng điện"},
-  {c:"MĐ14",n:"Kỹ thuật gia công ống kim loại",t:"ng",lt:30,th:120,ph:"Xưởng máy lạnh"},
-  {c:"MĐ18",n:"Kỹ thuật cảm biến",t:"ng",lt:45,th:60,ph:"Xưởng điện tử"},
-  {c:"MĐ21",n:"Kỹ thuật cơ khí cơ bản",t:"ng",lt:30,th:90,ph:"Xưởng ô tô"},
-  {c:"MĐ24",n:"Vẽ điện bằng AutoCAD",t:"ng",lt:15,th:75,ph:"Phòng máy"},
-  {c:"MĐ27",n:"Vật liệu nội thất",t:"ng",lt:45,th:45,ph:"LT nghề"},
-  {c:"MĐ29",n:"Nhân trắc học",t:"ng",lt:30,th:30,ph:"LT nghề"},
-  {c:"MĐ31",n:"Luật phối cảnh",t:"ng",lt:45,th:30,ph:"LT nghề"},
+  {c:"MĐ11",n:"Khí cụ điện và trang bị điện",t:"ng",lt:45,th:75,ph:"A11-201/206"},
+  {c:"MĐ12",n:"Máy điện và thiết bị điện gia dụng",t:"ng",lt:30,th:90,ph:"A11-104"},
+  {c:"MĐ14",n:"Kỹ thuật gia công ống kim loại",t:"ng",lt:30,th:120,ph:"A11-104"},
+  {c:"MĐ18",n:"Kỹ thuật cảm biến",t:"ng",lt:45,th:60,ph:"A11-204"},
+  {c:"MĐ19",n:"Kỹ thuật điện - điện tử cơ bản",t:"ng",lt:45,th:75,ph:"A11-203"},
+  {c:"MĐ21",n:"Kỹ thuật cơ khí cơ bản",t:"ng",lt:30,th:90,ph:"A10-XTH"},
+  {c:"MĐ22",n:"Sửa chữa thân vỏ xe",t:"ng",lt:30,th:120,ph:"A10-XTH"},
+  {c:"MĐ24",n:"Vẽ điện bằng AutoCAD",t:"ng",lt:15,th:75,ph:"A4-504"},
+  {c:"MĐ27",n:"Vật liệu nội thất",t:"ng",lt:45,th:45,ph:"A6-301"},
+  {c:"MĐ29",n:"Nhân trắc học",t:"ng",lt:30,th:30,ph:"A6-301"},
+  {c:"MĐ31",n:"Luật phối cảnh",t:"ng",lt:45,th:30,ph:"A6-301"},
+  {c:"MĐ33",n:"Nghiệp vụ lễ tân",t:"ng",lt:30,th:90,ph:"A7-T1"},
+  {c:"MĐ34",n:"Nghiệp vụ bar",t:"ng",lt:30,th:75,ph:"A7-405"},
+  {c:"MĐ35",n:"Làm bánh và một số món ăn",t:"ng",lt:30,th:120,ph:"B3"},
+  {c:"MĐ36",n:"Thương phẩm và an toàn thực phẩm",t:"ng",lt:45,th:30,ph:"A6-303"},
+  {c:"MĐ38",n:"Adobe Illustrator cơ bản",t:"ng",lt:30,th:90,ph:"A4-502"},
+  {c:"MĐ40",n:"Bảo trì máy tính",t:"ng",lt:30,th:90,ph:"A4-501"},
+  {c:"MĐ42",n:"Soạn thảo văn bản",t:"ng",lt:30,th:60,ph:"A4-504"},
+  {c:"MĐ43",n:"Kế toán doanh nghiệp 1",t:"ng",lt:60,th:45,ph:"A4-504"},
+  {c:"MĐ45",n:"Tiếng Anh chuyên ngành",t:"ng",lt:60,th:15,ph:"A6-303/306"},
   {c:"VH01",n:"Ngữ văn",t:"vh",lt:105,th:0,ph:"Phòng VH"},
   {c:"VH02",n:"Toán",t:"vh",lt:105,th:0,ph:"Phòng VH"},
   {c:"VH03",n:"Tiếng Anh",t:"vh",lt:105,th:0,ph:"Phòng VH"},
@@ -669,39 +713,39 @@ const MODULES=[
 /* buổi học tuần 03 — trục hiển thị: 5 nhóm nghề đầu (như bản in) */
 const COLS=GROUPS.slice(0,5);
 let SES=[
-  {id:"S01",d:0,s:"S",p:1,len:3,g:"G1",m:"Kỹ thuật cảm biến",gv:"Cô N.Thuỷ",gvc:"GV018",r:"A11-204",t:"ng",lock:1},
+  {id:"S01",d:0,s:"S",p:1,len:3,g:"G1",m:"Kỹ thuật cảm biến",gv:"Cô N.Thủy",gvc:"GV018",r:"A11-204",t:"ng",lock:1},
   {id:"S02",d:0,s:"S",p:1,len:3,g:"G2",m:"KT gia công ống kim loại",gv:"Thầy Đ.K.Huynh",gv2:"Thầy N.V.Hiện",gvc:"GV022",r:"A11-104",t:"ng"},
-  {id:"S03",d:0,s:"S",p:1,len:3,g:"G3",m:"Máy điện & TB điện gia dụng",gv:"Thầy L.N.Khanh",gv2:"Cô N.P.Thuý",gvc:"GV011",r:"A11-105",t:"ng"},
+  {id:"S03",d:0,s:"S",p:1,len:3,g:"G3",m:"Máy điện và TB điện gia dụng",gv:"Thầy L.N.Khanh",gv2:"Cô N.P.Thúy",gvc:"GV011",r:"A11-104",t:"ng"},
   {id:"S04",d:0,s:"S",p:1,len:3,g:"G4",m:"Luật phối cảnh",gv:"Thầy Đ.A.Vũ",gvc:"GV031",r:"A6-301",t:"ng"},
-  {id:"S05",d:0,s:"S",p:1,len:3,g:"G5",m:"Kỹ thuật cơ khí cơ bản",gv:"Thầy N.T.Anh",gvc:"GV021",r:"A10-XTH",t:"ng"},
+  {id:"S05",d:0,s:"S",p:1,len:3,g:"G5",m:"Kỹ thuật điện - điện tử cơ bản",gv:"Thầy N.K.Thụ",gvc:"GV035",r:"A11-203",t:"ng"},
   {id:"S06",d:0,s:"C",p:1,len:2,g:"G2",m:"Ngữ văn",gv:"Cô T.T.Mai",gvc:"GV004",r:"A6-505",t:"vh"},
   {id:"S07",d:0,s:"C",p:3,len:2,g:"G3",m:"Toán",gv:"Thầy N.V.Bình",gvc:"GV002",r:"A6-503",t:"vh"},
 
-  {id:"S08",d:1,s:"S",p:1,len:3,g:"G1",m:"Khí cụ điện & trang bị điện",gv:"Thầy L.N.Khanh",gvc:"GV011",r:"A11-204",t:"ng"},
+  {id:"S08",d:1,s:"S",p:1,len:3,g:"G1",m:"Khí cụ điện và trang bị điện",gv:"Thầy L.N.Khanh",gvc:"GV011",r:"A11-204",t:"ng"},
   {id:"S09",d:1,s:"S",p:1,len:3,g:"G2",m:"KT gia công ống kim loại",gv:"Thầy Đ.K.Huynh",gv2:"Thầy N.V.Hiện",gvc:"GV022",r:"A11-104",t:"ng"},
   {id:"S10",d:1,s:"S",p:1,len:3,g:"G3",m:"Vẽ điện bằng AutoCAD",gv:"Thầy N.Q.Tâm",gvc:"GV015",r:"A4-504",t:"ng"},
   {id:"S11",d:1,s:"S",p:1,len:2,g:"G4",m:"Nhân trắc học",gv:"Cô N.H.Minh",gvc:"GV029",r:"A6-301",t:"ng"},
   {id:"S12",d:1,s:"C",p:1,len:3,g:"G2",m:"Thực hành lạnh cơ bản",gv:"Thầy N.V.Hiện",gvc:"GV024",r:"A11-103",t:"ng"},
   {id:"S13",d:1,s:"C",p:1,len:2,g:"G1",m:"Tiếng Anh",gv:"Cô P.T.Hà",gvc:"GV007",r:"A6-501",t:"vh"},
 
-  {id:"S14",d:2,s:"S",p:1,len:2,g:"G1",m:"Kỹ thuật cảm biến",gv:"Cô N.Thuỷ",gvc:"GV018",r:"A11-204",t:"ng"},
+  {id:"S14",d:2,s:"S",p:1,len:2,g:"G1",m:"Kỹ thuật cảm biến",gv:"Cô N.Thủy",gvc:"GV018",r:"A11-204",t:"ng"},
   {id:"S15",d:2,s:"S",p:1,len:2,g:"G2",m:"Kỹ thuật cơ khí cơ bản",gv:"Thầy N.T.Anh",gvc:"GV021",r:"A10-XTH",t:"ng"},
-  {id:"S16",d:2,s:"S",p:1,len:3,g:"G3",m:"Máy điện & TB điện gia dụng",gv:"Thầy L.N.Khanh",gv2:"Cô N.P.Thuý",gvc:"GV011",r:"A11-105",t:"ng"},
+  {id:"S16",d:2,s:"S",p:1,len:3,g:"G3",m:"Máy điện và TB điện gia dụng",gv:"Thầy L.N.Khanh",gv2:"Cô N.P.Thúy",gvc:"GV011",r:"A11-104",t:"ng"},
   {id:"S17",d:2,s:"S",p:1,len:2,g:"G4",m:"Vật liệu nội thất",gv:"Thầy N.V.Thiệu",gvc:"GV027",r:"A6-302",t:"ng"},
-  {id:"S18",d:2,s:"S",p:1,len:3,g:"G5",m:"Kỹ thuật cơ khí cơ bản",gv:"Thầy N.T.Anh",gvc:"GV021",r:"A10-XTH",t:"ng",bad:"gv"},
-  {id:"S19",d:2,s:"C",p:1,len:2,g:"G5",m:"Tin học ứng dụng",gv:"Cô L.T.Vân",gvc:"GV009",r:"A4-501",t:"vh"},
+  {id:"S18",d:2,s:"S",p:1,len:3,g:"G5",m:"Sửa chữa thân vỏ xe",gv:"Thầy N.T.Anh",gvc:"GV021",r:"A10-XTH",t:"ng",bad:"gv"},
+  {id:"S19",d:2,s:"C",p:1,len:2,g:"G5",m:"Ngữ văn",gv:"Cô T.T.Mai",gvc:"GV004",r:"A6-503",t:"vh"},
 
-  {id:"S20",d:3,s:"S",p:1,len:3,g:"G1",m:"Khí cụ điện & trang bị điện",gv:"Thầy L.N.Khanh",gvc:"GV011",r:"A11-204",t:"ng"},
+  {id:"S20",d:3,s:"S",p:1,len:3,g:"G1",m:"Khí cụ điện và trang bị điện",gv:"Thầy L.N.Khanh",gvc:"GV011",r:"A11-204",t:"ng"},
   {id:"S21",d:3,s:"S",p:1,len:3,g:"G2",m:"KT gia công ống kim loại",gv:"Thầy Đ.K.Huynh",gv2:"Thầy N.V.Hiện",gvc:"GV022",r:"A11-104",t:"ng"},
   {id:"S22",d:3,s:"S",p:1,len:3,g:"G3",m:"Vẽ điện bằng AutoCAD",gv:"Thầy N.Q.Tâm",gvc:"GV015",r:"A4-504",t:"ng"},
   {id:"S23",d:3,s:"S",p:1,len:2,g:"G4",m:"Nhân trắc học",gv:"Cô N.H.Minh",gvc:"GV029",r:"A6-301",t:"ng"},
-  {id:"S24",d:3,s:"C",p:1,len:3,g:"G3",m:"Thực hành trang bị điện",gv:"Cô N.P.Thuý",gvc:"GV013",r:"A11-201",t:"ng"},
+  {id:"S24",d:3,s:"C",p:1,len:3,g:"G3",m:"Khí cụ điện và trang bị điện",gv:"Cô N.P.Thúy",gvc:"GV013",r:"A11-201",t:"ng"},
 
-  {id:"S25",d:4,s:"S",p:1,len:3,g:"G1",m:"Khí cụ điện & trang bị điện",gv:"Thầy L.N.Khanh",gvc:"GV011",r:"A11-204",t:"ng"},
+  {id:"S25",d:4,s:"S",p:1,len:3,g:"G1",m:"Khí cụ điện và trang bị điện",gv:"Thầy L.N.Khanh",gvc:"GV011",r:"A11-204",t:"ng"},
   {id:"S26",d:4,s:"S",p:1,len:2,g:"G2",m:"Kỹ thuật cơ khí cơ bản",gv:"Thầy N.T.Anh",gvc:"GV021",r:"A10-XTH",t:"ng"},
   {id:"S27",d:4,s:"S",p:1,len:2,g:"G4",m:"Vật liệu nội thất",gv:"Thầy N.V.Thiệu",gvc:"GV027",r:"A6-302",t:"ng"},
   /* xung đột lớp gốc: G5 và G1 cùng thuộc lớp văn hoá 11A3 */
-  {id:"S28",d:4,s:"S",p:1,len:2,g:"G5",m:"Giáo dục thể chất",gv:"Thầy V.H.Sơn",gvc:"GV041",r:"SÂN A6",t:"vh",bad:"vh"}
+  {id:"S28",d:4,s:"S",p:1,len:2,g:"G5",m:"Giáo dục thể chất",gv:"Thầy V.H.Sơn",gvc:"GV060",r:"SÂN A6",t:"vh",bad:"vh"}
 ];
 const DAYS=[{c:"T2",l:"Thứ hai"},{c:"T3",l:"Thứ ba"},{c:"T4",l:"Thứ tư"},{c:"T5",l:"Thứ năm"},{c:"T6",l:"Thứ sáu"}];
 
@@ -717,6 +761,7 @@ const CD_SES=(()=>{const out=[];let i=0;
   return out;})();
 
 /* --- luồng VĂN HOÁ khối 11: phòng cố định, học buổi chiều --- */
+/* Lớp văn hoá khối 11 — sĩ số cộng từ các nhóm nghề trong TKB K43 */
 const VH_COLS=[{g:"V1",vh:"11A1",si:38,nghe:"Lớp 11A1"},{g:"V2",vh:"11A2",si:38,nghe:"Lớp 11A2"},
   {g:"V3",vh:"11A3",si:63,nghe:"Lớp 11A3"},{g:"V4",vh:"11A4",si:31,nghe:"Lớp 11A4"},
   {g:"V5",vh:"11A5",si:44,nghe:"Lớp 11A5"}];
