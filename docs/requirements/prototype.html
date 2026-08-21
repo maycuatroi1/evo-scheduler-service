@@ -337,7 +337,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
       <button class="wstep" data-wz="check">
         <span class="wn">3</span><span class="wt"><b>Kiểm tra khả thi</b><i>Bắt mâu thuẫn trước khi chạy</i></span></button>
       <button class="wstep" data-wz="solve">
-        <span class="wn">4</span><span class="wt"><b>Chạy bộ giải</b><i>Xếp tự động</i></span></button>
+        <span class="wn">4</span><span class="wt"><b>Xếp lịch tự động</b><i>Bộ giải CP-SAT</i></span></button>
       <button class="wstep" data-wz="tinhchinh">
         <span class="wn">5</span><span class="wt"><b>Tinh chỉnh tay</b><i>Sửa thủ công sau khi xếp</i></span></button>
     </div>
@@ -423,7 +423,7 @@ input[type=range]{accent-color:var(--ng);width:110px}
   </div>
     <div class="wpane" id="wp-solve" style="display:none">
     <div class="card">
-      <div class="ch"><h3>Chạy bộ giải</h3><span class="sp"></span>
+      <div class="ch"><h3>Xếp lịch tự động</h3><span class="sp"></span>
         <button class="btn pri" id="bRun">▶ Bắt đầu xếp</button>
         <button class="btn" id="bStop" disabled>■ Dừng</button></div>
       <div class="cb">
@@ -1872,7 +1872,7 @@ mgAuto();
 /* ================= THANH TIẾN TRÌNH XẾP LỊCH ================= */
 const WZ=["kehoach","ghim","check","solve","tinhchinh"];
 const WZLBL={kehoach:"Kế hoạch xếp",ghim:"Xếp trước môn",check:"Kiểm tra khả thi",
-  solve:"Chạy bộ giải",tinhchinh:"Tinh chỉnh tay"};
+  solve:"Xếp lịch tự động",tinhchinh:"Tinh chỉnh tay"};
 let wzAt=0;
 function wzGo(idx,quiet){
   wzAt=Math.max(0,Math.min(WZ.length-1,idx));
