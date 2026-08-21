@@ -2,52 +2,114 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Bảng màu lấy từ logo CUWC: xanh lá #056903, xanh dương #0402b6,
+   đỏ #f60204, vàng #fcf405. Màu logo bão hoà 94–98% nên hạ bão hoà,
+   giữ nguyên sắc độ để đọc lâu không mỏi mắt.
+
+   Xanh lá chỉ dùng cho thương hiệu (sidebar) và trạng thái thành công.
+   Khối nghề dùng hổ phách trầm để tương phản rõ với xanh dương của khối
+   văn hoá trên lưới thời khoá biểu. */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --primary: #2563eb;
-  --accent: #059669;
-  --border: #e4ecfc;
-  --destructive: #dc2626;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #0f172a;
+  --background: #f1f2f0;
+  --panel: #ffffff;
+  --panel-2: #f7f8f6;
+  --head: #eceeea;
+  --foreground: #1c2320;
+  --foreground-2: #525b56;
+  --foreground-3: #828b86;
+  --border: #dfe2dd;
+  --border-2: #c3c9c1;
+
+  --culture: #2c5c9e;      /* khối văn hoá */
+  --culture-bg: #eaf0f9;
+  --vocational: #8f5e0e;   /* khối nghề */
+  --vocational-bg: #fbf1de;
+
+  --destructive: #bb3b31;
+  --destructive-bg: #fceceb;
+  --ok: #2a7346;
+  --ok-bg: #eaf4ee;
+  --warn: #8a6606;
+  --warn-bg: #fbf4de;
+
+  --sidebar: #123f22;
+  --sidebar-foreground: #c6d8cb;
+  --shadow: 0 1px 2px rgba(28, 35, 32, 0.06), 0 4px 14px rgba(28, 35, 32, 0.06);
 }
 
 .dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --primary: #3b82f6;
-  --accent: #10b981;
-  --border: #1e293b;
-  --destructive: #ef4444;
-  --sidebar: #111827;
-  --sidebar-foreground: #f8fafc;
+  --background: #10140f;
+  --panel: #181d19;
+  --panel-2: #1e2420;
+  --head: #242b26;
+  --foreground: #e9ece9;
+  --foreground-2: #b1bab4;
+  --foreground-3: #828d86;
+  --border: #2b332d;
+  --border-2: #3c463f;
+
+  --culture: #7fb0e6;
+  --culture-bg: #182437;
+  --vocational: #d9a557;
+  --vocational-bg: #2f2513;
+
+  --destructive: #e0776e;
+  --destructive-bg: #331b1a;
+  --ok: #6fc48a;
+  --ok-bg: #16301f;
+  --warn: #d5b055;
+  --warn-bg: #2d2714;
+
+  --sidebar: #0d1c12;
+  --sidebar-foreground: #abc0b1;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-head: var(--head);
   --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-accent: var(--accent);
+  --color-foreground-2: var(--foreground-2);
+  --color-foreground-3: var(--foreground-3);
   --color-border: var(--border);
+  --color-border-2: var(--border-2);
+  --color-culture: var(--culture);
+  --color-culture-bg: var(--culture-bg);
+  --color-vocational: var(--vocational);
+  --color-vocational-bg: var(--vocational-bg);
   --color-destructive: var(--destructive);
+  --color-destructive-bg: var(--destructive-bg);
+  --color-ok: var(--ok);
+  --color-ok-bg: var(--ok-bg);
+  --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
-  --font-sans: var(--font-fira-sans);
-  --font-mono: var(--font-fira-code);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono-code);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-fira-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
 }
 
+/* Tiêu đề dùng font hẹp ngang để tiêu đề tiếng Việt dài không vỡ dòng */
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-fira-code), ui-monospace, monospace;
+  font-family: var(--font-display), var(--font-body), sans-serif;
+  text-wrap: balance;
+}
+
+/* Số liệu thẳng cột trong bảng và lưới */
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
