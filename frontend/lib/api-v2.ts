@@ -143,6 +143,98 @@ export type InheritDiff = {
 
 export type BellPeriod = { period: number; start: string; end: string };
 
+export type Verdict = "green" | "orange" | "pink" | "pink_dark";
+
+export type SwapCandidate = {
+  session_id: number;
+  day: number;
+  period: number;
+  duration_slots: number;
+  module_code: string;
+  group_code: string;
+  teachers: string[];
+  room: string;
+  verdict: Verdict;
+  reason: string;
+};
+
+export type TrayItem = {
+  session_id: number;
+  module_code: string;
+  module_name: string;
+  group_code: string;
+  duration_slots: number;
+  session_type: string;
+  room: string;
+  teachers: string[];
+};
+
+export type MySession = {
+  session_id: number;
+  day: number;
+  period: number;
+  duration_slots: number;
+  shift: "morning" | "afternoon";
+  module_code: string;
+  module_name: string;
+  group_code: string;
+  group_name: string;
+  room: string;
+  session_type: string;
+  teachers: string[];
+  location: string;
+};
+
+export type MySchedule = {
+  role: string;
+  name: string;
+  schedule_id: number | null;
+  schedule_name: string;
+  published: boolean;
+  morning_count: number;
+  sessions: MySession[];
+  detail?: string;
+  teacher_code?: string;
+  group_code?: string;
+};
+
+export type MyWorkload = {
+  code: string;
+  name: string;
+  theory_periods: number;
+  practice_periods: number;
+  standard_hours: number;
+  quota: number;
+  usage_pct: number;
+};
+
+export type Module = {
+  id: number;
+  code: string;
+  name: string;
+  theory_hours: number;
+  practice_hours: number;
+  student_group_id: number | null;
+  group_code: string;
+  total_hours: number;
+  session_count: number;
+};
+
+export type ProgramRow = {
+  program: string;
+  label: string;
+  group_count: number;
+  student_count: number;
+  module_count: number;
+  theory_hours: number;
+  practice_hours: number;
+  total_hours: number;
+  practice_pct: number;
+  min_pct: number | null;
+  max_pct: number | null;
+  status: "dat" | "thieu_thuc_hanh" | "thua_thuc_hanh" | "chua_khai_gio";
+};
+
 export type Resource = {
   id: number;
   code: string;
@@ -247,6 +339,12 @@ export function createV2(token: string) {
     removePin: (scheduleId: number, sessionId: number) =>
       del(`/schedule/${scheduleId}/pins/${sessionId}`),
 
+    // Dừng bộ giải giữa chừng
+    stopSolve: (jobId: string) =>
+      post<{ job_id: string; status: string; stopped: boolean; detail?: string }>(
+        `/solve/${jobId}/stop`
+      ),
+
     // Kế thừa và xuất bản
     versions: () => get<{ versions: Version[]; count: number }>("/schedule/versions"),
     inheritDiff: (scheduleId: number, baseId: number) =>
@@ -284,6 +382,70 @@ export function createV2(token: string) {
       get<{ rooms: RoomUsage[]; total_slots_per_room: number }>(
         "/reports/room-usage" + (scheduleId ? `?schedule_id=${scheduleId}` : "")
       ),
+
+    // Tinh chỉnh thủ công
+    swapCandidates: (scheduleId: number, sessionId: number, scope: "group" | "all" = "group") =>
+      get<{
+        session_id: number;
+        scope: string;
+        candidates: SwapCandidate[];
+        green_count: number;
+      }>(`/schedule/${scheduleId}/swap-candidates/${sessionId}?scope=${scope}`),
+    swapSessions: (scheduleId: number, sessionId: number, otherId: number) =>
+      post<{ swapped: boolean; verdicts: Verdict[]; warnings: string[] }>(
+        `/schedule/${scheduleId}/swap`,
+        { session_id: sessionId, other_id: otherId }
+      ),
+    listTray: (scheduleId: number) =>
+      get<{ schedule_id: number; tray: TrayItem[]; count: number }>(
+        `/schedule/${scheduleId}/tray`
+      ),
+    pushToTray: (scheduleId: number, sessionId: number) =>
+      post<{ session_id: number; in_tray: boolean }>(
+        `/schedule/${scheduleId}/tray`,
+        { session_id: sessionId }
+      ),
+    placeFromTray: (
+      scheduleId: number,
+      sessionId: number,
+      day: number,
+      period: number
+    ) =>
+      post<{
+        session_id: number;
+        in_tray: boolean;
+        verdict: Verdict;
+        warning: string;
+      }>(`/schedule/${scheduleId}/tray/place`, {
+        session_id: sessionId,
+        day,
+        period,
+      }),
+
+    // Cổng cá nhân
+    mySchedule: (opts?: { scheduleId?: number; group?: string }) => {
+      const qs = new URLSearchParams();
+      if (opts?.scheduleId) qs.set("schedule_id", String(opts.scheduleId));
+      if (opts?.group) qs.set("group", opts.group);
+      const tail = qs.toString();
+      return get<MySchedule>("/me/schedule" + (tail ? "?" + tail : ""));
+    },
+    myWorkload: () => get<MyWorkload>("/me/workload"),
+
+    // Mô-đun và chương trình đào tạo
+    listModules: (opts?: { group?: string; q?: string }) => {
+      const qs = new URLSearchParams();
+      if (opts?.group) qs.set("group", opts.group);
+      if (opts?.q) qs.set("q", opts.q);
+      const tail = qs.toString();
+      return get<Module[]>("/modules" + (tail ? "?" + tail : ""));
+    },
+    createModule: (b: Partial<Module>) => post<Module>("/modules", b),
+    updateModule: (id: number, b: Partial<Module>) =>
+      put<Module>(`/modules/${id}`, b),
+    deleteModule: (id: number) => del(`/modules/${id}`),
+    programReport: () =>
+      get<{ programs: ProgramRow[]; count: number }>("/reports/programs"),
 
     // Tổ chức
     listCampuses: () => get<Campus[]>("/campuses"),

@@ -222,7 +222,7 @@ export type ApiClient = {
   uploadFile: (file: File) => Promise<UploadSummary>;
   commitFile: (file: File) => Promise<CommitResult>;
   templateUrl: () => string;
-  exportUrl: (scheduleId: number) => string;
+  exportUrl: (scheduleId: number, format?: "xlsx" | "pdf") => string;
   getStats: () => Promise<StatsResponse>;
   moveSession: (
     sessionId: number,
@@ -391,12 +391,13 @@ export function createApiClient(token: string | null): ApiClient {
     templateUrl() {
       return API_URL + "/import/template";
     },
-    exportUrl(scheduleId) {
+    exportUrl(scheduleId, format = "xlsx") {
       return (
         API_URL +
         "/schedule/" +
         scheduleId +
-        "/export?format=xlsx"
+        "/export?format=" +
+        format
       );
     },
     async getStats() {

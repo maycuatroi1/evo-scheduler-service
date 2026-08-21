@@ -15,8 +15,10 @@ const GROUPS: Group[] = [
       { href: "/", label: "Tổng quan", icon: "▤" },
       { href: "/schedule", label: "Thời khoá biểu", icon: "▦" },
       { href: "/xep-lich", label: "Xếp thời khoá biểu", icon: "▶" },
+      { href: "/tinh-chinh", label: "Tinh chỉnh thủ công", icon: "✎" },
       { href: "/ke-thua", label: "Kế thừa lịch cũ", icon: "♻" },
       { href: "/bang-giao-vien", label: "Bảng giáo viên", icon: "▥" },
+      { href: "/lich-cua-toi", label: "Lịch của tôi", icon: "☑" },
     ],
   },
   {
