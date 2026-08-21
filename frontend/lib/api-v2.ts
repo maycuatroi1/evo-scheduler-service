@@ -143,6 +143,27 @@ export type InheritDiff = {
 
 export type BellPeriod = { period: number; start: string; end: string };
 
+export type Resource = {
+  id: number;
+  code: string;
+  name: string;
+  type: string;
+  capacity: number;
+  quantity: number;
+  available_quantity: number;
+};
+
+export type RoomUsage = {
+  code: string;
+  name: string;
+  type: string;
+  capacity: number;
+  quantity: number;
+  periods_used: number;
+  slots_available: number;
+  usage_pct: number;
+};
+
 export type Campus = {
   id: number;
   code: string;
@@ -251,6 +272,18 @@ export function createV2(token: string) {
         config: Record<string, unknown>;
         periods: { morning: BellPeriod[]; afternoon: BellPeriod[] };
       }>("/tenant/bell-times", b),
+
+    // Phòng, xưởng
+    listResources: (type?: string) =>
+      get<Resource[]>("/resources" + (type ? `?type=${type}` : "")),
+    createResource: (b: Partial<Resource>) => post<Resource>("/resources", b),
+    updateResource: (id: number, b: Partial<Resource>) =>
+      put<Resource>(`/resources/${id}`, b),
+    deleteResource: (id: number) => del(`/resources/${id}`),
+    roomUsage: (scheduleId?: number) =>
+      get<{ rooms: RoomUsage[]; total_slots_per_room: number }>(
+        "/reports/room-usage" + (scheduleId ? `?schedule_id=${scheduleId}` : "")
+      ),
 
     // Tổ chức
     listCampuses: () => get<Campus[]>("/campuses"),

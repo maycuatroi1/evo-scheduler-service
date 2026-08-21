@@ -61,7 +61,7 @@ export function SessionDetailModal({ session, onClose, onFilterTeacher }: Props)
       aria-label="Chi tiết buổi học"
     >
       <div
-        className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
       <div className="relative z-10 w-full max-w-md overflow-hidden rounded-xl border border-border bg-sidebar shadow-2xl">

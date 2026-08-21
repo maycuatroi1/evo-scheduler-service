@@ -17,7 +17,7 @@ const steps = [
 
 const severityBadge: Record<string, string> = {
   error: "bg-destructive/15 text-destructive",
-  warning: "bg-amber-500/15 text-amber-700",
+  warning: "bg-warn-bg text-warn",
 };
 
 const severityLabel: Record<string, string> = {
@@ -124,7 +124,7 @@ export function ImportWizard() {
         <button
           type="button"
           onClick={handleReset}
-          className="mt-4 rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:bg-border dark:bg-slate-900"
+          className="mt-4 rounded-md border border-border bg-panel px-4 py-2 text-sm font-semibold text-foreground hover:bg-border"
         >
           Import file khác
         </button>
@@ -147,7 +147,7 @@ export function ImportWizard() {
                     ? "bg-primary text-white"
                     : isDone
                       ? "bg-accent text-white"
-                      : "border border-border bg-white text-foreground/50 dark:bg-slate-900")
+                      : "border border-border bg-panel text-foreground/50")
                 }
               >
                 {isDone ? "✓" : s.id}
@@ -169,7 +169,7 @@ export function ImportWizard() {
       </ol>
 
       {step === 1 && (
-        <section className="rounded-lg border border-border bg-white p-6 shadow-sm dark:bg-slate-900">
+        <section className="rounded-lg border border-border bg-panel p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-foreground">
               Tải lên file Excel
@@ -212,7 +212,7 @@ export function ImportWizard() {
       )}
 
       {step === 2 && summary && (
-        <section className="rounded-lg border border-border bg-white p-6 shadow-sm dark:bg-slate-900">
+        <section className="rounded-lg border border-border bg-panel p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-foreground">
               Kết quả kiểm tra
@@ -300,7 +300,7 @@ export function ImportWizard() {
       )}
 
       {step === 3 && (
-        <section className="rounded-lg border border-border bg-white p-6 shadow-sm dark:bg-slate-900">
+        <section className="rounded-lg border border-border bg-panel p-6 shadow-sm">
           <h3 className="text-sm font-semibold text-foreground">
             Xác nhận commit
           </h3>
@@ -330,7 +330,7 @@ export function ImportWizard() {
           type="button"
           onClick={handleReset}
           disabled={busy}
-          className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:bg-border disabled:opacity-40 dark:bg-slate-900"
+          className="rounded-md border border-border bg-panel px-4 py-2 text-sm font-semibold text-foreground hover:bg-border disabled:opacity-40"
         >
           Làm lại
         </button>

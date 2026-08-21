@@ -282,7 +282,7 @@ function MetricCard({
       ? "text-primary"
       : tone === "accent"
         ? "text-accent"
-        : "text-amber-600";
+        : "text-warn";
   return (
     <div className="rounded-md border border-border bg-background p-3">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-foreground/60">

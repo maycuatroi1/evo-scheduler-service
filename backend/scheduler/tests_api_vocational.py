@@ -356,3 +356,87 @@ class PinTests(ApiBase):
         )
         s.refresh_from_db()
         self.assertFalse(s.is_pinned)
+
+
+class ResourceTests(ApiBase):
+    """Phòng, xưởng và báo cáo suất sử dụng."""
+
+    def test_tao_va_liet_ke_phong(self):
+        r = self.post(
+            V2 + "/resources",
+            {"code": "A11-204", "name": "Xuong dien", "type": "workshop",
+             "capacity": 18, "quantity": 1, "available_quantity": 1},
+            self.h_pdt,
+        )
+        self.assertEqual(r.status_code, 201)
+        rs = self.c.get(V2 + "/resources", **self.h_pdt).json()
+        self.assertEqual(len(rs), 1)
+        self.assertEqual(rs[0]["code"], "A11-204")
+
+    def test_loc_theo_loai_phong(self):
+        self.post(
+            V2 + "/resources",
+            {"code": "A6-501", "name": "Phong VH", "type": "theory_room"},
+            self.h_pdt,
+        )
+        self.post(
+            V2 + "/resources",
+            {"code": "A10-XTH", "name": "Xuong o to", "type": "workshop"},
+            self.h_pdt,
+        )
+        rs = self.c.get(V2 + "/resources?type=workshop", **self.h_pdt).json()
+        self.assertEqual(len(rs), 1)
+        self.assertEqual(rs[0]["code"], "A10-XTH")
+
+    def test_loai_phong_khong_hop_le_bi_chan(self):
+        r = self.post(
+            V2 + "/resources", {"code": "X", "name": "X", "type": "sai"}, self.h_pdt
+        )
+        self.assertEqual(r.status_code, 400)
+
+    def test_giao_vien_khong_duoc_tao_phong(self):
+        r = self.post(
+            V2 + "/resources", {"code": "Y", "name": "Y"}, self.h_gv
+        )
+        self.assertEqual(r.status_code, 403)
+
+    def test_bao_cao_suat_su_dung_phong(self):
+        from scheduler.models import Resource
+
+        room = Resource.objects.create(
+            tenant=self.tenant, code="A11-204", name="Xuong",
+            type="workshop", capacity=18, quantity=1, available_quantity=1,
+        )
+        g = StudentGroup.objects.create(
+            tenant=self.tenant, code="G", name="G", enrollment_type="dual_degree"
+        )
+        m = Module.objects.create(tenant=self.tenant, code="M", name="M")
+        Session.objects.create(
+            tenant=self.tenant, module=m, student_group=g,
+            session_type="practice", tier="vocational",
+            duration_slots=3, assigned_resource=room,
+        )
+        r = self.c.get(V2 + "/reports/room-usage", **self.h_pdt).json()
+        row = [x for x in r["rooms"] if x["code"] == "A11-204"][0]
+        self.assertEqual(row["periods_used"], 3)
+        self.assertGreater(row["usage_pct"], 0)
+
+    def test_buoi_thuc_tap_khong_tinh_suat_dung_phong(self):
+        from scheduler.models import Resource
+
+        room = Resource.objects.create(
+            tenant=self.tenant, code="A11-103", name="X",
+            type="workshop", quantity=1, available_quantity=1,
+        )
+        g = StudentGroup.objects.create(
+            tenant=self.tenant, code="G2", name="G2", enrollment_type="college"
+        )
+        m = Module.objects.create(tenant=self.tenant, code="M2", name="M2")
+        Session.objects.create(
+            tenant=self.tenant, module=m, student_group=g,
+            session_type="internship", tier="vocational",
+            duration_slots=50, assigned_resource=room,
+        )
+        r = self.c.get(V2 + "/reports/room-usage", **self.h_pdt).json()
+        row = [x for x in r["rooms"] if x["code"] == "A11-103"][0]
+        self.assertEqual(row["periods_used"], 0)

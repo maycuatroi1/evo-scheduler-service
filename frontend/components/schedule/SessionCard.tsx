@@ -56,7 +56,7 @@ export function SessionCard({
       {...listeners}
       {...attributes}
       className={[
-        "select-none rounded-md border border-border bg-white px-2 py-1.5 text-left shadow-sm transition-opacity",
+        "select-none rounded-md border border-border bg-panel px-2 py-1.5 text-left shadow-sm transition-opacity",
         highlighted ? "ring-2 ring-accent ring-offset-1" : "",
         dimmed || isDragging ? "opacity-40" : "hover:shadow-md",
         dragging ? "cursor-grabbing" : "cursor-grab",
@@ -85,7 +85,7 @@ export function SessionCard({
 export function SessionCardPreview({ session }: { session: Session }) {
   const tc = tierColor(session.tier);
   return (
-    <div className="w-44 rounded-md border border-border bg-white px-2 py-1.5 shadow-lg">
+    <div className="w-44 rounded-md border border-border bg-panel px-2 py-1.5 shadow-lg">
       <div className={`mb-1 h-0.5 w-full rounded-full ${tc.bar}`} />
       <div className="flex items-center justify-between gap-1">
         <span className="truncate text-xs font-bold text-foreground">

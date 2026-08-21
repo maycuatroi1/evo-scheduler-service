@@ -35,6 +35,11 @@
   --sidebar: #123f22;
   --sidebar-foreground: #c6d8cb;
   --shadow: 0 1px 2px rgba(28, 35, 32, 0.06), 0 4px 14px rgba(28, 35, 32, 0.06);
+
+  /* Bí danh cho các màn hình viết trước khi đổi bảng màu. Giữ đúng ngữ
+     nghĩa cũ: primary là khối văn hoá, accent là khối nghề. */
+  --primary: var(--culture);
+  --accent: var(--vocational);
 }
 
 .dark {
@@ -63,6 +68,9 @@
   --sidebar: #0d1c12;
   --sidebar-foreground: #abc0b1;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 4px 14px rgba(0, 0, 0, 0.35);
+
+  --primary: var(--culture);
+  --accent: var(--vocational);
 }
 
 @theme inline {
@@ -87,6 +95,8 @@
   --color-warn-bg: var(--warn-bg);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-primary: var(--primary);
+  --color-accent: var(--accent);
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
   --font-mono: var(--font-mono-code);

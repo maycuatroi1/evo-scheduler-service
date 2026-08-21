@@ -342,6 +342,105 @@ def homeroom_split(request, hid: int):
 
 
 # --------------------------------------------------------------------------
+# Phòng, xưởng, thiết bị
+# --------------------------------------------------------------------------
+
+class ResourceIn(Schema):
+    code: str
+    name: str
+    type: str = "theory_room"
+    capacity: int = 0
+    quantity: int = 1
+    available_quantity: int = 1
+
+
+class ResourceOut(Schema):
+    id: int
+    code: str
+    name: str
+    type: str
+    capacity: int
+    quantity: int
+    available_quantity: int
+
+
+@router.get("/resources", response=list[ResourceOut])
+def list_resources(request, type: str | None = None):
+    qs = _scoped(Resource, request)
+    if type:
+        qs = qs.filter(type=type)
+    return list(qs)
+
+
+@router.post("/resources", response={201: ResourceOut})
+def create_resource(request, payload: ResourceIn):
+    _can_write(request)
+    valid = {c[0] for c in Resource.ResourceType.choices}
+    if payload.type not in valid:
+        raise HttpError(400, "Loại phòng không hợp lệ: %s" % payload.type)
+    if _scoped(Resource, request).filter(code=payload.code).exists():
+        raise HttpError(400, "Mã phòng %s đã tồn tại" % payload.code)
+    obj = Resource.objects.create(tenant=_tenant(request), **payload.dict())
+    return 201, obj
+
+
+@router.put("/resources/{rid}", response=ResourceOut)
+def update_resource(request, rid: int, payload: ResourceIn):
+    _can_write(request)
+    obj = _get_or_404(Resource, request, rid, "Phòng")
+    for k, v in payload.dict().items():
+        setattr(obj, k, v)
+    obj.save()
+    return obj
+
+
+@router.delete("/resources/{rid}")
+def delete_resource(request, rid: int):
+    _can_write(request)
+    _get_or_404(Resource, request, rid, "Phòng").delete()
+    return {"deleted": True}
+
+
+@router.get("/reports/room-usage")
+def room_usage(request, schedule_id: int | None = None):
+    """Suất sử dụng từng phòng: bao nhiêu tiết trên tổng số tiết khả dụng."""
+    from scheduler import horizon as horizon_mod
+
+    cfg = (_tenant(request).config_json or {}).get("horizon", {})
+    slots = horizon_mod.total_slots(cfg) or 1
+
+    qs = Session.objects.filter(tenant_id=request.auth["tenant_id"])
+    if schedule_id is not None:
+        qs = qs.filter(schedule_id=schedule_id)
+
+    used = {}
+    for s in qs.select_related("assigned_resource"):
+        r = s.assigned_resource
+        if r is None or not s.consumes_resources():
+            continue
+        used[r.code] = used.get(r.code, 0) + int(s.duration_slots or 1)
+
+    rows = []
+    for r in _scoped(Resource, request):
+        cap_slots = slots * max(1, r.available_quantity or 1)
+        periods = used.get(r.code, 0)
+        rows.append(
+            {
+                "code": r.code,
+                "name": r.name,
+                "type": r.type,
+                "capacity": r.capacity,
+                "quantity": r.quantity,
+                "periods_used": periods,
+                "slots_available": cap_slots,
+                "usage_pct": round(periods / cap_slots * 100, 1) if cap_slots else 0,
+            }
+        )
+    rows.sort(key=lambda x: -x["usage_pct"])
+    return {"rooms": rows, "total_slots_per_room": slots}
+
+
+# --------------------------------------------------------------------------
 # Giáo viên — hồ sơ đầy đủ
 # --------------------------------------------------------------------------
 
