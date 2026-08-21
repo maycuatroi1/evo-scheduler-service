@@ -111,6 +111,14 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 
+# Chạy máy cá nhân không có Redis thì bật cờ này: tác vụ chạy thẳng trong
+# tiến trình web thay vì đẩy qua hàng đợi. Yêu cầu xếp lịch sẽ chờ tới khi
+# giải xong nên chỉ hợp dữ liệu nhỏ, đừng dùng trên máy chủ thật.
+CELERY_TASK_ALWAYS_EAGER = (
+    os.environ.get("CELERY_TASK_ALWAYS_EAGER", "0") == "1"
+)
+CELERY_TASK_EAGER_PROPAGATES = CELERY_TASK_ALWAYS_EAGER
+
 JWT_SIGNING_KEY = os.environ.get(
     "JWT_SIGNING_KEY",
     "dev-insecure-signing-key-change-me",

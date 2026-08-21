@@ -1,6 +1,7 @@
 from scheduler.models import (
     Module,
     Resource,
+    Schedule,
     Session,
     StudentGroup,
     Teacher,
@@ -39,7 +40,9 @@ def seed_demo_data(tenant) -> None:
 
     resources_data = [
         ("P101", "Phòng lý thuyết 101", "theory_room", 40, 1),
-        ("XN01", "Xưởng thực hành 01", "workshop", 20, 1),
+        # Sức chứa phải đủ cho lớp đông nhất (30), nếu không tiền kiểm tra
+        # sẽ báo thiếu chỗ và bộ giải dừng trước khi chạy.
+        ("XN01", "Xưởng thực hành 01", "workshop", 40, 2),
     ]
     for code, name, rtype, capacity, quantity in resources_data:
         Resource.objects.create(
@@ -75,9 +78,13 @@ def seed_demo_data(tenant) -> None:
         (modules[1], groups[1], "theory", 2, "vocational"),
         (modules[1], groups[1], "practice", 2, "vocational"),
     ]
+    schedule = Schedule.objects.create(
+        tenant=tenant, name="Học kỳ mẫu", status=Schedule.Status.DRAFT
+    )
     for module, student_group, session_type, duration_slots, tier in sessions_data:
         Session.objects.create(
             tenant=tenant,
+            schedule=schedule,
             module=module,
             student_group=student_group,
             session_type=session_type,
