@@ -23,6 +23,8 @@ def mint_token(user) -> str:
         "deployment_id": "self",
         "email": user.email,
         "name": user.name,
+        "role": user.role,
+        "user_id": str(user.id),
         "iat": int(now.timestamp()),
         "exp": int((now + TOKEN_TTL).timestamp()),
     }

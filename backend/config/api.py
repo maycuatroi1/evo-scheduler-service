@@ -904,3 +904,10 @@ def _persist(parsed, tenant):
             created["sessions"] += 1
 
     return created
+
+
+# Router cho nghiệp vụ trường nghề: CRUD dữ liệu nền, ghim tiết, độ ưu
+# tiên ràng buộc, kế thừa lịch cũ, xuất bản, mốc giờ.
+from config.api_vocational import router as vocational_router  # noqa: E402
+
+api.add_router("/v2", vocational_router)

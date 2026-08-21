@@ -67,9 +67,15 @@ def tenant_auth(request):
     request.jwt_claims = claims
     set_current_tenant(tenant.id)
 
+    # Vai trò lấy từ token; token cũ chưa có claim này thì coi như Phòng
+    # Đào tạo để không khoá mất người dùng đang đăng nhập.
+    role = claims.get("role") or "registrar"
+
     return {
         "tenant_id": tenant.id,
         "deployment_id": claims.get(DEPLOYMENT_CLAIM),
         "claims": claims,
         "tenant": tenant,
+        "role": role,
+        "email": claims.get("email"),
     }
