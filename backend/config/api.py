@@ -288,6 +288,8 @@ def list_schedule_conflicts(request, schedule_id):
         tenant.sessions.select_related("module", "student_group", "assigned_resource")
         .prefetch_related("assigned_teachers")
     )
+    # Buổi nhiều tiết chiếm mọi tiết nó trải qua, không chỉ tiết bắt đầu;
+    # nếu chỉ so tiết bắt đầu thì bỏ sót chồng lấn (FR-7.11).
     buckets = {}
     for s in qs:
         ts = s.assigned_timeslot
@@ -297,15 +299,20 @@ def list_schedule_conflicts(request, schedule_id):
         period = ts.get("period")
         if day is None or period is None:
             continue
-        buckets.setdefault((day, period), []).append(s)
+        for k in range(max(1, int(s.duration_slots or 1))):
+            buckets.setdefault((day, period + k), []).append(s)
 
     conflicts = []
-    for (day, period), group in buckets.items():
+    seen_pairs = set()
+    for (day, period), group in sorted(buckets.items()):
         n = len(group)
         for i in range(n):
             for j in range(i + 1, n):
                 a = group[i]
                 b = group[j]
+                pair = (min(a.id, b.id), max(a.id, b.id))
+                if pair in seen_pairs:
+                    continue
                 a_teachers = {t.code for t in a.assigned_teachers.all()}
                 b_teachers = {t.code for t in b.assigned_teachers.all()}
                 shared_teachers = a_teachers & b_teachers
@@ -315,6 +322,8 @@ def list_schedule_conflicts(request, schedule_id):
                     a_room is not None and a_room == b_room
                 )
                 group_clash = a.student_group_id == b.student_group_id
+                if shared_teachers or room_clash or group_clash:
+                    seen_pairs.add(pair)
                 for kind, hit in (
                     ("teacher", bool(shared_teachers)),
                     ("room", room_clash),
@@ -337,7 +346,7 @@ def list_schedule_conflicts(request, schedule_id):
                             "session_ids": [a.id, b.id],
                             "day": day,
                             "period": period,
-                            "day_name": DAY_NAME_VI.get(day, ts.get("day_name", "")),
+                            "day_name": DAY_NAME_VI.get(day, ""),
                             "detail": detail,
                         }
                     )
@@ -459,11 +468,31 @@ def _build_export_xlsx(tenant, schedule):
 
 
 @api.get("/schedule/{schedule_id}/export", auth=tenant_auth)
-def export_schedule(request, schedule_id, format: str = "xlsx"):
+def export_schedule(request, schedule_id, format: str = "xlsx", page: str = "auto"):
+    """Xuất lịch ra Excel (mặc định) hoặc PDF đúng mẫu bản in của trường."""
     schedule = _get_tenant_schedule(request, schedule_id)
-    if format != "xlsx":
-        raise HttpError(400, "only format=xlsx is supported")
+    if format not in ("xlsx", "pdf"):
+        raise HttpError(400, "Chỉ hỗ trợ format=xlsx hoặc format=pdf")
     tenant = request.auth["tenant"]
+
+    if format == "pdf":
+        from scheduler import horizon as horizon_mod
+        from scheduler import pdf_export
+
+        cfg = horizon_mod.normalize((tenant.config_json or {}).get("horizon"))
+        payload = pdf_export.build_pdf(
+            tenant,
+            schedule,
+            morning_count=cfg["morning_count"],
+            page=page if page in ("auto", "a4", "a3") else "auto",
+        )
+        response = HttpResponse(payload, content_type="application/pdf")
+        response["Content-Disposition"] = (
+            'attachment; filename="tkb_%s.pdf"' % schedule_id
+        )
+        response["Content-Length"] = str(len(payload))
+        return response
+
     payload = _build_export_xlsx(tenant, schedule)
     response = HttpResponse(payload, content_type=XLSX_CONTENT_TYPE)
     response["Content-Disposition"] = (

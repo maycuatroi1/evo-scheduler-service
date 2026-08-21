@@ -440,3 +440,692 @@ class ResourceTests(ApiBase):
         r = self.c.get(V2 + "/reports/room-usage", **self.h_pdt).json()
         row = [x for x in r["rooms"] if x["code"] == "A11-103"][0]
         self.assertEqual(row["periods_used"], 0)
+
+
+class StopSolveTests(ApiBase):
+    """Người dùng bấm Dừng: bộ giải phải giữ lại phương án đã tìm được."""
+
+    def _job(self, status="solving"):
+        from scheduler.models import SolveJob
+
+        sch = Schedule.objects.create(
+            tenant=self.tenant, name="HK1", status="solving"
+        )
+        return SolveJob.objects.create(
+            tenant=self.tenant, schedule=sch, status=status
+        )
+
+    def test_dat_co_dung_cho_phien_dang_chay(self):
+        from scheduler.models import SolveJob
+
+        job = self._job()
+        r = self.post(V2 + "/solve/%s/stop" % job.id, {}, self.h_pdt)
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.json()["stopped"])
+        self.assertTrue(
+            SolveJob.objects.get(id=job.id).stop_requested
+        )
+
+    def test_phien_da_ket_thuc_thi_khong_dung_nua(self):
+        from scheduler.models import SolveJob
+
+        job = self._job(status=SolveJob.Status.SOLVED)
+        r = self.post(V2 + "/solve/%s/stop" % job.id, {}, self.h_pdt)
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(r.json()["stopped"])
+        self.assertFalse(SolveJob.objects.get(id=job.id).stop_requested)
+
+    def test_giao_vien_khong_duoc_dung_bo_giai(self):
+        job = self._job()
+        r = self.post(V2 + "/solve/%s/stop" % job.id, {}, self.h_gv)
+        self.assertEqual(r.status_code, 403)
+
+    def test_phien_cua_truong_khac_tra_ve_404(self):
+        from scheduler.models import SolveJob
+
+        other = Tenant.objects.create(code="X", name="X")
+        sch = Schedule.objects.create(tenant=other, name="HK1")
+        job = SolveJob.objects.create(
+            tenant=other, schedule=sch, status="solving"
+        )
+        r = self.post(V2 + "/solve/%s/stop" % job.id, {}, self.h_pdt)
+        self.assertEqual(r.status_code, 404)
+
+    def test_ma_phien_sai_dinh_dang_tra_ve_404(self):
+        r = self.post(V2 + "/solve/khong-phai-uuid/stop", {}, self.h_pdt)
+        self.assertEqual(r.status_code, 404)
+
+    def test_tac_vu_ghi_trang_thai_da_dung(self):
+        """Bấm Dừng trước khi tác vụ chạy xong -> trạng thái là stopped."""
+        from scheduler.models import SolveJob
+        from scheduler.tasks import solve_schedule
+
+        job = self._job()
+        job.stop_requested = True
+        job.save(update_fields=["stop_requested"])
+
+        out = solve_schedule(job.schedule_id, {"solve_job_id": str(job.id)})
+        self.assertEqual(out["status"], "stopped")
+        self.assertEqual(
+            SolveJob.objects.get(id=job.id).status, SolveJob.Status.STOPPED
+        )
+
+
+class ModuleCrudTests(ApiBase):
+    """CRUD mô-đun cho màn hình /mo-dun."""
+
+    def _mk(self, code="MD01", **kw):
+        kw.setdefault("name", "Kỹ thuật điện")
+        kw.setdefault("theory_hours", 30)
+        kw.setdefault("practice_hours", 60)
+        return self.post(V2 + "/modules", {"code": code, **kw}, self.h_pdt)
+
+    def test_tao_va_liet_ke_mo_dun(self):
+        r = self._mk()
+        self.assertEqual(r.status_code, 201)
+        body = r.json()
+        self.assertEqual(body["total_hours"], 90)
+        rows = self.c.get(V2 + "/modules", **self.h_pdt).json()
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["code"], "MD01")
+
+    def test_ma_trung_bi_tu_choi(self):
+        self._mk()
+        r = self._mk()
+        self.assertEqual(r.status_code, 400)
+
+    def test_sua_mo_dun(self):
+        mid = self._mk().json()["id"]
+        r = self.put(
+            V2 + "/modules/%d" % mid,
+            {"code": "MD01", "name": "Đã đổi", "theory_hours": 10,
+             "practice_hours": 20},
+            self.h_pdt,
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json()["name"], "Đã đổi")
+        self.assertEqual(r.json()["total_hours"], 30)
+
+    def test_xoa_mo_dun_khong_con_buoi(self):
+        mid = self._mk().json()["id"]
+        r = self.c.delete(V2 + "/modules/%d" % mid, **self.h_pdt)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(Module.objects.count(), 0)
+
+    def test_khong_xoa_duoc_mo_dun_dang_co_buoi_hoc(self):
+        """Xoá mô-đun đang dùng sẽ kéo theo mất buổi học — phải chặn."""
+        mid = self._mk().json()["id"]
+        g = StudentGroup.objects.create(
+            tenant=self.tenant, code="G", name="G", enrollment_type="college"
+        )
+        Session.objects.create(
+            tenant=self.tenant, module_id=mid, student_group=g,
+            session_type="theory", tier="vocational",
+        )
+        r = self.c.delete(V2 + "/modules/%d" % mid, **self.h_pdt)
+        self.assertEqual(r.status_code, 400)
+        self.assertEqual(Module.objects.count(), 1)
+
+    def test_loc_theo_nhom_va_tim_kiem(self):
+        g = StudentGroup.objects.create(
+            tenant=self.tenant, code="11A3", name="11A3",
+            enrollment_type="dual_degree",
+        )
+        self._mk("MD01", student_group_id=g.id)
+        self._mk("MD02", name="Hàn cơ bản")
+        rows = self.c.get(V2 + "/modules?group=11A3", **self.h_pdt).json()
+        self.assertEqual([m["code"] for m in rows], ["MD01"])
+        rows = self.c.get(V2 + "/modules?q=hàn", **self.h_pdt).json()
+        self.assertEqual([m["code"] for m in rows], ["MD02"])
+
+    def test_giao_vien_khong_duoc_tao_mo_dun(self):
+        r = self._mk_as_gv()
+        self.assertEqual(r.status_code, 403)
+
+    def _mk_as_gv(self):
+        return self.post(
+            V2 + "/modules", {"code": "X", "name": "X"}, self.h_gv
+        )
+
+    def test_khong_thay_mo_dun_truong_khac(self):
+        khac = Tenant.objects.create(code="X", name="X")
+        Module.objects.create(tenant=khac, code="ZZ", name="Z")
+        rows = self.c.get(V2 + "/modules", **self.h_pdt).json()
+        self.assertEqual(rows, [])
+
+
+class ProgramReportTests(ApiBase):
+    """FR-9.6: tỉ lệ thực hành theo chương trình so với ngưỡng quy định."""
+
+    def _group(self, code, loai, size=30):
+        return StudentGroup.objects.create(
+            tenant=self.tenant, code=code, name=code,
+            enrollment_type=loai, size=size,
+        )
+
+    def _mod(self, code, g, lt, th):
+        return Module.objects.create(
+            tenant=self.tenant, code=code, name=code,
+            theory_hours=lt, practice_hours=th, student_group=g,
+        )
+
+    def test_ti_le_dat_nguong(self):
+        g = self._group("CD1", "college")
+        self._mod("M1", g, 40, 60)  # TH 60% -> trong khoảng 50-70
+        rows = self.c.get(V2 + "/reports/programs", **self.h_pdt).json()
+        row = [r for r in rows["programs"] if r["program"] == "college"][0]
+        self.assertEqual(row["practice_pct"], 60.0)
+        self.assertEqual(row["status"], "dat")
+
+    def test_thieu_thuc_hanh_bi_canh_bao(self):
+        g = self._group("CD2", "college")
+        self._mod("M2", g, 80, 20)  # TH 20% -> dưới 50
+        rows = self.c.get(V2 + "/reports/programs", **self.h_pdt).json()
+        row = [r for r in rows["programs"] if r["program"] == "college"][0]
+        self.assertEqual(row["status"], "thieu_thuc_hanh")
+
+    def test_thua_thuc_hanh_bi_canh_bao(self):
+        g = self._group("TC1", "intermediate")
+        self._mod("M3", g, 5, 95)  # TH 95% -> trên 75
+        rows = self.c.get(V2 + "/reports/programs", **self.h_pdt).json()
+        row = [r for r in rows["programs"] if r["program"] == "intermediate"][0]
+        self.assertEqual(row["status"], "thua_thuc_hanh")
+
+    def test_chua_khai_gio_thi_khong_bao_lech_chuan(self):
+        self._group("SB1", "dual_degree")
+        rows = self.c.get(V2 + "/reports/programs", **self.h_pdt).json()
+        row = [r for r in rows["programs"] if r["program"] == "dual_degree"][0]
+        self.assertEqual(row["status"], "chua_khai_gio")
+        self.assertEqual(row["total_hours"], 0)
+
+    def test_nguong_lay_tu_cau_hinh_don_vi(self):
+        """SRS §2.5 cấm mã hoá cứng ngưỡng vì thông tư sắp ban hành lại."""
+        g = self._group("CD3", "college")
+        self._mod("M4", g, 80, 20)
+        self.tenant.config_json = {
+            "practice_ratio": {"college": {"min": 10, "max": 90}}
+        }
+        self.tenant.save(update_fields=["config_json"])
+        rows = self.c.get(V2 + "/reports/programs", **self.h_pdt).json()
+        row = [r for r in rows["programs"] if r["program"] == "college"][0]
+        self.assertEqual(row["status"], "dat")
+        self.assertEqual(row["min_pct"], 10)
+
+    def test_thu_tu_trung_cap_truoc_song_bang(self):
+        self._group("SB2", "dual_degree")
+        self._group("TC2", "intermediate")
+        self._group("CD4", "college")
+        rows = self.c.get(V2 + "/reports/programs", **self.h_pdt).json()
+        self.assertEqual(
+            [r["program"] for r in rows["programs"]],
+            ["college", "intermediate", "dual_degree"],
+        )
+
+    def test_dem_dung_so_nhom_va_hoc_sinh(self):
+        self._group("CD5", "college", size=30)
+        self._group("CD6", "college", size=25)
+        rows = self.c.get(V2 + "/reports/programs", **self.h_pdt).json()
+        row = [r for r in rows["programs"] if r["program"] == "college"][0]
+        self.assertEqual(row["group_count"], 2)
+        self.assertEqual(row["student_count"], 55)
+
+
+class PortalTests(ApiBase):
+    """FR-8.4: cổng xem lịch riêng cho giáo viên và sinh viên."""
+
+    def setUp(self):
+        super().setUp()
+        self.gv_ho_so = Teacher.objects.create(
+            tenant=self.tenant, code="GV01", name="Trần Thị Bích"
+        )
+        self.gv.teacher = self.gv_ho_so
+        self.gv.save(update_fields=["teacher"])
+        self.gv_khac = Teacher.objects.create(
+            tenant=self.tenant, code="GV02", name="Lê Văn Cường"
+        )
+        self.sch = Schedule.objects.create(
+            tenant=self.tenant, name="HK1", status="published"
+        )
+        self.grp = StudentGroup.objects.create(
+            tenant=self.tenant, code="11A3", name="11A3",
+            enrollment_type="dual_degree",
+        )
+        self.mod = Module.objects.create(
+            tenant=self.tenant, code="MD01", name="Kỹ thuật điện"
+        )
+
+    def _buoi(self, teacher, day=0, period=0, **kw):
+        kw.setdefault("session_type", "theory")
+        s = Session.objects.create(
+            tenant=self.tenant, schedule=self.sch, module=self.mod,
+            student_group=self.grp, tier="vocational",
+            assigned_timeslot={"day": day, "period": period}, **kw
+        )
+        if teacher:
+            s.assigned_teachers.add(teacher)
+        return s
+
+    def test_giao_vien_chi_thay_buoi_cua_minh(self):
+        self._buoi(self.gv_ho_so, day=0)
+        self._buoi(self.gv_khac, day=1)
+        r = self.c.get(V2 + "/me/schedule", **self.h_gv).json()
+        self.assertEqual(len(r["sessions"]), 1)
+        self.assertEqual(r["sessions"][0]["day"], 0)
+        self.assertEqual(r["teacher_code"], "GV01")
+
+    def test_giao_vien_khong_thay_lich_chua_xuat_ban(self):
+        """Dạy theo bản nháp là sai; chỉ bản đã chốt mới hiện."""
+        self.sch.status = "solved"
+        self.sch.save(update_fields=["status"])
+        self._buoi(self.gv_ho_so)
+        r = self.c.get(V2 + "/me/schedule", **self.h_gv).json()
+        self.assertEqual(r["sessions"], [])
+        self.assertIsNone(r["schedule_id"])
+
+    def test_can_bo_dao_tao_xem_duoc_ban_nhap(self):
+        self.sch.status = "solved"
+        self.sch.save(update_fields=["status"])
+        self._buoi(self.gv_ho_so)
+        r = self.c.get(V2 + "/me/schedule", **self.h_pdt).json()
+        self.assertEqual(r["schedule_id"], self.sch.id)
+        self.assertFalse(r["published"])
+
+    def test_tai_khoan_chua_gan_ho_so_giao_vien(self):
+        self.gv.teacher = None
+        self.gv.save(update_fields=["teacher"])
+        r = self.c.get(V2 + "/me/schedule", **self.h_gv).json()
+        self.assertEqual(r["sessions"], [])
+        self.assertIn("hồ sơ giáo viên", r["detail"])
+
+    def test_sinh_vien_phai_chon_nhom(self):
+        sv = User.objects.create(
+            tenant=self.tenant, email="sv@cuwc.edu.vn", name="SV",
+            password_hash=hash_password("x"), role="student",
+        )
+        h = {"HTTP_AUTHORIZATION": "Bearer " + mint_token(sv)}
+        r = self.c.get(V2 + "/me/schedule", **h).json()
+        self.assertEqual(r["sessions"], [])
+        self.assertIn("chọn nhóm nghề", r["detail"])
+
+    def test_sinh_vien_xem_lich_nhom_cua_minh(self):
+        sv = User.objects.create(
+            tenant=self.tenant, email="sv2@cuwc.edu.vn", name="SV2",
+            password_hash=hash_password("x"), role="student",
+        )
+        h = {"HTTP_AUTHORIZATION": "Bearer " + mint_token(sv)}
+        self._buoi(self.gv_ho_so)
+        r = self.c.get(V2 + "/me/schedule?group=11A3", **h).json()
+        self.assertEqual(len(r["sessions"]), 1)
+        self.assertEqual(r["group_code"], "11A3")
+
+    def test_buoi_co_du_thong_tin_de_hien_thi(self):
+        self._buoi(self.gv_ho_so)
+        r = self.c.get(V2 + "/me/schedule", **self.h_gv).json()
+        s = r["sessions"][0]
+        for k in ("module_name", "group_code", "shift", "duration_slots"):
+            self.assertIn(k, s)
+        self.assertEqual(s["teachers"], ["Trần Thị Bích"])
+
+    def test_khong_thay_lich_truong_khac(self):
+        khac = Tenant.objects.create(code="X", name="X")
+        sch = Schedule.objects.create(
+            tenant=khac, name="HK1", status="published"
+        )
+        r = self.c.get(
+            V2 + "/me/schedule?schedule_id=%d" % sch.id, **self.h_gv
+        ).json()
+        self.assertIsNone(r["schedule_id"])
+
+    def test_tai_giang_day_cua_chinh_minh(self):
+        self._buoi(self.gv_ho_so, duration_slots=2)
+        self._buoi(self.gv_ho_so, day=1, session_type="practice",
+                   duration_slots=4)
+        r = self.c.get(V2 + "/me/workload", **self.h_gv).json()
+        self.assertEqual(r["theory_periods"], 2)
+        self.assertEqual(r["practice_periods"], 4)
+        # 2 tiết LT + 4 tiết TH * 0,75 = 5,0 giờ chuẩn
+        self.assertEqual(r["standard_hours"], 5.0)
+
+    def test_khong_co_ho_so_thi_khong_co_tai_giang_day(self):
+        self.gv.teacher = None
+        self.gv.save(update_fields=["teacher"])
+        r = self.c.get(V2 + "/me/workload", **self.h_gv)
+        self.assertEqual(r.status_code, 400)
+
+
+class ConflictOverlapTests(ApiBase):
+    """FR-7.11: phát hiện xung đột phải tính cả độ dài buổi học."""
+
+    def setUp(self):
+        super().setUp()
+        self.sch = Schedule.objects.create(tenant=self.tenant, name="HK1")
+        self.gv1 = Teacher.objects.create(
+            tenant=self.tenant, code="GV01", name="A"
+        )
+        self.mod = Module.objects.create(
+            tenant=self.tenant, code="MD01", name="M"
+        )
+        self.g1 = StudentGroup.objects.create(
+            tenant=self.tenant, code="G1", name="G1",
+            enrollment_type="college",
+        )
+        self.g2 = StudentGroup.objects.create(
+            tenant=self.tenant, code="G2", name="G2",
+            enrollment_type="college",
+        )
+
+    def _buoi(self, group, period, slots, teacher=None, room=None):
+        s = Session.objects.create(
+            tenant=self.tenant, schedule=self.sch, module=self.mod,
+            student_group=group, session_type="practice", tier="vocational",
+            duration_slots=slots, assigned_resource=room,
+            assigned_timeslot={"day": 0, "period": period},
+        )
+        if teacher:
+            s.assigned_teachers.add(teacher)
+        return s
+
+    def _conflicts(self):
+        r = self.c.get(
+            "/api/schedule/%d/conflicts" % self.sch.id, **self.h_pdt
+        )
+        self.assertEqual(r.status_code, 200)
+        return r.json()["conflicts"]
+
+    def test_buoi_dai_chong_lan_bi_phat_hien(self):
+        """GV dạy tiết 1 kéo 4 tiết, buổi kia bắt đầu tiết 3 -> phải báo."""
+        self._buoi(self.g1, 0, 4, teacher=self.gv1)
+        self._buoi(self.g2, 2, 1, teacher=self.gv1)
+        c = self._conflicts()
+        self.assertTrue(c, "chồng lấn giữa chừng phải bị phát hiện")
+        self.assertEqual(c[0]["type"], "teacher")
+
+    def test_khong_bao_nham_khi_khong_chong_lan(self):
+        self._buoi(self.g1, 0, 2, teacher=self.gv1)
+        self._buoi(self.g2, 2, 2, teacher=self.gv1)
+        self.assertEqual(self._conflicts(), [])
+
+    def test_moi_cap_chi_bao_mot_lan(self):
+        """Chồng lấn 3 tiết vẫn chỉ là một xung đột, không phải ba."""
+        self._buoi(self.g1, 0, 4, teacher=self.gv1)
+        self._buoi(self.g2, 1, 3, teacher=self.gv1)
+        c = [x for x in self._conflicts() if x["type"] == "teacher"]
+        self.assertEqual(len(c), 1)
+
+    def test_phong_bi_trung_khi_buoi_dai_chong_lan(self):
+        from scheduler.models import Resource
+
+        room = Resource.objects.create(
+            tenant=self.tenant, code="A11-204", name="X", type="workshop",
+            quantity=1, available_quantity=1,
+        )
+        self._buoi(self.g1, 0, 3, room=room)
+        self._buoi(self.g2, 2, 2, room=room)
+        kinds = {x["type"] for x in self._conflicts()}
+        self.assertIn("room", kinds)
+
+    def test_ten_ngay_van_dung(self):
+        self._buoi(self.g1, 0, 4, teacher=self.gv1)
+        self._buoi(self.g2, 2, 1, teacher=self.gv1)
+        self.assertEqual(self._conflicts()[0]["day_name"], "Thứ 2")
+
+
+class SwapCandidateTests(ApiBase):
+    """FR-7.8 và FR-7.12: gợi ý ô đổi được, tô màu theo bảng màu bắt buộc."""
+
+    def setUp(self):
+        super().setUp()
+        self.sch = Schedule.objects.create(tenant=self.tenant, name="HK1")
+        self.gv1 = Teacher.objects.create(
+            tenant=self.tenant, code="GV01", name="A"
+        )
+        self.gv2 = Teacher.objects.create(
+            tenant=self.tenant, code="GV02", name="B"
+        )
+        self.mod = Module.objects.create(
+            tenant=self.tenant, code="MD01", name="M"
+        )
+        self.g1 = StudentGroup.objects.create(
+            tenant=self.tenant, code="G1", name="G1",
+            enrollment_type="college",
+        )
+        self.g2 = StudentGroup.objects.create(
+            tenant=self.tenant, code="G2", name="G2",
+            enrollment_type="college",
+        )
+
+    def _buoi(self, group, day, period, slots=1, teacher=None, **kw):
+        s = Session.objects.create(
+            tenant=self.tenant, schedule=self.sch, module=self.mod,
+            student_group=group, session_type="theory", tier="vocational",
+            duration_slots=slots,
+            assigned_timeslot={"day": day, "period": period}, **kw
+        )
+        if teacher:
+            s.assigned_teachers.add(teacher)
+        return s
+
+    def _cands(self, sid, scope="group"):
+        r = self.c.get(
+            V2 + "/schedule/%d/swap-candidates/%d?scope=%s"
+            % (self.sch.id, sid, scope),
+            **self.h_pdt
+        )
+        self.assertEqual(r.status_code, 200)
+        return r.json()
+
+    def test_o_trong_lich_duoc_cham_mau_xanh(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        self._buoi(self.g1, 1, 0, teacher=self.gv1)
+        r = self._cands(a.id)
+        self.assertEqual(len(r["candidates"]), 1)
+        self.assertEqual(r["candidates"][0]["verdict"], "green")
+        self.assertEqual(r["green_count"], 1)
+
+    def test_trung_giao_vien_bi_cham_hong_dam(self):
+        """GV1 đã có tiết ở chỗ đích -> chặn hẳn."""
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        b = self._buoi(self.g1, 1, 0, teacher=self.gv2)
+        # GV1 bận đúng ô đích
+        self._buoi(self.g2, 1, 0, teacher=self.gv1)
+        r = self._cands(a.id, scope="all")
+        row = [c for c in r["candidates"] if c["session_id"] == b.id][0]
+        self.assertEqual(row["verdict"], "pink_dark")
+        self.assertIn("giáo viên bận", row["reason"])
+
+    def test_khac_so_tiet_bi_cham_hong_nhat(self):
+        a = self._buoi(self.g1, 0, 0, slots=1, teacher=self.gv1)
+        self._buoi(self.g1, 1, 0, slots=3, teacher=self.gv1)
+        r = self._cands(a.id)
+        self.assertEqual(r["candidates"][0]["verdict"], "pink")
+
+    def test_an_mat_ngay_nghi_bi_cham_da_cam(self):
+        """GV khai nghỉ 5/6 ngày; đẩy sang ngày mới là vi phạm hạn chế."""
+        self.gv1.days_off_per_week = 5
+        self.gv1.save(update_fields=["days_off_per_week"])
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        self._buoi(self.g1, 3, 0, teacher=self.gv2)
+        r = self._cands(a.id)
+        self.assertEqual(r["candidates"][0]["verdict"], "orange")
+
+    def test_pham_vi_nhom_va_toan_truong_khac_nhau(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        self._buoi(self.g2, 1, 0, teacher=self.gv2)
+        self.assertEqual(len(self._cands(a.id, "group")["candidates"]), 0)
+        self.assertEqual(len(self._cands(a.id, "all")["candidates"]), 1)
+
+    def test_buoi_da_ghim_khong_doi_duoc(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1, is_pinned=True)
+        r = self.c.get(
+            V2 + "/schedule/%d/swap-candidates/%d" % (self.sch.id, a.id),
+            **self.h_pdt
+        )
+        self.assertEqual(r.status_code, 400)
+
+    def test_buoi_ghim_khong_hien_trong_danh_sach_dich(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        self._buoi(self.g1, 1, 0, teacher=self.gv2, is_locked=True)
+        self.assertEqual(self._cands(a.id)["candidates"], [])
+
+
+class SwapExecuteTests(SwapCandidateTests):
+    def _swap(self, a, b, headers=None):
+        return self.post(
+            V2 + "/schedule/%d/swap" % self.sch.id,
+            {"session_id": a.id, "other_id": b.id},
+            headers or self.h_pdt,
+        )
+
+    def test_doi_cho_thanh_cong(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        b = self._buoi(self.g1, 2, 3, teacher=self.gv1)
+        r = self._swap(a, b)
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.json()["swapped"])
+        a.refresh_from_db()
+        b.refresh_from_db()
+        self.assertEqual(a.assigned_timeslot["day"], 2)
+        self.assertEqual(a.assigned_timeslot["period"], 3)
+        self.assertEqual(b.assigned_timeslot["day"], 0)
+
+    def test_danh_dau_lich_da_sua_tay(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        b = self._buoi(self.g1, 1, 0, teacher=self.gv1)
+        self._swap(a, b)
+        self.sch.refresh_from_db()
+        self.assertTrue(self.sch.is_manual_edit)
+
+    def test_tu_choi_khi_trung_tiet(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        b = self._buoi(self.g2, 1, 0, teacher=self.gv2)
+        # GV1 bận sẵn ở ô đích của a
+        self._buoi(self.g2, 1, 0, teacher=self.gv1)
+        r = self._swap(a, b)
+        self.assertEqual(r.status_code, 409)
+        a.refresh_from_db()
+        self.assertEqual(a.assigned_timeslot["day"], 0, "không được đổi")
+
+    def test_giao_vien_khong_duoc_doi_cho(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        b = self._buoi(self.g1, 1, 0, teacher=self.gv1)
+        self.assertEqual(self._swap(a, b, self.h_gv).status_code, 403)
+
+    def test_khong_doi_buoi_da_khoa(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        b = self._buoi(self.g1, 1, 0, teacher=self.gv1, is_locked=True)
+        self.assertEqual(self._swap(a, b).status_code, 400)
+
+    def test_khong_doi_voi_chinh_no(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        self.assertEqual(self._swap(a, a).status_code, 400)
+
+    def test_buoi_chua_xep_tiet_thi_khong_doi_duoc(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        b = Session.objects.create(
+            tenant=self.tenant, schedule=self.sch, module=self.mod,
+            student_group=self.g1, session_type="theory", tier="vocational",
+        )
+        self.assertEqual(self._swap(a, b).status_code, 400)
+
+    def test_khong_doi_duoc_buoi_cua_truong_khac(self):
+        khac = Tenant.objects.create(code="X", name="X")
+        sch = Schedule.objects.create(tenant=khac, name="HK1")
+        r = self.post(
+            V2 + "/schedule/%d/swap" % sch.id,
+            {"session_id": 1, "other_id": 2},
+            self.h_pdt,
+        )
+        self.assertEqual(r.status_code, 404)
+
+
+class TrayTests(SwapCandidateTests):
+    """FR-7.9: khay tiết chờ — gỡ ra, để đó, thả lại vào ô trống."""
+
+    def _tray(self):
+        r = self.c.get(V2 + "/schedule/%d/tray" % self.sch.id, **self.h_pdt)
+        self.assertEqual(r.status_code, 200)
+        return r.json()
+
+    def _push(self, s, headers=None):
+        return self.post(
+            V2 + "/schedule/%d/tray" % self.sch.id,
+            {"session_id": s.id},
+            headers or self.h_pdt,
+        )
+
+    def _place(self, s, day, period, headers=None):
+        return self.post(
+            V2 + "/schedule/%d/tray/place" % self.sch.id,
+            {"session_id": s.id, "day": day, "period": period},
+            headers or self.h_pdt,
+        )
+
+    def test_go_buoi_ra_khay(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        r = self._push(a)
+        self.assertEqual(r.status_code, 200)
+        a.refresh_from_db()
+        self.assertIsNone(a.assigned_timeslot)
+        self.assertEqual(self._tray()["count"], 1)
+
+    def test_khay_chi_chua_buoi_chua_xep(self):
+        self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        b = self._buoi(self.g1, 1, 0, teacher=self.gv1)
+        self._push(b)
+        t = self._tray()
+        self.assertEqual(t["count"], 1)
+        self.assertEqual(t["tray"][0]["session_id"], b.id)
+
+    def test_tha_vao_o_trong(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        self._push(a)
+        r = self._place(a, 2, 1)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json()["verdict"], "green")
+        a.refresh_from_db()
+        self.assertEqual(a.assigned_timeslot, {"day": 2, "period": 1})
+        self.assertEqual(self._tray()["count"], 0)
+
+    def test_khong_tha_duoc_vao_o_da_co_nguoi(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        self._buoi(self.g2, 3, 0, teacher=self.gv1)
+        self._push(a)
+        r = self._place(a, 3, 0)
+        self.assertEqual(r.status_code, 409)
+        a.refresh_from_db()
+        self.assertIsNone(a.assigned_timeslot, "thất bại thì phải giữ nguyên")
+
+    def test_buoi_dai_khong_tran_qua_cuoi_ngay(self):
+        """Buổi 3 tiết không thể bắt đầu ở tiết cuối cùng."""
+        a = self._buoi(self.g1, 0, 0, slots=3, teacher=self.gv1)
+        self._push(a)
+        r = self._place(a, 1, 4)
+        self.assertEqual(r.status_code, 400)
+
+    def test_ngay_ngoai_khung_bi_tu_choi(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        self._push(a)
+        self.assertEqual(self._place(a, 99, 0).status_code, 400)
+        self.assertEqual(self._place(a, 0, -1).status_code, 400)
+
+    def test_buoi_ghim_khong_go_ra_khay_duoc(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1, is_pinned=True)
+        self.assertEqual(self._push(a).status_code, 400)
+
+    def test_giao_vien_khong_duoc_go_hay_tha(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        self.assertEqual(self._push(a, self.h_gv).status_code, 403)
+        self.assertEqual(self._place(a, 1, 0, self.h_gv).status_code, 403)
+
+    def test_go_hai_lan_khong_bao_loi(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        self._push(a)
+        r = self._push(a)
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(r.json()["in_tray"])
+
+    def test_thao_tac_khay_danh_dau_sua_tay(self):
+        a = self._buoi(self.g1, 0, 0, teacher=self.gv1)
+        self._push(a)
+        self.sch.refresh_from_db()
+        self.assertTrue(self.sch.is_manual_edit)

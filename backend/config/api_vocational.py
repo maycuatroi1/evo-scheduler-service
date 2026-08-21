@@ -5,6 +5,7 @@ nền, ghim tiết, độ ưu tiên ràng buộc, kế thừa lịch cũ và xu�
 """
 
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from ninja import Router, Schema
 from ninja.errors import HttpError
@@ -608,6 +609,743 @@ def build_sessions(request, schedule_id: int, payload: BuildIn):
         )
     result["schedule_id"] = sched.id
     return result
+
+
+# --------------------------------------------------------------------------
+# Mô-đun / môn học
+# --------------------------------------------------------------------------
+
+class ModuleIn(Schema):
+    code: str
+    name: str
+    theory_hours: int = 0
+    practice_hours: int = 0
+    student_group_id: int | None = None
+
+
+class ModuleOut(Schema):
+    id: int
+    code: str
+    name: str
+    theory_hours: int
+    practice_hours: int
+    student_group_id: int | None = None
+    group_code: str = ""
+    total_hours: int = 0
+    session_count: int = 0
+
+
+def _module_out(m, session_count=None):
+    return {
+        "id": m.id,
+        "code": m.code,
+        "name": m.name,
+        "theory_hours": m.theory_hours,
+        "practice_hours": m.practice_hours,
+        "student_group_id": m.student_group_id,
+        "group_code": m.student_group.code if m.student_group else "",
+        "total_hours": m.theory_hours + m.practice_hours,
+        "session_count": (
+            m.sessions.count() if session_count is None else session_count
+        ),
+    }
+
+
+@router.get("/modules", response=list[ModuleOut])
+def list_modules(request, group: str | None = None, q: str | None = None):
+    qs = _scoped(Module, request).select_related("student_group")
+    if group:
+        qs = qs.filter(student_group__code=group)
+    if q:
+        qs = qs.filter(Q(code__icontains=q) | Q(name__icontains=q))
+    return [_module_out(m) for m in qs]
+
+
+@router.post("/modules", response={201: ModuleOut})
+def create_module(request, payload: ModuleIn):
+    _can_write(request)
+    data = payload.dict()
+    if _scoped(Module, request).filter(code=data["code"]).exists():
+        raise HttpError(400, "Mã mô-đun %s đã tồn tại" % data["code"])
+    gid = data.pop("student_group_id", None)
+    group = (
+        _get_or_404(StudentGroup, request, gid, "Nhóm nghề") if gid else None
+    )
+    obj = Module.objects.create(
+        tenant=_tenant(request), student_group=group, **data
+    )
+    return 201, _module_out(obj)
+
+
+@router.put("/modules/{mid}", response=ModuleOut)
+def update_module(request, mid: int, payload: ModuleIn):
+    _can_write(request)
+    obj = _get_or_404(Module, request, mid, "Mô-đun")
+    data = payload.dict()
+    gid = data.pop("student_group_id", None)
+    obj.student_group = (
+        _get_or_404(StudentGroup, request, gid, "Nhóm nghề") if gid else None
+    )
+    for k, v in data.items():
+        setattr(obj, k, v)
+    obj.save()
+    return _module_out(obj)
+
+
+@router.delete("/modules/{mid}")
+def delete_module(request, mid: int):
+    """Xoá mô-đun; từ chối nếu còn buổi học tham chiếu tới nó."""
+    _can_write(request)
+    obj = _get_or_404(Module, request, mid, "Mô-đun")
+    used = obj.sessions.count()
+    if used:
+        raise HttpError(
+            400,
+            "Mô-đun %s còn %d buổi học đang dùng; xoá buổi trước."
+            % (obj.code, used),
+        )
+    obj.delete()
+    return {"deleted": True}
+
+
+# --------------------------------------------------------------------------
+# Chương trình đào tạo
+# --------------------------------------------------------------------------
+
+# Ngưỡng tỉ lệ thực hành theo TT 01/2024. Thông tư đang trong diện ban hành
+# lại nên để ở cấu hình đơn vị, không mã hoá cứng (SRS §2.5).
+DEFAULT_PRACTICE_RATIO = {
+    "college": {"min": 50, "max": 70},
+    "intermediate": {"min": 55, "max": 75},
+    "dual_degree": {"min": 55, "max": 75},
+}
+
+PROGRAM_LABEL = {
+    "college": "Cao đẳng",
+    "intermediate": "Trung cấp",
+    "dual_degree": "Trung cấp song bằng",
+}
+
+
+@router.get("/reports/programs")
+def program_report(request):
+    """Tổng hợp theo chương trình đào tạo: quỹ giờ và tỉ lệ LT/TH (FR-9.6).
+
+    Đối chiếu tỉ lệ thực hành với ngưỡng quy định để cán bộ đào tạo biết
+    chương trình nào đang lệch chuẩn.
+    """
+    cfg = (_tenant(request).config_json or {}).get("practice_ratio") or {}
+    thresholds = {**DEFAULT_PRACTICE_RATIO}
+    for key, val in cfg.items():
+        if key in thresholds and isinstance(val, dict):
+            thresholds[key] = {**thresholds[key], **val}
+
+    buckets = {}
+    groups = _scoped(StudentGroup, request).prefetch_related("modules")
+    for g in groups:
+        b = buckets.setdefault(
+            g.enrollment_type,
+            {
+                "program": g.enrollment_type,
+                "label": PROGRAM_LABEL.get(g.enrollment_type, g.enrollment_type),
+                "group_count": 0,
+                "student_count": 0,
+                "module_count": 0,
+                "theory_hours": 0,
+                "practice_hours": 0,
+            },
+        )
+        b["group_count"] += 1
+        b["student_count"] += g.size or 0
+        for m in g.modules.all():
+            b["module_count"] += 1
+            b["theory_hours"] += m.theory_hours or 0
+            b["practice_hours"] += m.practice_hours or 0
+
+    rows = []
+    for b in buckets.values():
+        total = b["theory_hours"] + b["practice_hours"]
+        pct = round(b["practice_hours"] / total * 100, 1) if total else 0.0
+        th = thresholds.get(b["program"], {})
+        lo, hi = th.get("min"), th.get("max")
+        if not total:
+            trang_thai = "chua_khai_gio"
+        elif lo is not None and pct < lo:
+            trang_thai = "thieu_thuc_hanh"
+        elif hi is not None and pct > hi:
+            trang_thai = "thua_thuc_hanh"
+        else:
+            trang_thai = "dat"
+        rows.append(
+            {
+                **b,
+                "total_hours": total,
+                "practice_pct": pct,
+                "min_pct": lo,
+                "max_pct": hi,
+                "status": trang_thai,
+            }
+        )
+    # Trung cấp đứng trước song bằng, đúng trình tự xếp lịch của trường.
+    order = ["college", "intermediate", "dual_degree"]
+    rows.sort(key=lambda r: order.index(r["program"]) if r["program"] in order else 99)
+    return {"programs": rows, "count": len(rows)}
+
+
+# --------------------------------------------------------------------------
+# Cổng xem lịch cho giáo viên và sinh viên (FR-8.4)
+# --------------------------------------------------------------------------
+
+def _current_user(request):
+    """Tài khoản đang đăng nhập, lấy từ claim user_id trong token."""
+    uid = (request.auth.get("claims") or {}).get("user_id")
+    if not uid:
+        return None
+    return (
+        User.objects.select_related("teacher")
+        .filter(id=uid, tenant_id=request.auth["tenant_id"])
+        .first()
+    )
+
+
+def _session_rows(sessions, morning_count):
+    rows = []
+    for s in sessions:
+        ts = s.assigned_timeslot or {}
+        day, period = ts.get("day"), ts.get("period")
+        if day is None or period is None:
+            continue
+        rows.append(
+            {
+                "session_id": s.id,
+                "day": int(day),
+                "period": int(period),
+                "duration_slots": int(s.duration_slots or 1),
+                "shift": (
+                    "morning" if int(period) < morning_count else "afternoon"
+                ),
+                "module_code": s.module.code,
+                "module_name": s.module.name,
+                "group_code": s.student_group.code,
+                "group_name": s.student_group.name,
+                "room": s.assigned_resource.code if s.assigned_resource else "",
+                "session_type": s.session_type,
+                "teachers": [t.name for t in s.assigned_teachers.all()],
+                "location": s.location,
+            }
+        )
+    rows.sort(key=lambda r: (r["day"], r["period"]))
+    return rows
+
+
+@router.get("/me/schedule")
+def my_schedule(request, schedule_id: int | None = None):
+    """Lịch cá nhân của người đang đăng nhập.
+
+    Giáo viên thấy các buổi mình dạy; sinh viên thấy lịch của nhóm mình.
+    Chỉ trả lịch đã xuất bản, trừ khi người dùng có quyền sửa — cán bộ
+    đào tạo cần xem trước bản nháp, còn giáo viên thì không, để tránh
+    dạy theo một bản lịch chưa chốt.
+    """
+    from scheduler import horizon as horizon_mod
+
+    user = _current_user(request)
+    if user is None:
+        raise HttpError(404, "Không tìm thấy tài khoản")
+
+    tenant = _tenant(request)
+    cfg = horizon_mod.normalize((tenant.config_json or {}).get("horizon"))
+    morning_count = cfg["morning_count"]
+
+    schedules = _scoped(Schedule, request)
+    if not user.can_write():
+        schedules = schedules.filter(status=Schedule.Status.PUBLISHED)
+    if schedule_id is not None:
+        schedules = schedules.filter(id=schedule_id)
+    schedule = schedules.order_by("-published_at", "-id").first()
+
+    base = {
+        "role": user.role,
+        "name": user.name,
+        "schedule_id": schedule.id if schedule else None,
+        "schedule_name": schedule.name if schedule else "",
+        "published": bool(schedule and schedule.status == Schedule.Status.PUBLISHED),
+        "morning_count": morning_count,
+    }
+
+    if schedule is None:
+        return {**base, "sessions": [], "detail": "Chưa có lịch nào được xuất bản"}
+
+    qs = (
+        tenant.sessions.filter(schedule=schedule)
+        .select_related("module", "student_group", "assigned_resource")
+        .prefetch_related("assigned_teachers")
+    )
+
+    if user.role == User.Role.TEACHER:
+        if user.teacher_id is None:
+            return {
+                **base,
+                "sessions": [],
+                "detail": "Tài khoản chưa gắn với hồ sơ giáo viên nào",
+            }
+        qs = qs.filter(assigned_teachers=user.teacher_id)
+        base["teacher_code"] = user.teacher.code
+    elif user.role == User.Role.STUDENT:
+        # Chưa có liên kết tài khoản sinh viên với nhóm nghề, nên yêu cầu
+        # chỉ rõ nhóm cần xem thay vì trả nhầm lịch của cả trường.
+        group = request.GET.get("group")
+        if not group:
+            return {
+                **base,
+                "sessions": [],
+                "detail": "Cần chọn nhóm nghề để xem lịch",
+            }
+        qs = qs.filter(student_group__code=group)
+        base["group_code"] = group
+
+    return {**base, "sessions": _session_rows(qs, morning_count)}
+
+
+@router.get("/me/workload")
+def my_workload(request):
+    """Tải giảng dạy của chính giáo viên đang đăng nhập."""
+    user = _current_user(request)
+    if user is None:
+        raise HttpError(404, "Không tìm thấy tài khoản")
+    if user.teacher_id is None:
+        raise HttpError(400, "Tài khoản chưa gắn với hồ sơ giáo viên nào")
+
+    lt = th = 0
+    for s in user.teacher.sessions.all():
+        if not s.consumes_resources():
+            continue
+        slots = int(s.duration_slots or 1)
+        if s.session_type == Session.SessionType.PRACTICE:
+            th += slots
+        else:
+            lt += slots
+    standard = round(lt * 1.0 + th * 0.75, 1)
+    quota = user.teacher.quota_standard_hours or 550
+    return {
+        "code": user.teacher.code,
+        "name": user.teacher.name,
+        "theory_periods": lt,
+        "practice_periods": th,
+        "standard_hours": standard,
+        "quota": quota,
+        "usage_pct": round(standard / quota * 100, 1) if quota else 0,
+    }
+
+
+# --------------------------------------------------------------------------
+# Tinh chỉnh thủ công: gợi ý ô đổi được (FR-7.8, FR-7.12)
+# --------------------------------------------------------------------------
+
+#: Bảng màu bắt buộc khi tinh chỉnh (SRS §7.5).
+#: xanh = đổi tốt; hồng nhạt = vi phạm ràng buộc mềm; hồng đậm = trùng
+#: tiết, chặn hẳn; da cam = vi phạm hạn chế xếp của giáo viên.
+VERDICT_GREEN = "green"
+VERDICT_PINK = "pink"
+VERDICT_PINK_DARK = "pink_dark"
+VERDICT_ORANGE = "orange"
+
+
+def _span(session):
+    """Buổi này chiếm ngày nào, từ tiết nào, dài mấy tiết."""
+    ts = session.assigned_timeslot or {}
+    day, period = ts.get("day"), ts.get("period")
+    if day is None or period is None:
+        return None
+    return int(day), int(period), max(1, int(session.duration_slots or 1))
+
+
+def _busy_map(sessions, skip_ids):
+    """Ai bận tiết nào: (day, period) -> {teachers, rooms, groups}.
+
+    Trải buổi ra đủ số tiết nó chiếm, nếu không sẽ bỏ sót chồng lấn của
+    buổi thực hành dài (cùng lỗi với FR-7.11).
+    """
+    busy = {}
+    for s in sessions:
+        if s.id in skip_ids:
+            continue
+        sp = _span(s)
+        if sp is None:
+            continue
+        day, period, n = sp
+        for k in range(n):
+            slot = busy.setdefault(
+                (day, period + k),
+                {"teachers": set(), "rooms": set(), "groups": set()},
+            )
+            slot["teachers"].update(t.id for t in s.assigned_teachers.all())
+            if s.assigned_resource_id:
+                slot["rooms"].add(s.assigned_resource_id)
+            slot["groups"].add(s.student_group_id)
+    return busy
+
+
+def _days_in_use(sessions, teacher_ids):
+    """Những ngày giáo viên đã có tiết — dùng để đếm ngày nghỉ còn lại."""
+    days = set()
+    for s in sessions:
+        sp = _span(s)
+        if sp is None:
+            continue
+        if teacher_ids & {t.id for t in s.assigned_teachers.all()}:
+            days.add(sp[0])
+    return days
+
+
+def _judge(session, day, period, busy, day_budget=None, other=None):
+    """Chấm một ô đích cho buổi ``session``; trả (màu, lý do)."""
+    n = max(1, int(session.duration_slots or 1))
+    tids = {t.id for t in session.assigned_teachers.all()}
+    rid = session.assigned_resource_id
+    gid = session.student_group_id
+
+    trung = []
+    for k in range(n):
+        slot = busy.get((day, period + k))
+        if not slot:
+            continue
+        if tids & slot["teachers"]:
+            trung.append("giáo viên bận")
+        if rid is not None and rid in slot["rooms"]:
+            trung.append("phòng đã có lớp")
+        if gid in slot["groups"]:
+            trung.append("nhóm đang học môn khác")
+    if trung:
+        # Trùng tiết là chặn hẳn, không cho đổi.
+        return VERDICT_PINK_DARK, "; ".join(sorted(set(trung)))
+
+    # Đẩy giáo viên sang một ngày mới sẽ ăn mất ngày nghỉ đã khai.
+    if day_budget is not None:
+        used, allowed = day_budget
+        if day not in used and len(used) + 1 > allowed:
+            return (
+                VERDICT_ORANGE,
+                "chiếm mất ngày nghỉ trong tuần của giáo viên",
+            )
+
+    # Đổi hai buổi khác độ dài thì lưới lệch, phải xếp lại quanh đó.
+    if other is not None and int(other.duration_slots or 1) != n:
+        return VERDICT_PINK, "hai buổi khác số tiết nên phải xếp lại lưới"
+
+    return VERDICT_GREEN, "đổi được"
+
+
+def _day_budget(tenant, sessions, teacher_ids):
+    """Số ngày giáo viên được phép có tiết, suy từ ``days_off_per_week``."""
+    if not teacher_ids:
+        return None
+    nghi = [
+        t.days_off_per_week
+        for t in Teacher.objects.filter(id__in=teacher_ids)
+        if t.days_off_per_week
+    ]
+    if not nghi:
+        return None
+    from scheduler import horizon as horizon_mod
+
+    cfg = horizon_mod.normalize((tenant.config_json or {}).get("horizon"))
+    allowed = max(1, len(cfg["days"]) - max(nghi))
+    return _days_in_use(sessions, teacher_ids), allowed
+
+
+@router.get("/schedule/{schedule_id}/swap-candidates/{session_id}")
+def swap_candidates(request, schedule_id: int, session_id: int, scope: str = "group"):
+    """Ô nào đổi được với buổi này, kèm màu theo bảng màu bắt buộc.
+
+    ``scope="group"`` chỉ xét buổi cùng nhóm nghề — cách 1, đổi trực tiếp.
+    ``scope="all"`` tô sáng mọi phân công toàn trường — cách 3.
+    """
+    schedule = _get_or_404(Schedule, request, schedule_id, "Lịch")
+    tenant = _tenant(request)
+    target = (
+        tenant.sessions.select_related("student_group", "module")
+        .prefetch_related("assigned_teachers")
+        .filter(id=session_id, schedule=schedule)
+        .first()
+    )
+    if target is None:
+        raise HttpError(404, "Buổi học không tồn tại")
+    if target.is_locked or target.is_pinned:
+        raise HttpError(400, "Buổi đã khoá hoặc đã ghim nên không đổi được")
+
+    everything = list(
+        tenant.sessions.filter(schedule=schedule)
+        .select_related("student_group", "module", "assigned_resource")
+        .prefetch_related("assigned_teachers")
+    )
+    others = [s for s in everything if s.id != target.id]
+    if scope == "group":
+        others = [
+            s for s in others if s.student_group_id == target.student_group_id
+        ]
+
+    tids = {t.id for t in target.assigned_teachers.all()}
+    budget = _day_budget(tenant, everything, tids)
+    cur = _span(target)
+
+    rows = []
+    for other in others:
+        sp = _span(other)
+        if sp is None or other.is_locked or other.is_pinned:
+            continue
+        day, period, _n = sp
+        if cur and cur[0] == day and cur[1] == period:
+            continue
+        # Bỏ hai buổi khỏi bản đồ bận rồi mới chấm, vì chúng sắp đổi chỗ.
+        busy = _busy_map(everything, {target.id, other.id})
+        verdict, reason = _judge(
+            target, day, period, busy, day_budget=budget, other=other
+        )
+        rows.append(
+            {
+                "session_id": other.id,
+                "day": day,
+                "period": period,
+                "duration_slots": int(other.duration_slots or 1),
+                "module_code": other.module.code,
+                "group_code": other.student_group.code,
+                "teachers": [t.name for t in other.assigned_teachers.all()],
+                "room": (
+                    other.assigned_resource.code
+                    if other.assigned_resource
+                    else ""
+                ),
+                "verdict": verdict,
+                "reason": reason,
+            }
+        )
+
+    order = {
+        VERDICT_GREEN: 0,
+        VERDICT_ORANGE: 1,
+        VERDICT_PINK: 2,
+        VERDICT_PINK_DARK: 3,
+    }
+    rows.sort(key=lambda r: (order.get(r["verdict"], 9), r["day"], r["period"]))
+    return {
+        "session_id": target.id,
+        "scope": scope,
+        "candidates": rows,
+        "green_count": sum(1 for r in rows if r["verdict"] == VERDICT_GREEN),
+    }
+
+
+class SwapIn(Schema):
+    session_id: int
+    other_id: int
+
+
+@router.post("/schedule/{schedule_id}/swap")
+def swap_sessions(request, schedule_id: int, payload: SwapIn):
+    """Đổi chỗ hai buổi học. Từ chối nếu chấm ra trùng tiết."""
+    _can_write(request)
+    schedule = _get_or_404(Schedule, request, schedule_id, "Lịch")
+    tenant = _tenant(request)
+    qs = list(
+        tenant.sessions.filter(schedule=schedule)
+        .select_related("student_group")
+        .prefetch_related("assigned_teachers")
+    )
+    by_id = {s.id: s for s in qs}
+    a = by_id.get(payload.session_id)
+    b = by_id.get(payload.other_id)
+    if a is None or b is None:
+        raise HttpError(404, "Buổi học không tồn tại")
+    if a.id == b.id:
+        raise HttpError(400, "Không thể đổi một buổi với chính nó")
+    for s in (a, b):
+        if s.is_locked or s.is_pinned:
+            raise HttpError(400, "Buổi %s đã khoá hoặc đã ghim" % s.id)
+
+    sp_a, sp_b = _span(a), _span(b)
+    if sp_a is None or sp_b is None:
+        raise HttpError(400, "Cả hai buổi đều phải đã được xếp tiết")
+
+    busy = _busy_map(qs, {a.id, b.id})
+    va, ra = _judge(a, sp_b[0], sp_b[1], busy)
+    vb, rb = _judge(b, sp_a[0], sp_a[1], busy)
+    for verdict, reason in ((va, ra), (vb, rb)):
+        if verdict == VERDICT_PINK_DARK:
+            raise HttpError(409, "Không đổi được: %s" % reason)
+
+    with transaction.atomic():
+        a.assigned_timeslot, b.assigned_timeslot = (
+            dict(b.assigned_timeslot or {}),
+            dict(a.assigned_timeslot or {}),
+        )
+        a.save(update_fields=["assigned_timeslot"])
+        b.save(update_fields=["assigned_timeslot"])
+        schedule.is_manual_edit = True
+        schedule.save(update_fields=["is_manual_edit"])
+
+    return {
+        "swapped": True,
+        "verdicts": [va, vb],
+        "warnings": [r for v, r in ((va, ra), (vb, rb)) if v != VERDICT_GREEN],
+    }
+
+
+# --------------------------------------------------------------------------
+# Khay tiết chờ xếp (FR-7.9)
+# --------------------------------------------------------------------------
+
+@router.get("/schedule/{schedule_id}/tray")
+def list_tray(request, schedule_id: int):
+    """Các buổi chưa có tiết — đang nằm chờ trong khay."""
+    schedule = _get_or_404(Schedule, request, schedule_id, "Lịch")
+    tenant = _tenant(request)
+    rows = []
+    qs = (
+        tenant.sessions.filter(schedule=schedule)
+        .select_related("module", "student_group", "assigned_resource")
+        .prefetch_related("assigned_teachers")
+    )
+    for s in qs:
+        if _span(s) is not None:
+            continue
+        rows.append(
+            {
+                "session_id": s.id,
+                "module_code": s.module.code,
+                "module_name": s.module.name,
+                "group_code": s.student_group.code,
+                "duration_slots": int(s.duration_slots or 1),
+                "session_type": s.session_type,
+                "room": (
+                    s.assigned_resource.code if s.assigned_resource else ""
+                ),
+                "teachers": [t.name for t in s.assigned_teachers.all()],
+            }
+        )
+    rows.sort(key=lambda r: (r["group_code"], r["module_code"]))
+    return {"schedule_id": schedule.id, "tray": rows, "count": len(rows)}
+
+
+class TrayMoveIn(Schema):
+    session_id: int
+
+
+@router.post("/schedule/{schedule_id}/tray")
+def push_to_tray(request, schedule_id: int, payload: TrayMoveIn):
+    """Kéo một buổi ra khỏi lưới, để đó xếp lại sau."""
+    _can_write(request)
+    schedule = _get_or_404(Schedule, request, schedule_id, "Lịch")
+    tenant = _tenant(request)
+    s = tenant.sessions.filter(
+        id=payload.session_id, schedule=schedule
+    ).first()
+    if s is None:
+        raise HttpError(404, "Buổi học không tồn tại")
+    if s.is_locked or s.is_pinned:
+        raise HttpError(400, "Buổi đã khoá hoặc đã ghim nên không gỡ được")
+    if _span(s) is None:
+        return {"session_id": s.id, "in_tray": True, "detail": "Đã ở trong khay"}
+
+    s.assigned_timeslot = None
+    s.save(update_fields=["assigned_timeslot"])
+    schedule.is_manual_edit = True
+    schedule.save(update_fields=["is_manual_edit"])
+    return {"session_id": s.id, "in_tray": True}
+
+
+class TrayPlaceIn(Schema):
+    session_id: int
+    day: int
+    period: int
+
+
+@router.post("/schedule/{schedule_id}/tray/place")
+def place_from_tray(request, schedule_id: int, payload: TrayPlaceIn):
+    """Thả buổi từ khay vào một ô. Chỉ nhận ô trống (FR-7.9)."""
+    _can_write(request)
+    schedule = _get_or_404(Schedule, request, schedule_id, "Lịch")
+    tenant = _tenant(request)
+    qs = list(
+        tenant.sessions.filter(schedule=schedule)
+        .select_related("student_group")
+        .prefetch_related("assigned_teachers")
+    )
+    by_id = {s.id: s for s in qs}
+    s = by_id.get(payload.session_id)
+    if s is None:
+        raise HttpError(404, "Buổi học không tồn tại")
+    if s.is_locked or s.is_pinned:
+        raise HttpError(400, "Buổi đã khoá hoặc đã ghim")
+    if payload.day < 0 or payload.period < 0:
+        raise HttpError(400, "Vị trí không hợp lệ")
+
+    from scheduler import horizon as horizon_mod
+
+    cfg = horizon_mod.normalize((tenant.config_json or {}).get("horizon"))
+    n = max(1, int(s.duration_slots or 1))
+    if payload.period + n > cfg["periods_per_day"]:
+        raise HttpError(
+            400,
+            "Buổi dài %d tiết nên không đặt vừa từ tiết %d"
+            % (n, payload.period + 1),
+        )
+    if payload.day >= len(cfg["days"]):
+        raise HttpError(400, "Ngày nằm ngoài khung thời gian")
+
+    busy = _busy_map(qs, {s.id})
+    verdict, reason = _judge(s, payload.day, payload.period, busy)
+    if verdict == VERDICT_PINK_DARK:
+        raise HttpError(409, "Ô này không trống: %s" % reason)
+
+    s.assigned_timeslot = {"day": payload.day, "period": payload.period}
+    s.save(update_fields=["assigned_timeslot"])
+    schedule.is_manual_edit = True
+    schedule.save(update_fields=["is_manual_edit"])
+    return {
+        "session_id": s.id,
+        "in_tray": False,
+        "day": payload.day,
+        "period": payload.period,
+        "verdict": verdict,
+        "warning": "" if verdict == VERDICT_GREEN else reason,
+    }
+
+
+# --------------------------------------------------------------------------
+# Dừng bộ giải
+# --------------------------------------------------------------------------
+
+@router.post("/solve/{job_id}/stop")
+def stop_solve(request, job_id: str):
+    """Yêu cầu bộ giải dừng, giữ nguyên phương án đã tìm được.
+
+    CP-SAT chỉ kiểm tra được yêu cầu dừng mỗi khi tìm ra nghiệm mới, nên
+    lệnh có độ trễ tới nghiệm kế tiếp — thường vài giây.
+    """
+    from django.core.exceptions import ValidationError
+
+    from scheduler.models import SolveJob
+
+    _require(request, {"admin", "registrar"})
+    try:
+        job = SolveJob.objects.get(id=job_id)
+    except (SolveJob.DoesNotExist, ValidationError, ValueError, TypeError):
+        raise HttpError(404, "Phiên chạy không tồn tại")
+    if job.tenant_id != request.auth["tenant_id"]:
+        raise HttpError(404, "Phiên chạy không tồn tại")
+
+    if job.status in (SolveJob.Status.SOLVED, SolveJob.Status.FAILED):
+        return {
+            "job_id": str(job.id),
+            "status": job.status,
+            "stopped": False,
+            "detail": "Phiên chạy đã kết thúc",
+        }
+
+    job.stop_requested = True
+    job.save(update_fields=["stop_requested"])
+    return {"job_id": str(job.id), "status": job.status, "stopped": True}
 
 
 # --------------------------------------------------------------------------
