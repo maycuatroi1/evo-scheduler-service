@@ -19,6 +19,7 @@ dependencies = [
     "dj-database-url",
     "gunicorn",
     "PyJWT>=2.8,<3.0",
+    "reportlab>=4.0",
 ]
 
 [project.optional-dependencies]
@@ -26,6 +27,7 @@ dev = [
     "pytest",
     "pytest-django",
     "ruff",
+    "pypdf",
 ]
 
 [tool.setuptools]
@@ -37,4 +39,4 @@ target-version = "py312"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
-python_files = ["tests.py", "test_*.py", "*_tests.py"]
+python_files = ["tests.py", "tests_*.py", "test_*.py", "*_tests.py"]
