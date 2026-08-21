@@ -546,6 +546,71 @@ def teacher_workload(request):
 
 
 # --------------------------------------------------------------------------
+# Sinh buổi học từ số giờ chương trình
+# --------------------------------------------------------------------------
+
+class BuildIn(Schema):
+    max_slots_per_day: int = 5
+    replace: bool = True
+    module_codes: list[str] | None = None
+    group_codes: list[str] | None = None
+
+
+@router.get("/schedule/{schedule_id}/build-preview")
+def build_preview(request, schedule_id: int, max_slots_per_day: int = 5):
+    """Xem trước sẽ sinh ra bao nhiêu buổi, trước khi ghi thật."""
+    from scheduler import session_builder
+
+    _get_or_404(Schedule, request, schedule_id, "Lịch")
+    plans = session_builder.plan(
+        _tenant(request), max_slots_per_day=max_slots_per_day
+    )
+    return {
+        "schedule_id": schedule_id,
+        "plans": [
+            {
+                "module_code": p.module_code,
+                "group_code": p.group_code,
+                "session_type": p.session_type,
+                "tier": p.tier,
+                "slots_each": p.slots_each,
+                "count": p.count,
+                "batches": p.batches,
+                "total_periods": p.total_periods,
+                "note": p.note,
+            }
+            for p in plans
+        ],
+        "total_sessions": sum(p.count for p in plans),
+        "total_periods": sum(p.total_periods for p in plans),
+    }
+
+
+@router.post("/schedule/{schedule_id}/build-sessions")
+def build_sessions(request, schedule_id: int, payload: BuildIn):
+    """Bung số giờ chương trình thành buổi học cụ thể.
+
+    Buổi đã khoá hoặc đã ghim luôn được giữ, nên chạy lại nhiều lần không
+    làm mất công tinh chỉnh.
+    """
+    _can_write(request)
+    from scheduler import session_builder
+
+    sched = _get_or_404(Schedule, request, schedule_id, "Lịch")
+    with transaction.atomic():
+        result = session_builder.apply(
+            _tenant(request),
+            sched,
+            max_slots_per_day=payload.max_slots_per_day,
+            replace=payload.replace,
+            module_codes=payload.module_codes,
+            group_codes=payload.group_codes,
+        )
+    result["schedule_id"] = sched.id
+    return result
+
+
+# --------------------------------------------------------------------------
 # Ghim tiết trước khi chạy bộ giải
 # --------------------------------------------------------------------------
 

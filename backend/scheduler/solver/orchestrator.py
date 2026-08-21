@@ -75,6 +75,13 @@ CROSS_TIER_RULES = [
         "weight": 1,
         "active": True,
     },
+    {
+        "id": -107,
+        "type": "teacher_limits",
+        "hardness": "soft",
+        "weight": 3,
+        "active": True,
+    },
 ]
 
 @dataclass

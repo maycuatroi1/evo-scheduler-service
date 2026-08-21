@@ -11,21 +11,31 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 const PUBLIC_PATHS = ["/login", "/register"];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { token, user, isAuthenticated, logout } = useAuth();
+  const { token, user, isAuthenticated, ready, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const isPublic = PUBLIC_PATHS.includes(pathname);
 
   useEffect(() => {
-    if (!token && !isPublic) {
+    // Chờ đọc xong phiên đã lưu rồi mới kết luận là chưa đăng nhập, nếu
+    // không mỗi lần tải lại trang sẽ bị đá về trang đăng nhập.
+    if (ready && !token && !isPublic) {
       router.replace("/login");
     }
-  }, [token, isPublic, router]);
+  }, [ready, token, isPublic, router]);
 
   if (isPublic) {
     return (
       <main className="flex min-h-screen items-center justify-center p-6">
         {children}
+      </main>
+    );
+  }
+
+  if (!ready) {
+    return (
+      <main className="flex min-h-screen items-center justify-center p-6 text-foreground-3">
+        Đang khôi phục phiên làm việc…
       </main>
     );
   }

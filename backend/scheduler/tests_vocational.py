@@ -295,3 +295,81 @@ class ModelBehaviourTests(TestCase):
             g.homerooms.add(lop)
         self.assertEqual(lop.groups.count(), 3)
         self.assertEqual(sum(g.size for g in lop.groups.all()), 63)
+
+
+class TeacherLimitTests(VocationalConstraintTests):
+    """Ràng buộc cá nhân của giáo viên — trước đây khai xong không có tác dụng."""
+
+    def _with_teacher(self, sessions, teacher):
+        data = self._data(sessions)
+        data["teachers"] = [teacher]
+        data["rules"] = [
+            {"id": -107, "type": "teacher_limits", "hardness": "soft", "weight": 3}
+        ]
+        return data
+
+    def test_toi_da_tiet_moi_buoi_duoc_ap(self):
+        """Giáo viên khai tối đa 2 tiết/buổi thì không dồn 4 tiết một ngày."""
+        sessions = [
+            self._session(i, "G%d" % i, teacher_codes=["GV1"], group_code="G%d" % i)
+            for i in range(1, 5)
+        ]
+        data = self._with_teacher(
+            sessions,
+            {"id": 1, "code": "GV1", "max_periods_per_session": 2,
+             "min_periods_per_session": None, "days_off_per_week": None},
+        )
+        res = engine.build_and_solve(data, max_time_seconds=15, skip_preflight=True)
+        self.assertIn(res.status, ("OPTIMAL", "FEASIBLE"))
+        per_day = {}
+        for a in res.assignments:
+            per_day[a.day] = per_day.get(a.day, 0) + 1
+        self.assertLessEqual(
+            max(per_day.values()), 2, "Không được vượt 2 tiết mỗi buổi"
+        )
+
+    def test_khong_khai_gi_thi_khong_rang_buoc(self):
+        sessions = [
+            self._session(i, "G%d" % i, teacher_codes=["GV1"], group_code="G%d" % i)
+            for i in range(1, 4)
+        ]
+        data = self._with_teacher(
+            sessions,
+            {"id": 1, "code": "GV1", "max_periods_per_session": None,
+             "min_periods_per_session": None, "days_off_per_week": None},
+        )
+        res = engine.build_and_solve(data, max_time_seconds=10, skip_preflight=True)
+        self.assertIn(res.status, ("OPTIMAL", "FEASIBLE"))
+
+    def test_so_ngay_nghi_trong_tuan(self):
+        """Khai nghỉ 3 ngày thì bộ giải dồn tiết vào ít ngày hơn."""
+        sessions = [
+            self._session(i, "G%d" % i, teacher_codes=["GV1"], group_code="G%d" % i)
+            for i in range(1, 5)
+        ]
+        data = self._with_teacher(
+            sessions,
+            {"id": 1, "code": "GV1", "max_periods_per_session": None,
+             "min_periods_per_session": None, "days_off_per_week": 3},
+        )
+        res = engine.build_and_solve(data, max_time_seconds=15, skip_preflight=True)
+        self.assertIn(res.status, ("OPTIMAL", "FEASIBLE"))
+        days_used = len({a.day for a in res.assignments})
+        self.assertLessEqual(days_used, 3, "Nghỉ 3/5 ngày nên dạy tối đa 2–3 ngày")
+
+    def test_rang_buoc_mem_khong_lam_vo_nghiem(self):
+        """Ép cứng sẽ vô nghiệm; đây là ràng buộc mềm nên vẫn ra lịch."""
+        sessions = [
+            self._session(i, "G%d" % i, teacher_codes=["GV1"], group_code="G%d" % i)
+            for i in range(1, 11)
+        ]
+        data = self._with_teacher(
+            sessions,
+            {"id": 1, "code": "GV1", "max_periods_per_session": 1,
+             "min_periods_per_session": None, "days_off_per_week": 4},
+        )
+        res = engine.build_and_solve(data, max_time_seconds=15, skip_preflight=True)
+        self.assertIn(
+            res.status, ("OPTIMAL", "FEASIBLE"),
+            "Ràng buộc mềm mâu thuẫn vẫn phải ra được lịch",
+        )

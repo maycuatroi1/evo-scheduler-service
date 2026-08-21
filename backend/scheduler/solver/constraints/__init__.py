@@ -14,6 +14,7 @@ from scheduler.solver.constraints import (
     shift_by_grade,
     capacity_by_type,
     offsite_no_room,
+    teacher_limits,
 )
 
 RULE_MODULES = {
@@ -32,6 +33,7 @@ RULE_MODULES = {
     "shift_by_grade": shift_by_grade,
     "capacity_by_type": capacity_by_type,
     "offsite_no_room": offsite_no_room,
+    "teacher_limits": teacher_limits,
 }
 
 __all__ = ["RULE_MODULES", "apply_rule"]

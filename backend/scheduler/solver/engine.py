@@ -82,6 +82,14 @@ def _teacher_to_dict(teacher):
         "id": teacher.id,
         "code": teacher.code,
         "quota_standard_hours": teacher.quota_standard_hours,
+        # Ràng buộc cá nhân; None nghĩa là không áp cho người này
+        "max_periods_per_session": getattr(
+            teacher, "max_periods_per_session", None
+        ),
+        "min_periods_per_session": getattr(
+            teacher, "min_periods_per_session", None
+        ),
+        "days_off_per_week": getattr(teacher, "days_off_per_week", None),
     }
 
 

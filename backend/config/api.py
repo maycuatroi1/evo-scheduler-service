@@ -758,7 +758,13 @@ def import_upload(request, file: UploadedFile = File(...)):
 
 
 @api.post("/import/commit", auth=tenant_auth, url_name="import_commit")
-def import_commit(request, file: UploadedFile = File(...)):
+def import_commit(request, file: UploadedFile = File(...), mode: str = "merge"):
+    """Ghi dữ liệu từ workbook vào cơ sở dữ liệu.
+
+    mode="merge" (mặc định) cập nhật theo mã, giữ nguyên dữ liệu cũ và các
+    buổi đã tinh chỉnh. mode="replace" xoá sạch rồi ghi lại — chỉ dùng khi
+    người dùng chủ động chọn.
+    """
     parsed = _read_upload(file)
     issues = validator.validate(parsed)
     if validator.has_errors(issues):
@@ -775,11 +781,13 @@ def import_commit(request, file: UploadedFile = File(...)):
         )
 
     tenant = request.auth["tenant"]
-    created = _persist(parsed, tenant)
+    if mode not in ("merge", "replace"):
+        raise HttpError(400, "Chế độ nhập không hợp lệ: %s" % mode)
+    created = _persist(parsed, tenant, mode=mode)
     return JsonResponse({"created": created, "issues": issues}, status=201)
 
 
-def _persist(parsed, tenant):
+def _persist(parsed, tenant, mode="merge"):
     from scheduler.excel_parser import to_int, to_list, to_str
 
     teachers = {}
@@ -804,12 +812,28 @@ def _persist(parsed, tenant):
             tenant.save(update_fields=["config_json"])
             created["horizon"] = horizon.total_slots(config["horizon"])
 
-        Session.objects.filter(tenant=tenant).delete()
-        TeacherModule.objects.filter(tenant=tenant).delete()
-        Module.objects.filter(tenant=tenant).delete()
-        Resource.objects.filter(tenant=tenant).delete()
-        StudentGroup.objects.filter(tenant=tenant).delete()
-        Teacher.objects.filter(tenant=tenant).delete()
+        # Chế độ "replace" xoá sạch rồi ghi lại — mất mọi tinh chỉnh đã
+        # làm, kể cả buổi đã khoá. Chỉ dùng khi người dùng chủ động chọn.
+        # Mặc định là "merge": giữ dữ liệu cũ, cập nhật theo mã.
+        if mode == "replace":
+            Session.objects.filter(tenant=tenant).delete()
+            TeacherModule.objects.filter(tenant=tenant).delete()
+            Module.objects.filter(tenant=tenant).delete()
+            Resource.objects.filter(tenant=tenant).delete()
+            StudentGroup.objects.filter(tenant=tenant).delete()
+            Teacher.objects.filter(tenant=tenant).delete()
+            created["deleted_all"] = True
+        else:
+            # Nạp sẵn dữ liệu hiện có để cập nhật theo mã thay vì tạo trùng
+            teachers.update({t.code: t for t in Teacher.objects.filter(tenant=tenant)})
+            student_groups.update(
+                {g.code: g for g in StudentGroup.objects.filter(tenant=tenant)}
+            )
+            resources.update(
+                {r.code: r for r in Resource.objects.filter(tenant=tenant)}
+            )
+            modules.update({m.code: m for m in Module.objects.filter(tenant=tenant)})
+            created["updated"] = 0
 
         for r in parsed["Teachers"]:
             code = to_str(r.get("code"))
@@ -817,27 +841,37 @@ def _persist(parsed, tenant):
             quota = None
             if r.get("quota_standard_hours") not in (None, ""):
                 quota = to_int(r.get("quota_standard_hours"))
-            teacher = Teacher.objects.create(
+            teacher, made = Teacher.objects.update_or_create(
                 tenant=tenant,
                 code=code,
-                name=to_str(r.get("name")),
-                blocks=blocks,
-                quota_standard_hours=quota,
+                defaults={
+                    "name": to_str(r.get("name")),
+                    "blocks": blocks,
+                    "quota_standard_hours": quota,
+                },
             )
             teachers[code] = teacher
-            created["teachers"] += 1
+            if made:
+                created["teachers"] += 1
+            else:
+                created["updated"] = created.get("updated", 0) + 1
 
         for r in parsed["StudentGroups"]:
             code = to_str(r.get("code"))
-            sg = StudentGroup.objects.create(
+            sg, made = StudentGroup.objects.update_or_create(
                 tenant=tenant,
                 code=code,
-                name=to_str(r.get("name")),
-                enrollment_type=to_str(r.get("enrollment_type")).lower(),
-                size=to_int(r.get("size")) or 0,
+                defaults={
+                    "name": to_str(r.get("name")),
+                    "enrollment_type": to_str(r.get("enrollment_type")).lower(),
+                    "size": to_int(r.get("size")) or 0,
+                },
             )
             student_groups[code] = sg
-            created["student_groups"] += 1
+            if made:
+                created["student_groups"] += 1
+            else:
+                created["updated"] = created.get("updated", 0) + 1
 
         for r in parsed["Resources"]:
             code = to_str(r.get("code"))
@@ -845,40 +879,60 @@ def _persist(parsed, tenant):
             available = to_int(r.get("available_quantity"))
             if available is None:
                 available = quantity
-            resource = Resource.objects.create(
+            resource, made = Resource.objects.update_or_create(
                 tenant=tenant,
                 code=code,
-                name=to_str(r.get("name")),
-                type=to_str(r.get("type")).lower(),
-                capacity=to_int(r.get("capacity")) or 0,
-                quantity=quantity,
-                available_quantity=available,
+                defaults={
+                    "name": to_str(r.get("name")),
+                    "type": to_str(r.get("type")).lower(),
+                    "capacity": to_int(r.get("capacity")) or 0,
+                    "quantity": quantity,
+                    "available_quantity": available,
+                },
             )
             resources[code] = resource
-            created["resources"] += 1
+            if made:
+                created["resources"] += 1
+            else:
+                created["updated"] = created.get("updated", 0) + 1
 
         for r in parsed["Modules"]:
             code = to_str(r.get("code"))
             sg_code = to_str(r.get("student_group"))
-            module = Module.objects.create(
+            module, made = Module.objects.update_or_create(
                 tenant=tenant,
                 code=code,
-                name=to_str(r.get("name")),
-                theory_hours=to_int(r.get("theory_hours")) or 0,
-                practice_hours=to_int(r.get("practice_hours")) or 0,
-                student_group=student_groups.get(sg_code) if sg_code else None,
+                defaults={
+                    "name": to_str(r.get("name")),
+                    "theory_hours": to_int(r.get("theory_hours")) or 0,
+                    "practice_hours": to_int(r.get("practice_hours")) or 0,
+                    "student_group": student_groups.get(sg_code) if sg_code else None,
+                },
             )
             modules[code] = module
-            created["modules"] += 1
+            if made:
+                created["modules"] += 1
+            else:
+                created["updated"] = created.get("updated", 0) + 1
 
         for r in parsed["TeacherModule"]:
             teacher = teachers.get(to_str(r.get("teacher_code")))
             module = modules.get(to_str(r.get("module_code")))
             if teacher and module:
-                TeacherModule.objects.create(
+                TeacherModule.objects.get_or_create(
                     tenant=tenant, teacher=teacher, module=module
                 )
                 created["teacher_modules"] += 1
+
+        # Ở chế độ merge, buổi học từ lần nhập trước phải dọn đi, nếu
+        # không mỗi lần nhập lại sẽ nhân đôi. Buổi đã khoá hoặc đã ghim thì
+        # giữ nguyên vì đó là công tinh chỉnh của người dùng.
+        if mode != "replace" and parsed["FixedSessions"]:
+            stale = Session.objects.filter(
+                tenant=tenant, is_locked=False, is_pinned=False
+            )
+            created["replaced_sessions"] = stale.count()
+            stale.delete()
 
         for r in parsed["FixedSessions"]:
             module = modules.get(to_str(r.get("module_code")))

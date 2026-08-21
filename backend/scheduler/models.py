@@ -441,6 +441,7 @@ class ConstraintRule(models.Model):
         SHIFT_BY_GRADE = "shift_by_grade", "Ca học theo khối"
         CAPACITY_BY_TYPE = "capacity_by_type", "Trần sĩ số theo loại buổi"
         OFFSITE_NO_ROOM = "offsite_no_room", "Buổi ngoài trường không chiếm phòng"
+        TEACHER_LIMITS = "teacher_limits", "Ràng buộc cá nhân giáo viên"
 
     class Hardness(models.TextChoices):
         HARD = "hard", "Hard"
