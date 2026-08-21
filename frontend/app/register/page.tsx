@@ -33,7 +33,7 @@ export default function RegisterPage() {
     <div className="w-full max-w-sm space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground">Đăng ký</h2>
-        <p className="mt-1 text-sm text-foreground/60">
+        <p className="mt-1 text-sm text-foreground-2">
           Tạo tài khoản mới. Dữ liệu mẫu sẽ được tạo tự động.
         </p>
       </div>
@@ -90,7 +90,7 @@ export default function RegisterPage() {
           {loading ? "Đang đăng ký..." : "Đăng ký"}
         </button>
       </form>
-      <p className="text-center text-xs text-foreground/60">
+      <p className="text-center text-xs text-foreground-2">
         Đã có tài khoản?{" "}
         <Link
           href="/login"

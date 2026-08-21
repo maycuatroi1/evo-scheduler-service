@@ -45,13 +45,13 @@ export function FeasibilityPanel({ scheduleId, reloadToken }: Props) {
   if (!token || scheduleId === null) return null;
 
   return (
-    <section className="rounded-lg border border-border bg-sidebar p-5 shadow-sm">
+    <section className="rounded-lg border border-border bg-panel p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground/60">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground-2">
             Kiểm tra dữ liệu
           </h3>
-          <p className="mt-1 text-xs text-foreground/60">
+          <p className="mt-1 text-xs text-foreground-2">
             Những mâu thuẫn khiến không lịch nào tồn tại, phát hiện trước khi
             chạy bộ giải.
           </p>
@@ -85,12 +85,12 @@ export function FeasibilityPanel({ scheduleId, reloadToken }: Props) {
 
       {report?.tiers.map((tier) => (
         <div key={tier.tier} className="mt-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-foreground/60">
+          <p className="text-xs font-semibold uppercase tracking-wide text-foreground-2">
             {TIER_LABELS[tier.tier] ?? tier.tier} — {tier.num_sessions} buổi /{" "}
             {tier.total_slots} tiết mỗi tuần
           </p>
           {tier.issues.length === 0 ? (
-            <p className="mt-1 text-xs text-foreground/50">Không có vấn đề.</p>
+            <p className="mt-1 text-xs text-foreground-3">Không có vấn đề.</p>
           ) : (
             <ul className="mt-2 flex flex-col gap-1">
               {tier.issues.map((issue, index) => (

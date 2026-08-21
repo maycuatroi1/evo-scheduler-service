@@ -207,7 +207,7 @@ export function ScheduleGrid({
 
   if (loading) {
     return (
-      <p className="text-sm text-foreground/60">Đang tải dữ liệu lịch...</p>
+      <p className="text-sm text-foreground-2">Đang tải dữ liệu lịch...</p>
     );
   }
 
@@ -228,7 +228,7 @@ export function ScheduleGrid({
 
   if (!scheduleId) {
     return (
-      <p className="text-sm text-foreground/60">
+      <p className="text-sm text-foreground-2">
         Chưa có lịch nào. Hãy tạo lịch ở trang Ràng buộc hoặc Import dữ liệu trước.
       </p>
     );
@@ -236,7 +236,7 @@ export function ScheduleGrid({
 
   if (effectiveSessions.length === 0) {
     return (
-      <p className="text-sm text-foreground/60">
+      <p className="text-sm text-foreground-2">
         Chưa có buổi học nào được xếp lịch. Chạy bộ giải ở trang Ràng buộc để
         xếp lịch.
       </p>
@@ -269,7 +269,7 @@ export function ScheduleGrid({
         <StatCard label="Xung đột" value={stats.conflicts} tone={stats.conflicts > 0 ? "danger" : "neutral"} />
       </div>
 
-      <div className="flex flex-wrap items-end gap-4 rounded-lg border border-border bg-sidebar p-3 text-sidebar-foreground">
+      <div className="flex flex-wrap items-end gap-4 rounded-lg border border-border bg-panel p-3 text-foreground">
         <FilterSelect
           label="Giáo viên"
           value={filters.teacher}
@@ -292,7 +292,7 @@ export function ScheduleGrid({
           options={roomOptions.map((r) => ({ value: r, label: r }))}
         />
         <div className="flex flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase text-foreground/60">
+          <span className="text-[11px] font-semibold uppercase text-foreground-2">
             Xem theo
           </span>
           <div className="flex overflow-hidden rounded-md border border-border">
@@ -334,7 +334,7 @@ export function ScheduleGrid({
             Hoàn tác kéo thả
           </button>
         )}
-        <div className="ml-auto self-end text-xs text-foreground/60">
+        <div className="ml-auto self-end text-xs text-foreground-2">
           {moving ? "Đang sửa lịch..." : "%s buổi".replace("%s", String(effectiveSessions.length))}
           {conflicts.length > 0 && (
             <span className="ml-2 rounded bg-destructive/15 px-1.5 py-0.5 font-semibold text-destructive">
@@ -344,7 +344,7 @@ export function ScheduleGrid({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 px-1 text-xs text-foreground/60">
+      <div className="flex flex-wrap items-center gap-4 px-1 text-xs text-foreground-2">
         <span className="font-semibold uppercase tracking-wide">Chú thích:</span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-4 rounded-full bg-primary" />
@@ -371,23 +371,23 @@ export function ScheduleGrid({
         onDragEnd={onDragEnd}
         onDragCancel={onDragCancel}
       >
-        <div className="overflow-auto rounded-lg border border-border bg-sidebar shadow-sm">
+        <div className="overflow-auto rounded-lg border border-border bg-panel shadow-sm">
           <div
             className="grid min-w-[860px]"
             style={{
               gridTemplateColumns: "90px repeat(" + days.length + ", minmax(160px, 1fr))",
             }}
           >
-            <div className="sticky left-0 top-0 z-30 border-b border-r border-border bg-sidebar px-2 py-2 text-[11px] font-semibold uppercase text-foreground/60">
+            <div className="sticky left-0 top-0 z-30 border-b border-r border-border bg-head px-2 py-2 text-[11px] font-semibold uppercase text-foreground-2">
               Tiết / Ngày
             </div>
             {days.map((d) => (
               <div
                 key={d.index}
-                className="sticky top-0 z-20 border-b border-r border-border bg-sidebar px-2 py-2 text-sm font-bold text-foreground"
+                className="sticky top-0 z-20 border-b border-r border-border bg-head px-2 py-2 text-sm font-bold text-foreground"
               >
                 <div>{d.code}</div>
-                <div className="text-[11px] font-medium text-foreground/60">
+                <div className="text-[11px] font-medium text-foreground-2">
                   {d.label}
                 </div>
               </div>
@@ -473,7 +473,7 @@ function PeriodRow({
 }) {
   return (
     <>
-      <div className="sticky left-0 z-10 flex items-center border-b border-r border-border bg-sidebar px-2 text-xs font-semibold text-foreground">
+      <div className="sticky left-0 z-10 flex items-center border-b border-r border-border bg-head px-2 text-xs font-semibold text-foreground">
         {periodLabel}
       </div>
       {days.map((d) => (
@@ -529,7 +529,7 @@ function GridCell({
     <div
       ref={setNodeRef}
       className={[
-        "min-h-[88px] border-b border-r border-border bg-background/40 p-1 transition-colors",
+        "min-h-[88px] border-b border-r border-border bg-background p-1 transition-colors",
         isOver && !wouldConflict ? "bg-primary/5" : "",
         wouldConflict || hasConflict
           ? "ring-2 ring-inset ring-destructive"
@@ -577,7 +577,7 @@ function FilterSelect({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-[11px] font-semibold uppercase text-foreground/60">
+      <span className="text-[11px] font-semibold uppercase text-foreground-2">
         {label}
       </span>
       <select
@@ -613,8 +613,8 @@ function StatCard({
     danger: "text-destructive",
   };
   return (
-    <div className="rounded-lg border border-border bg-sidebar px-3 py-2 shadow-sm">
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-foreground/50">
+    <div className="rounded-lg border border-border bg-panel px-3 py-2 shadow-sm">
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-foreground-2">
         {label}
       </div>
       <div className={`mt-0.5 font-mono text-2xl font-bold ${tones[tone]}`}>

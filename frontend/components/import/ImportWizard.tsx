@@ -93,7 +93,7 @@ export function ImportWizard() {
 
   if (!token) {
     return (
-      <p className="text-sm text-foreground/60">
+      <p className="text-sm text-foreground-2">
         Cần dán JWT token ở thanh trên cùng trước khi import.
       </p>
     );
@@ -116,7 +116,7 @@ export function ImportWizard() {
               key={k}
               className="rounded-md border border-border bg-background p-2"
             >
-              <dt className="text-foreground/50">{k}</dt>
+              <dt className="text-foreground-3">{k}</dt>
               <dd className="text-sm font-bold text-foreground">{v}</dd>
             </div>
           ))}
@@ -147,7 +147,7 @@ export function ImportWizard() {
                     ? "bg-primary text-white"
                     : isDone
                       ? "bg-accent text-white"
-                      : "border border-border bg-panel text-foreground/50")
+                      : "border border-border bg-panel text-foreground-3")
                 }
               >
                 {isDone ? "✓" : s.id}
@@ -155,7 +155,7 @@ export function ImportWizard() {
               <span
                 className={
                   "text-sm font-medium " +
-                  (isCurrent ? "text-foreground" : "text-foreground/50")
+                  (isCurrent ? "text-foreground" : "text-foreground-3")
                 }
               >
                 {s.label}
@@ -183,7 +183,7 @@ export function ImportWizard() {
               {downloading ? "Đang tải..." : "Tải file mẫu"}
             </button>
           </div>
-          <p className="mt-1 text-xs text-foreground/60">
+          <p className="mt-1 text-xs text-foreground-2">
             Chấp nhận .xlsx. Dữ liệu sẽ gửi lên backend để kiểm tra.
           </p>
           <label
@@ -194,7 +194,7 @@ export function ImportWizard() {
             <span className="text-sm font-medium text-foreground">
               {file ? file.name : "Bấm để chọn file"}
             </span>
-            <span className="text-xs text-foreground/50">
+            <span className="text-xs text-foreground-3">
               {busy ? "Đang tải lên..." : "Chọn file .xlsx hợp lệ"}
             </span>
           </label>
@@ -241,7 +241,7 @@ export function ImportWizard() {
                 key={sheet}
                 className="rounded-md border border-border bg-background p-2"
               >
-                <p className="text-[11px] text-foreground/50">{sheet}</p>
+                <p className="text-[11px] text-foreground-3">{sheet}</p>
                 <p className="text-lg font-bold text-foreground">{count}</p>
               </div>
             ))}
@@ -251,7 +251,7 @@ export function ImportWizard() {
             <div className="mt-4 overflow-x-auto">
               <table className="w-full border-collapse text-left text-xs">
                 <thead>
-                  <tr className="border-b border-border bg-background text-foreground/60">
+                  <tr className="border-b border-border bg-background text-foreground-2">
                     <th className="px-2 py-2 font-medium">Sheet</th>
                     <th className="px-2 py-2 font-medium">Dòng</th>
                     <th className="px-2 py-2 font-medium">Cột</th>
@@ -304,7 +304,7 @@ export function ImportWizard() {
           <h3 className="text-sm font-semibold text-foreground">
             Xác nhận commit
           </h3>
-          <p className="mt-1 text-xs text-foreground/60">
+          <p className="mt-1 text-xs text-foreground-2">
             File <span className="font-medium">{file?.name}</span> sẽ được ghi
             vào cơ sở dữ liệu của tenant.
           </p>

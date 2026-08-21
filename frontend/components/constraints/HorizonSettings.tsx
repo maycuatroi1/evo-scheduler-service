@@ -124,19 +124,19 @@ export function HorizonSettings({ onChange }: Props) {
   if (!token) return null;
   if (loading) {
     return (
-      <p className="text-sm text-foreground/60">Đang tải cấu hình thời khoá biểu...</p>
+      <p className="text-sm text-foreground-2">Đang tải cấu hình thời khoá biểu...</p>
     );
   }
   if (!draft || !config) return null;
 
   return (
-    <section className="rounded-lg border border-border bg-sidebar p-5 shadow-sm">
+    <section className="rounded-lg border border-border bg-panel p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground/60">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground-2">
             Khung thời khoá biểu
           </h3>
-          <p className="mt-1 text-xs text-foreground/60">
+          <p className="mt-1 text-xs text-foreground-2">
             Số tiết khả dụng mỗi tuần. Mỗi lớp và mỗi giáo viên không thể vượt
             quá con số này.
           </p>
@@ -158,7 +158,7 @@ export function HorizonSettings({ onChange }: Props) {
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {FIELDS.map((field) => (
           <div key={field.key}>
-            <label className="mb-1 block text-xs font-semibold uppercase text-foreground/60">
+            <label className="mb-1 block text-xs font-semibold uppercase text-foreground-2">
               {field.label}
             </label>
             <input
@@ -171,7 +171,7 @@ export function HorizonSettings({ onChange }: Props) {
               }
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
             />
-            <p className="mt-1 text-[11px] text-foreground/50">{field.hint}</p>
+            <p className="mt-1 text-[11px] text-foreground-3">{field.hint}</p>
           </div>
         ))}
       </div>
@@ -181,7 +181,7 @@ export function HorizonSettings({ onChange }: Props) {
         <span className="font-bold text-primary">{previewSlots} tiết</span> mỗi
         tuần
         {dirty && (
-          <span className="text-foreground/50">
+          <span className="text-foreground-3">
             {" "}
             (đang là {config.total_slots} tiết)
           </span>

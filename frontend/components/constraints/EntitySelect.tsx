@@ -58,10 +58,10 @@ export function EntitySelect({ groups, value, onChange, placeholder }: Props) {
         <span className={selectedLabel ? "text-foreground" : "text-foreground/40"}>
           {selectedLabel || placeholder || "Chọn đối tượng"}
         </span>
-        <span className="ml-2 text-xs text-foreground/50">&#9662;</span>
+        <span className="ml-2 text-xs text-foreground-3">&#9662;</span>
       </button>
       {open && (
-        <div className="absolute z-30 mt-1 w-full rounded-md border border-border bg-sidebar shadow-lg">
+        <div className="absolute z-30 mt-1 w-full rounded-md border border-border bg-panel shadow-lg">
           <div className="flex gap-1 border-b border-border p-2">
             {groups.map((g) => (
               <button
@@ -93,7 +93,7 @@ export function EntitySelect({ groups, value, onChange, placeholder }: Props) {
           </div>
           <ul className="max-h-52 overflow-auto">
             {options.length === 0 && (
-              <li className="px-3 py-2 text-xs text-foreground/50">
+              <li className="px-3 py-2 text-xs text-foreground-3">
                 Không tìm thấy kết quả.
               </li>
             )}

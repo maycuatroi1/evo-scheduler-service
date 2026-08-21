@@ -52,7 +52,7 @@ export function ScheduleSelector({ value, onChange }: Props) {
 
   if (!token) {
     return (
-      <p className="text-xs text-foreground/60">
+      <p className="text-xs text-foreground-2">
         Cần đăng nhập (JWT) để xem lịch. Dán token vào ô bên dưới.
       </p>
     );

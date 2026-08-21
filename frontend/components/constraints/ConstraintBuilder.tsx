@@ -86,7 +86,7 @@ export function ConstraintBuilder({ scheduleId }: Props) {
 
   if (!token) {
     return (
-      <p className="text-sm text-foreground/60">
+      <p className="text-sm text-foreground-2">
         Cần dán JWT token để chỉnh trọng số.
       </p>
     );
@@ -94,22 +94,22 @@ export function ConstraintBuilder({ scheduleId }: Props) {
 
   if (scheduleId === null) {
     return (
-      <p className="text-sm text-foreground/60">
+      <p className="text-sm text-foreground-2">
         Chọn một lịch để cấu hình trọng số.
       </p>
     );
   }
 
   if (loading) {
-    return <p className="text-sm text-foreground/60">Đang tải trọng số...</p>;
+    return <p className="text-sm text-foreground-2">Đang tải trọng số...</p>;
   }
 
   if (!draft) return null;
 
   return (
-    <section className="rounded-lg border border-border bg-sidebar p-5 shadow-sm">
+    <section className="rounded-lg border border-border bg-panel p-5 shadow-sm">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground/60">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground-2">
           Trọng số mục tiêu
         </h3>
         {saved && !dirty && (
@@ -121,7 +121,7 @@ export function ConstraintBuilder({ scheduleId }: Props) {
       <div className="mt-4 flex flex-col gap-4">
         {WEIGHT_LABELS.map((item) => (
           <div key={item.key}>
-            <label className="mb-1 flex items-center justify-between text-xs font-semibold uppercase text-foreground/60">
+            <label className="mb-1 flex items-center justify-between text-xs font-semibold uppercase text-foreground-2">
               <span>{item.label}</span>
               <span className="text-primary">{draft[item.key]}</span>
             </label>
@@ -136,7 +136,7 @@ export function ConstraintBuilder({ scheduleId }: Props) {
               }
               className="w-full accent-primary"
             />
-            <p className="mt-1 text-[11px] text-foreground/50">{item.hint}</p>
+            <p className="mt-1 text-[11px] text-foreground-3">{item.hint}</p>
           </div>
         ))}
       </div>

@@ -90,7 +90,7 @@ export default function SchedulePage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Lưới lịch</h2>
-          <p className="text-sm text-foreground/60">
+          <p className="text-sm text-foreground-2">
             Xem lịch thật từ backend theo giáo viên, lớp, phòng.
           </p>
         </div>

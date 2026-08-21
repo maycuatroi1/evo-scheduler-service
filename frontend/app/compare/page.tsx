@@ -76,7 +76,7 @@ export default function ComparePage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-2xl font-bold text-foreground">So sánh lịch</h2>
-          <p className="text-sm text-foreground/60">
+          <p className="text-sm text-foreground-2">
             Chụp nhanh lịch trước và sau khi chạy bộ giải.
           </p>
         </div>
@@ -118,7 +118,7 @@ export default function ComparePage() {
       )}
 
       {!hasRun && !busy && (
-        <p className="text-sm text-foreground/60">
+        <p className="text-sm text-foreground-2">
           Chọn lịch rồi bấm "Chạy so sánh" để xem trước / sau.
         </p>
       )}
@@ -140,7 +140,7 @@ function VariantPanel({
   highlightIds?: Set<string>;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border bg-sidebar p-4 shadow-sm">
+    <div className="flex flex-col gap-3 rounded-lg border border-border bg-panel p-4 shadow-sm">
       <div>
         <div className="flex items-center justify-between">
           <h3 className="text-base font-bold text-foreground">{label}</h3>
@@ -153,7 +153,7 @@ function VariantPanel({
             </span>
           </div>
         </div>
-        <p className="mt-1 text-xs text-foreground/60">{description}</p>
+        <p className="mt-1 text-xs text-foreground-2">{description}</p>
       </div>
       <ReadOnlyScheduleGrid
         variantLabel={label}

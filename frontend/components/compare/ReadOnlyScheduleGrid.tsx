@@ -32,25 +32,25 @@ export function ReadOnlyScheduleGrid({ variantLabel, sessions, highlightIds }: P
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
         <span className="text-sm font-semibold text-foreground">{variantLabel}</span>
-        <span className="text-xs text-foreground/60">{sessions.length} buổi</span>
+        <span className="text-xs text-foreground-2">{sessions.length} buổi</span>
       </div>
-      <div className="overflow-auto rounded-lg border border-border bg-sidebar shadow-sm">
+      <div className="overflow-auto rounded-lg border border-border bg-panel shadow-sm">
         <div
           className="grid min-w-[640px]"
           style={{
             gridTemplateColumns: "70px repeat(" + days.length + ", minmax(110px, 1fr))",
           }}
         >
-          <div className="sticky left-0 top-0 z-30 border-b border-r border-border bg-sidebar px-2 py-2 text-[11px] font-semibold uppercase text-foreground/60">
+          <div className="sticky left-0 top-0 z-30 border-b border-r border-border bg-panel px-2 py-2 text-[11px] font-semibold uppercase text-foreground-2">
             Tiết / Ngày
           </div>
           {days.map((d) => (
             <div
               key={d.index}
-              className="sticky top-0 z-20 border-b border-r border-border bg-sidebar px-2 py-2 text-sm font-bold text-foreground"
+              className="sticky top-0 z-20 border-b border-r border-border bg-panel px-2 py-2 text-sm font-bold text-foreground"
             >
               <div>{d.code}</div>
-              <div className="text-[11px] font-medium text-foreground/60">{d.label}</div>
+              <div className="text-[11px] font-medium text-foreground-2">{d.label}</div>
             </div>
           ))}
           {periods.map((p) => (
@@ -84,7 +84,7 @@ function Row({
 }) {
   return (
     <>
-      <div className="sticky left-0 z-10 flex items-center border-b border-r border-border bg-sidebar px-2 text-xs font-semibold text-foreground">
+      <div className="sticky left-0 z-10 flex items-center border-b border-r border-border bg-panel px-2 text-xs font-semibold text-foreground">
         {periodLabel}
       </div>
       {days.map((d) => {

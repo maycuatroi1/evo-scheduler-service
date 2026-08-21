@@ -21,11 +21,11 @@ function InfoRow({
 }) {
   return (
     <div className="flex items-start gap-3 border-b border-border/60 py-2.5 last:border-0">
-      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-foreground/50">
+      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center text-foreground-3">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <dt className="text-[11px] font-semibold uppercase tracking-wide text-foreground/50">
+        <dt className="text-[11px] font-semibold uppercase tracking-wide text-foreground-3">
           {label}
         </dt>
         <dd className="mt-0.5 text-sm font-medium text-foreground">{children}</dd>
@@ -64,7 +64,7 @@ export function SessionDetailModal({ session, onClose, onFilterTeacher }: Props)
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-xl border border-border bg-sidebar shadow-2xl">
+      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-xl border border-border bg-panel shadow-2xl">
         <div className={`flex items-center justify-between gap-3 border-b border-border px-5 py-3.5 ${tc.soft}`}>
           <div className="flex items-center gap-2.5 min-w-0">
             <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${tc.dot}`} />
@@ -76,7 +76,7 @@ export function SessionDetailModal({ session, onClose, onFilterTeacher }: Props)
             type="button"
             onClick={onClose}
             aria-label="Đóng"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-foreground/60 transition-colors hover:bg-foreground/10 hover:text-foreground"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-foreground-2 transition-colors hover:bg-foreground/10 hover:text-foreground"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M18 6L6 18M6 6l12 12" />
@@ -96,7 +96,7 @@ export function SessionDetailModal({ session, onClose, onFilterTeacher }: Props)
             {sessionTypeLabel(session.type)}
           </span>
           {session.locked && (
-            <span className="flex items-center gap-1 rounded border border-foreground/20 bg-foreground/5 px-2 py-0.5 text-[11px] font-semibold text-foreground/60">
+            <span className="flex items-center gap-1 rounded border border-foreground/20 bg-foreground/5 px-2 py-0.5 text-[11px] font-semibold text-foreground-2">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="5" y="11" width="14" height="10" rx="2" />
                 <path d="M8 11V7a4 4 0 0 1 8 0v4" />
@@ -126,7 +126,7 @@ export function SessionDetailModal({ session, onClose, onFilterTeacher }: Props)
                 {teachers.map((t) => (
                   <span key={t.code} className="flex items-center gap-1.5">
                     {t.name}
-                    <code className="rounded bg-foreground/5 px-1 text-[11px] text-foreground/50">{t.code}</code>
+                    <code className="rounded bg-foreground/5 px-1 text-[11px] text-foreground-3">{t.code}</code>
                   </span>
                 ))}
               </div>
@@ -139,7 +139,7 @@ export function SessionDetailModal({ session, onClose, onFilterTeacher }: Props)
           >
             {session.className || session.classCode}
             {session.className && session.classCode !== session.className && (
-              <code className="ml-1.5 rounded bg-foreground/5 px-1 text-[11px] text-foreground/50">{session.classCode}</code>
+              <code className="ml-1.5 rounded bg-foreground/5 px-1 text-[11px] text-foreground-3">{session.classCode}</code>
             )}
           </InfoRow>
 
@@ -157,7 +157,7 @@ export function SessionDetailModal({ session, onClose, onFilterTeacher }: Props)
             {session.dayName || dayLabelVi(session.day)}
             {", tiết %s".replace("%s", String(session.period + 1))}
             {session.duration && session.duration > 1 && (
-              <span className="text-foreground/50"> ({session.duration} tiết)</span>
+              <span className="text-foreground-3"> ({session.duration} tiết)</span>
             )}
           </InfoRow>
         </dl>
@@ -170,7 +170,7 @@ export function SessionDetailModal({ session, onClose, onFilterTeacher }: Props)
                 onFilterTeacher(session.teacherCode);
                 onClose();
               }}
-              className="flex items-center gap-1.5 rounded-md border border-border bg-sidebar px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-primary/5 hover:text-primary"
+              className="flex items-center gap-1.5 rounded-md border border-border bg-panel px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-primary/5 hover:text-primary"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" /></svg>
               Lọc theo GV này

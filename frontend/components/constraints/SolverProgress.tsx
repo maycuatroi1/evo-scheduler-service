@@ -7,8 +7,9 @@ import {
   exportBlob,
   type SolveJobStatus,
 } from "@/lib/api";
+import { createV2 } from "@/lib/api-v2";
 
-type Phase = "idle" | "running" | "done" | "error";
+type Phase = "idle" | "running" | "done" | "error" | "stopped";
 
 const POLL_INTERVAL_MS = 2000;
 const POLL_TIMEOUT_MS = 10 * 60 * 1000;
@@ -27,7 +28,10 @@ type Props = {
 export function SolverProgress({ scheduleId, onSolved }: Props) {
   const { token } = useAuth();
   const api = createApiClient(token);
+  const v2 = createV2(token ?? "");
   const [phase, setPhase] = useState<Phase>("idle");
+  const [stopping, setStopping] = useState(false);
+  const jobIdRef = useRef<string | null>(null);
   const [job, setJob] = useState<SolveJobStatus | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -64,6 +68,14 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
             onSolvedRef.current?.();
             return;
           }
+          // Người dùng đã bấm Dừng: phương án dở dang vẫn dùng được nên
+          // vẫn gọi onSolved để bảng lịch nạp lại.
+          if (st.status === "stopped") {
+            stopTimer();
+            setPhase("stopped");
+            onSolvedRef.current?.();
+            return;
+          }
           if (st.status === "failed") {
             stopTimer();
             setPhase("error");
@@ -88,10 +100,16 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
     startedAtRef.current = Date.now();
     try {
       const res = await api.solve(scheduleId);
+      jobIdRef.current = res.solve_job_id;
       const st = await api.solveJobStatus(res.solve_job_id);
       setJob(st);
       if (st.status === "solved") {
         setPhase("done");
+        onSolved?.();
+        return;
+      }
+      if (st.status === "stopped") {
+        setPhase("stopped");
         onSolved?.();
         return;
       }
@@ -112,13 +130,34 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
     setPhase("idle");
     setJob(null);
     setError(null);
+    setStopping(false);
+    jobIdRef.current = null;
   }
 
-  async function handleExport() {
+  async function stop() {
+    const jobId = jobIdRef.current;
+    if (!jobId || stopping) return;
+    setStopping(true);
+    try {
+      // Bộ giải chỉ kiểm tra cờ dừng mỗi khi tìm ra nghiệm mới, nên có
+      // độ trễ vài giây; vòng poll sẽ bắt trạng thái "stopped".
+      const r = await v2.stopSolve(jobId);
+      if (!r.stopped) setStopping(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Không dừng được bộ giải");
+      setStopping(false);
+    }
+  }
+
+  async function handleExport(format: "xlsx" | "pdf" = "xlsx") {
     if (scheduleId === null) return;
     setExporting(true);
     try {
-      await exportBlob(api.exportUrl(scheduleId), token, "schedule.xlsx");
+      await exportBlob(
+        api.exportUrl(scheduleId, format),
+        token,
+        format === "pdf" ? "tkb.pdf" : "schedule.xlsx",
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Lỗi xuất file");
     } finally {
@@ -130,20 +169,25 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
   const placed = tierResults.reduce((a, t) => a + t.num_assignments, 0);
   const totalSessions = tierResults.reduce((a, t) => a + t.num_sessions, 0);
   const violations = job?.metrics?.violations ?? [];
-  const progress = phase === "running" ? (job?.progress ?? 5) : phase === "done" ? 100 : 0;
+  const progress =
+    phase === "running"
+      ? (job?.progress ?? 5)
+      : phase === "done" || phase === "stopped"
+        ? 100
+        : 0;
   const phaseLabel =
     phase === "running" && job?.phase
       ? (PHASE_LABELS[job.phase] ?? job.phase)
       : null;
 
   return (
-    <section className="rounded-lg border border-border bg-sidebar p-5 shadow-sm">
+    <section className="rounded-lg border border-border bg-panel p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground/60">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-foreground-2">
             Tối ưu lịch
           </h3>
-          <p className="mt-1 text-xs text-foreground/60">
+          <p className="mt-1 text-xs text-foreground-2">
             Chạy bộ giải để xếp lịch và tính lại chỉ số mục tiêu.
           </p>
         </div>
@@ -156,15 +200,36 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
           >
             {phase === "running" ? "Đang tối ưu..." : "Bắt đầu tối ưu"}
           </button>
-          {phase === "done" && (
+          {phase === "running" && (
             <button
               type="button"
-              onClick={handleExport}
-              disabled={exporting}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              onClick={stop}
+              disabled={stopping || !jobIdRef.current}
+              className="rounded-md border border-destructive px-4 py-2 text-sm font-semibold text-destructive hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {exporting ? "Đang xuất..." : "Xuất Excel"}
+              {stopping ? "Đang dừng..." : "Dừng"}
             </button>
+          )}
+          {(phase === "done" || phase === "stopped") && (
+            <>
+              <button
+                type="button"
+                onClick={() => handleExport("xlsx")}
+                disabled={exporting}
+                className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
+              >
+                {exporting ? "Đang xuất..." : "Xuất Excel"}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleExport("pdf")}
+                disabled={exporting}
+                title="Bản in đúng mẫu thời khoá biểu của trường"
+                className="rounded-md border border-accent px-4 py-2 text-sm font-semibold text-accent hover:bg-accent/10 disabled:opacity-50"
+              >
+                {exporting ? "Đang xuất..." : "In PDF"}
+              </button>
+            </>
           )}
           {phase !== "idle" && (
             <button
@@ -179,17 +244,18 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
       </div>
 
       {scheduleId === null && (
-        <p className="mt-3 text-xs text-foreground/60">
+        <p className="mt-3 text-xs text-foreground-2">
           Chọn một lịch trước khi chạy bộ giải.
         </p>
       )}
 
       <div className="mt-4">
-        <div className="mb-1 flex items-center justify-between text-xs text-foreground/60">
+        <div className="mb-1 flex items-center justify-between text-xs text-foreground-2">
           <span>
             {phase === "idle" && "Sẵn sàng"}
             {phase === "running" && (phaseLabel ?? "Đang chờ bộ giải...")}
             {phase === "done" && "Hoàn tất"}
+            {phase === "stopped" && "Đã dừng — giữ phương án tìm được"}
             {phase === "error" && "Lỗi"}
           </span>
           {phase === "running" && <span>{progress}%</span>}
@@ -205,7 +271,7 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
         </div>
       </div>
 
-      {phase === "done" && job && (
+      {(phase === "done" || phase === "stopped") && job && (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <MetricCard
             label="Số buổi đã xếp"
@@ -229,7 +295,7 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
         </div>
       )}
 
-      {phase === "done" && tierResults.length > 0 && (
+      {(phase === "done" || phase === "stopped") && tierResults.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
           {tierResults.map((t) => (
             <span
@@ -258,7 +324,7 @@ export function SolverProgress({ scheduleId, onSolved }: Props) {
             </ul>
           )}
           {violations.length > 12 && (
-            <p className="text-xs text-foreground/60">
+            <p className="text-xs text-foreground-2">
               Còn {violations.length - 12} vấn đề nữa.
             </p>
           )}
@@ -285,7 +351,7 @@ function MetricCard({
         : "text-warn";
   return (
     <div className="rounded-md border border-border bg-background p-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-foreground/60">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-foreground-2">
         {label}
       </p>
       <p className={"mt-1 text-xl font-bold " + toneText}>{value}</p>

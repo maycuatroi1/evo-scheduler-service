@@ -32,7 +32,7 @@ export default function LoginPage() {
     <div className="w-full max-w-sm space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-foreground">Đăng nhập</h2>
-        <p className="mt-1 text-sm text-foreground/60">
+        <p className="mt-1 text-sm text-foreground-2">
           Đăng nhập để sử dụng EVO Scheduler.
         </p>
       </div>
@@ -76,7 +76,7 @@ export default function LoginPage() {
           {loading ? "Đang đăng nhập..." : "Đăng nhập"}
         </button>
       </form>
-      <p className="text-center text-xs text-foreground/60">
+      <p className="text-center text-xs text-foreground-2">
         Chưa có tài khoản?{" "}
         <Link
           href="/register"
