@@ -78,6 +78,8 @@ class BuildContext:
                 self.sessions_by_group.setdefault(grp, []).append(s)
         self.day_names = [ts.get("day_name", "") for ts in self.horizon]
         self.teacher_module_map = data.get("teacher_module_map", {})
+        self._homerooms = None
+        self._shifts = None
         # Buổi sid bắt đầu ở tiết t.
         self.start_lit = {}
         # Buổi sid dùng tài nguyên rcode.
@@ -127,6 +129,32 @@ class BuildContext:
 
     def morning_indices(self):
         return [i for i, ts in enumerate(self.horizon) if ts.get("is_morning")]
+
+    def homerooms_by_session(self):
+        """Mỗi buổi chạm tới những lớp văn hoá nào.
+
+        Một nhóm nghề có thể gộp nhiều lớp, nên trả về danh sách chứ không
+        phải một mã lớp. Buổi không gắn lớp văn hoá nào thì bỏ qua.
+        """
+        if self._homerooms is None:
+            out = {}
+            for s in self.sessions:
+                codes = s.get("homeroom_codes") or []
+                if codes:
+                    out[s["id"]] = list(codes)
+            self._homerooms = out
+        return self._homerooms
+
+    def shift_by_session(self):
+        """Ca mà mỗi buổi được phép rơi vào: morning, afternoon hoặc any."""
+        if self._shifts is None:
+            out = {}
+            for s in self.sessions:
+                shift = s.get("allowed_shift")
+                if shift in ("morning", "afternoon"):
+                    out[s["id"]] = shift
+            self._shifts = out
+        return self._shifts
 
     def covers(self, start_t, duration):
         return list(range(start_t, start_t + duration))

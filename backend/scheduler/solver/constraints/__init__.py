@@ -10,6 +10,10 @@ from scheduler.solver.constraints import (
     teacher_no_overlap,
     student_no_overlap,
     shared_resource_pool,
+    group_same_class,
+    shift_by_grade,
+    capacity_by_type,
+    offsite_no_room,
 )
 
 RULE_MODULES = {
@@ -24,6 +28,10 @@ RULE_MODULES = {
     "teacher_no_overlap": teacher_no_overlap,
     "student_no_overlap": student_no_overlap,
     "shared_resource_pool": shared_resource_pool,
+    "group_same_class": group_same_class,
+    "shift_by_grade": shift_by_grade,
+    "capacity_by_type": capacity_by_type,
+    "offsite_no_room": offsite_no_room,
 }
 
 __all__ = ["RULE_MODULES", "apply_rule"]

@@ -221,6 +221,12 @@ def _build_variables(ctx):
         )
         ctx.start_day[sid] = sd_var
 
+        # Buổi thực tập và buổi ngoài trường chặn lớp nhưng không chiếm
+        # phòng nào, nên không dựng biến chọn phòng cho chúng. Nếu vẫn ép
+        # AddExactlyOne thì mô hình sẽ vô nghiệm dù thực tế không cần phòng.
+        if not s.get("consumes_resources", True):
+            continue
+
         res_lits = []
         for rcode in candidates:
             lit = model.NewBoolVar(f"r_{sid}_{rcode}")

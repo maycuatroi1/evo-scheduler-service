@@ -46,6 +46,35 @@ CROSS_TIER_RULES = [
         "weight": 1,
         "active": True,
     },
+    # Ràng buộc đặc thù trường nghề — luôn áp, không cần khai báo
+    {
+        "id": -103,
+        "type": "group_same_class",
+        "hardness": "hard",
+        "weight": 1,
+        "active": True,
+    },
+    {
+        "id": -104,
+        "type": "shift_by_grade",
+        "hardness": "hard",
+        "weight": 1,
+        "active": True,
+    },
+    {
+        "id": -105,
+        "type": "offsite_no_room",
+        "hardness": "hard",
+        "weight": 1,
+        "active": True,
+    },
+    {
+        "id": -106,
+        "type": "capacity_by_type",
+        "hardness": "hard",
+        "weight": 1,
+        "active": True,
+    },
 ]
 
 @dataclass
@@ -152,7 +181,58 @@ def _session_dict(session) -> dict:
         "is_locked": bool(getattr(session, "is_locked", False)),
         "assigned_timeslot": ats,
         "assigned_resource_code": getattr(res, "code", None) if res else None,
+        # Các lớp văn hoá mà buổi này chạm tới. Nhóm nghề gộp nhiều lớp thì
+        # danh sách có nhiều phần tử; nhóm không thuộc hệ 9+ thì rỗng.
+        "homeroom_codes": _homeroom_codes(group),
+        # Ca được phép, suy từ ca văn hoá của lớp gốc.
+        "allowed_shift": _allowed_shift(session, group),
+        "hazardous": bool(getattr(group, "hazardous", False)) if group else False,
+        "consumes_resources": _consumes(session),
     }
+
+
+def _homeroom_codes(group):
+    if group is None:
+        return []
+    try:
+        return [h.code for h in group.homerooms.all()]
+    except Exception:
+        return []
+
+
+def _allowed_shift(session, group):
+    """Buổi văn hoá theo ca của lớp; buổi nghề theo ca bù.
+
+    Lớp học cả ngày (khối 12) không bị giới hạn ca cho phần văn hoá.
+    """
+    if group is None:
+        return "any"
+    try:
+        homes = list(group.homerooms.all())
+    except Exception:
+        return "any"
+    if not homes:
+        return "any"
+    shifts = set()
+    tier = getattr(session, "tier", None)
+    for h in homes:
+        if tier == "culture":
+            shifts.add(h.culture_shift)
+        else:
+            shifts.add(h.vocational_shift())
+    if len(shifts) != 1:
+        return "any"
+    only = shifts.pop()
+    if only == "full_day":
+        return "any"
+    return "morning" if only == "morning" else "afternoon"
+
+
+def _consumes(session):
+    try:
+        return bool(session.consumes_resources())
+    except Exception:
+        return True
 
 
 def _locked_phantom(session, target_horizon) -> Optional[dict]:
