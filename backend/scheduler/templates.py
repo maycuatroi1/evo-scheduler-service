@@ -8,7 +8,8 @@ from scheduler.excel_parser import ALL_SHEET_NAMES
 
 SHEET_HEADERS = {
     "Teachers": ["Mã GV", "Họ tên", "Khối", "Định mức"],
-    "StudentGroups": ["Mã LH", "Tên LH", "Loại hình", "Sĩ số"],
+    "StudentGroups": ["Mã LH", "Tên LH", "Loại hình", "Sĩ số", "Lớp văn hoá", "Nghề", "Độc hại"],
+    "Homerooms": ["Mã lớp", "Tên lớp", "Khối", "Sĩ số", "Ca văn hoá", "Phòng"],
     "Resources": ["Mã TB", "Tên TB", "Loại", "Sức chứa", "Số lượng", "Còn lại"],
     "Modules": ["Mã MH", "Tên MH", "Lý thuyết", "Thực hành", "Mã LH"],
     "TeacherModule": ["Mã GV", "Mã MH"],
@@ -23,7 +24,8 @@ SHEET_HEADERS = {
 
 SHEET_LABELS = {
     "Teachers": "Giáo viên",
-    "StudentGroups": "Lớp học",
+    "StudentGroups": "Nhóm nghề",
+    "Homerooms": "Lớp văn hoá",
     "Resources": "Thiết bị",
     "Modules": "Môn học",
     "TeacherModule": "GV - Môn học",
@@ -37,8 +39,15 @@ EXAMPLE_ROWS = {
         ["GV002", "Trần Thị Bình", "Nghề", 16],
     ],
     "StudentGroups": [
-        ["LH001", "Lớp 10A1", "Song bằng", 30],
-        ["LH002", "Lớp 11B2", "Cao đẳng", 25],
+        ["G1", "CNKT Điều khiển tự động", "Song bằng", 16, "11A3", "CNKT Điều khiển tự động", ""],
+        ["G4", "Thiết kế nội thất", "Song bằng", 17, "11A3", "Thiết kế nội thất", ""],
+        ["M3", "KT lắp đặt điện", "Song bằng", 44, "12A1 + 12A4", "KT lắp đặt điện", ""],
+        ["LH002", "Lớp 11B2", "Cao đẳng", 25, "", "", ""],
+    ],
+    "Homerooms": [
+        ["11A3", "Lớp 11A3", 11, 63, "Chiều", ""],
+        ["12A1", "Lớp 12A1", 12, 30, "Cả ngày", ""],
+        ["12A4", "Lớp 12A4", 12, 14, "Cả ngày", ""],
     ],
     "Resources": [
         ["P101", "Phòng Lý thuyết 101", "Phòng lý thuyết", 40, 1, 1],

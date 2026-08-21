@@ -13,7 +13,7 @@ SHEET_NAMES = [
 ]
 
 # Sheet không bắt buộc: thiếu thì giữ nguyên cấu hình đang có, không cảnh báo.
-OPTIONAL_SHEET_NAMES = ["Config"]
+OPTIONAL_SHEET_NAMES = ["Config", "Homerooms"]
 
 ALL_SHEET_NAMES = SHEET_NAMES + OPTIONAL_SHEET_NAMES
 
@@ -25,9 +25,34 @@ SHEET_ALIASES = {
     "TeacherModule": ["TeacherModule", "GVMH", "GV-MH", "GV - Môn học", "GV - Mon hoc", "GV - Môn"],
     "FixedSessions": ["FixedSessions", "TietCoDinh", "Tiết cố định", "Tiet co dinh", "Sessions", "BuoiHoc", "Session"],
     "Config": ["Config", "CauHinh", "Cấu hình", "Cau hinh", "ThoiKhoaBieu", "Thời khoá biểu", "Khung giờ"],
+    "Homerooms": [
+        "Homerooms",
+        "LopVanHoa",
+        "Lớp văn hoá",
+        "Lop van hoa",
+        "Lớp văn hóa",
+        "LopVH",
+        "Homeroom",
+    ],
 }
 
 FIELD_ALIASES = {
+    "Homerooms": {
+        "code": ["Ma lop", "Mã lớp", "Ma LVH", "Mã LVH", "code", "malop"],
+        "name": ["Ten lop", "Tên lớp", "name", "tenlop", "ten"],
+        "grade": ["Khoi", "Khối", "grade", "khoi", "khoi lop"],
+        "size": ["Si so", "Sĩ số", "size", "siso"],
+        "culture_shift": [
+            "Ca van hoa",
+            "Ca văn hoá",
+            "Ca văn hóa",
+            "culture_shift",
+            "cavanhoa",
+            "Buoi hoc van hoa",
+            "Buổi học văn hoá",
+        ],
+        "room": ["Phong", "Phòng", "room", "phong", "Ma phong", "Mã phòng"],
+    },
     "Teachers": {
         "code": ["Ma GV", "Mã GV", "code", "magv", "codegv", "teacher_code"],
         "name": ["Ho ten", "Họ tên", "name", "hoten", "tengv", "ten"],
@@ -71,6 +96,26 @@ FIELD_ALIASES = {
             "loai hinh",
         ],
         "size": ["Si so", "Sĩ số", "size", "siso", "soluonghs"],
+        # Nhóm nghề gộp nhiều lớp thì liệt kê cách nhau bởi dấu phẩy hoặc
+        # dấu cộng: "12A1 + 12A4". Để trống nếu nhóm không thuộc hệ 9+.
+        "homeroom_codes": [
+            "Lop van hoa",
+            "Lớp văn hoá",
+            "Lớp văn hóa",
+            "homeroom_codes",
+            "lopvanhoa",
+            "Ma lop VH",
+            "Mã lớp VH",
+        ],
+        "occupation": ["Nghe", "Nghề", "occupation", "nghe", "Ten nghe", "Tên nghề"],
+        "hazardous": [
+            "Doc hai",
+            "Độc hại",
+            "hazardous",
+            "dochai",
+            "Nang nhoc doc hai",
+            "Nặng nhọc độc hại",
+        ],
     },
     "Resources": {
         "code": [
@@ -275,12 +320,17 @@ def to_list(value):
     if isinstance(value, (list, tuple)):
         return [to_str(v) for v in value if to_str(v)]
     if isinstance(value, str):
-        parts = value.replace(";", ",").split(",")
+        # Thời khoá biểu của trường ghi nhóm gộp là "12A1 + 12A4", nên
+        # tách cả dấu cộng chứ không chỉ dấu phẩy.
+        parts = value.replace(";", ",").replace("+", ",").split(",")
         return [p.strip() for p in parts if p.strip()]
     return [to_str(value)]
 
 
 ENUM_LABELS = {
+    "morning": ["Sáng", "Buổi sáng", "Ca sáng"],
+    "afternoon": ["Chiều", "Buổi chiều", "Ca chiều"],
+    "full_day": ["Cả ngày", "Cả hai buổi", "Sáng và chiều"],
     "culture": ["Văn hóa", "Khối văn hóa"],
     "vocational": ["Nghề", "Khối nghề"],
     "both": ["Cả hai"],
@@ -298,7 +348,14 @@ for _code, _labels in ENUM_LABELS.items():
     for _lbl in [_code, _code.replace("_", ""), _code.replace("_", " ")] + _labels:
         ENUM_NORMALIZED[normalize(_lbl)] = _code
 
-ENUM_FIELDS = ("blocks", "enrollment_type", "type", "session_type", "tier")
+ENUM_FIELDS = (
+    "blocks",
+    "enrollment_type",
+    "type",
+    "session_type",
+    "tier",
+    "culture_shift",
+)
 
 
 def _canonical_enum(raw):

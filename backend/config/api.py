@@ -17,6 +17,7 @@ from scheduler import excel_parser, horizon, templates, validator
 from scheduler.accounts import hash_password, mint_token, verify_password
 from scheduler.auth import tenant_auth
 from scheduler.models import (
+    HomeroomClass,
     Module,
     Resource,
     Schedule,
@@ -787,6 +788,17 @@ def import_commit(request, file: UploadedFile = File(...), mode: str = "merge"):
     return JsonResponse({"created": created, "issues": issues}, status=201)
 
 
+def _truthy(value):
+    """Ô Excel đánh dấu có/không: nhận cả x, có, 1, true."""
+    if value is None:
+        return False
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    return str(value).strip().lower() in ("x", "co", "có", "1", "true", "yes", "y")
+
+
 def _persist(parsed, tenant, mode="merge"):
     from scheduler.excel_parser import to_int, to_list, to_str
 
@@ -794,9 +806,11 @@ def _persist(parsed, tenant, mode="merge"):
     student_groups = {}
     resources = {}
     modules = {}
+    homerooms = {}
     created = {
         "teachers": 0,
         "student_groups": 0,
+        "homerooms": 0,
         "resources": 0,
         "modules": 0,
         "teacher_modules": 0,
@@ -821,6 +835,7 @@ def _persist(parsed, tenant, mode="merge"):
             Module.objects.filter(tenant=tenant).delete()
             Resource.objects.filter(tenant=tenant).delete()
             StudentGroup.objects.filter(tenant=tenant).delete()
+            HomeroomClass.objects.filter(tenant=tenant).delete()
             Teacher.objects.filter(tenant=tenant).delete()
             created["deleted_all"] = True
         else:
@@ -833,6 +848,9 @@ def _persist(parsed, tenant, mode="merge"):
                 {r.code: r for r in Resource.objects.filter(tenant=tenant)}
             )
             modules.update({m.code: m for m in Module.objects.filter(tenant=tenant)})
+            homerooms.update(
+                {h.code: h for h in HomeroomClass.objects.filter(tenant=tenant)}
+            )
             created["updated"] = 0
 
         for r in parsed["Teachers"]:
@@ -856,6 +874,32 @@ def _persist(parsed, tenant, mode="merge"):
             else:
                 created["updated"] = created.get("updated", 0) + 1
 
+        # Lớp văn hoá phải ghi trước nhóm nghề vì nhóm tham chiếu tới lớp.
+        for r in parsed.get("Homerooms") or []:
+            code = to_str(r.get("code"))
+            if not code:
+                continue
+            shift = to_str(r.get("culture_shift")).lower() or "morning"
+            if shift not in ("morning", "afternoon", "full_day"):
+                shift = "morning"
+            room_code = to_str(r.get("room"))
+            hr, made = HomeroomClass.objects.update_or_create(
+                tenant=tenant,
+                code=code,
+                defaults={
+                    "name": to_str(r.get("name")),
+                    "grade": to_int(r.get("grade")),
+                    "size": to_int(r.get("size")) or 0,
+                    "culture_shift": shift,
+                    "room": resources.get(room_code) if room_code else None,
+                },
+            )
+            homerooms[code] = hr
+            if made:
+                created["homerooms"] += 1
+            else:
+                created["updated"] = created.get("updated", 0) + 1
+
         for r in parsed["StudentGroups"]:
             code = to_str(r.get("code"))
             sg, made = StudentGroup.objects.update_or_create(
@@ -865,9 +909,20 @@ def _persist(parsed, tenant, mode="merge"):
                     "name": to_str(r.get("name")),
                     "enrollment_type": to_str(r.get("enrollment_type")).lower(),
                     "size": to_int(r.get("size")) or 0,
+                    "occupation": to_str(r.get("occupation")),
+                    "hazardous": _truthy(r.get("hazardous")),
                 },
             )
             student_groups[code] = sg
+            # Một nhóm nghề có thể gộp nhiều lớp văn hoá: "12A1 + 12A4"
+            hr_codes = to_list(r.get("homeroom_codes"))
+            if hr_codes:
+                linked = [homerooms[c] for c in hr_codes if c in homerooms]
+                if linked:
+                    sg.homerooms.set(linked)
+                    created["homeroom_links"] = created.get(
+                        "homeroom_links", 0
+                    ) + len(linked)
             if made:
                 created["student_groups"] += 1
             else:

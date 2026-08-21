@@ -375,3 +375,149 @@ class ImportModeTests(TestCase):
             HTTP_AUTHORIZATION="Bearer " + mint_token(u),
         )
         self.assertIn(r.status_code, (400, 422))
+
+
+class ImportHomeroomTests(TestCase):
+    """Nhập lớp văn hoá và quan hệ tách/gộp nhóm từ Excel."""
+
+    def setUp(self):
+        self.tenant = Tenant.objects.create(code="T", name="T")
+
+    def _parsed(self, homerooms=None, groups=None):
+        return {
+            "Teachers": [],
+            "StudentGroups": groups or [],
+            "Resources": [],
+            "Modules": [],
+            "TeacherModule": [],
+            "FixedSessions": [],
+            "Config": [],
+            "Homerooms": homerooms or [],
+        }
+
+    def test_nhap_lop_van_hoa(self):
+        from config.api import _persist
+
+        r = _persist(
+            self._parsed(
+                homerooms=[
+                    {"code": "11A3", "name": "Lop 11A3", "grade": 11,
+                     "size": 63, "culture_shift": "afternoon"}
+                ]
+            ),
+            self.tenant,
+        )
+        self.assertEqual(r["homerooms"], 1)
+        h = HomeroomClass.objects.get(tenant=self.tenant, code="11A3")
+        self.assertEqual(h.grade, 11)
+        self.assertEqual(h.culture_shift, "afternoon")
+        self.assertEqual(h.vocational_shift(), "morning")
+
+    def test_lop_tach_ba_nhom_nghe(self):
+        """Dữ liệu thật: 11A3 tách ba nhóm 16/17/30."""
+        from config.api import _persist
+
+        _persist(
+            self._parsed(
+                homerooms=[{"code": "11A3", "size": 63, "culture_shift": "afternoon"}],
+                groups=[
+                    {"code": "G1", "name": "CNKT DKTD", "enrollment_type": "dual_degree",
+                     "size": 16, "homeroom_codes": "11A3"},
+                    {"code": "G4", "name": "TK noi that", "enrollment_type": "dual_degree",
+                     "size": 17, "homeroom_codes": "11A3"},
+                    {"code": "G5", "name": "CN o to 1", "enrollment_type": "dual_degree",
+                     "size": 30, "homeroom_codes": "11A3"},
+                ],
+            ),
+            self.tenant,
+        )
+        h = HomeroomClass.objects.get(tenant=self.tenant, code="11A3")
+        self.assertEqual(h.groups.count(), 3)
+        self.assertEqual(sum(g.size for g in h.groups.all()), 63)
+
+    def test_nhieu_lop_gop_mot_nhom_bang_dau_cong(self):
+        """TKB của trường ghi nhóm gộp là '12A1 + 12A4'."""
+        from config.api import _persist
+
+        r = _persist(
+            self._parsed(
+                homerooms=[
+                    {"code": "12A1", "size": 30, "culture_shift": "full_day"},
+                    {"code": "12A4", "size": 14, "culture_shift": "full_day"},
+                ],
+                groups=[
+                    {"code": "M3", "name": "KT lap dat dien",
+                     "enrollment_type": "dual_degree", "size": 44,
+                     "homeroom_codes": "12A1 + 12A4"},
+                ],
+            ),
+            self.tenant,
+        )
+        self.assertEqual(r.get("homeroom_links"), 2)
+        g = StudentGroup.objects.get(tenant=self.tenant, code="M3")
+        self.assertEqual(
+            sorted(h.code for h in g.homerooms.all()), ["12A1", "12A4"]
+        )
+
+    def test_nhan_nhan_tieng_viet_cho_ca_hoc(self):
+        """Nhãn tiếng Việt trong file Excel được quy về mã chuẩn."""
+        from scheduler.excel_parser import _canonical_enum
+
+        self.assertEqual(_canonical_enum("Sáng"), "morning")
+        self.assertEqual(_canonical_enum("Buổi chiều"), "afternoon")
+        self.assertEqual(_canonical_enum("Cả ngày"), "full_day")
+
+    def test_nghe_doc_hai_nhan_dau_x(self):
+        from config.api import _persist
+
+        _persist(
+            self._parsed(
+                groups=[
+                    {"code": "G9", "name": "Han", "enrollment_type": "dual_degree",
+                     "size": 25, "hazardous": "x"},
+                ]
+            ),
+            self.tenant,
+        )
+        g = StudentGroup.objects.get(tenant=self.tenant, code="G9")
+        self.assertTrue(g.hazardous)
+
+    def test_nhom_khong_thuoc_he_9cong_thi_khong_lien_ket(self):
+        from config.api import _persist
+
+        _persist(
+            self._parsed(
+                groups=[
+                    {"code": "CD1", "name": "Cao dang", "enrollment_type": "college",
+                     "size": 20, "homeroom_codes": ""},
+                ]
+            ),
+            self.tenant,
+        )
+        g = StudentGroup.objects.get(tenant=self.tenant, code="CD1")
+        self.assertEqual(g.homerooms.count(), 0)
+
+    def test_file_cu_khong_co_sheet_lop_van_hoa_van_nhap_duoc(self):
+        """Sheet mới là tuỳ chọn nên file mẫu cũ vẫn dùng được."""
+        from config.api import _persist
+
+        parsed = self._parsed(
+            groups=[
+                {"code": "G1", "name": "G1", "enrollment_type": "dual_degree", "size": 20}
+            ]
+        )
+        del parsed["Homerooms"]
+        r = _persist(parsed, self.tenant)
+        self.assertEqual(r["student_groups"], 1)
+        self.assertEqual(r["homerooms"], 0)
+
+    def test_file_mau_co_sheet_lop_van_hoa(self):
+        import io
+
+        from openpyxl import load_workbook
+
+        from scheduler.templates import generate_template
+
+        wb = load_workbook(io.BytesIO(generate_template()))
+        self.assertIn("Lớp văn hoá", wb.sheetnames)
+        self.assertIn("Nhóm nghề", wb.sheetnames)
