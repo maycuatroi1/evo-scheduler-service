@@ -365,6 +365,7 @@ def _solve_tier(
     max_time_seconds,
     seed,
     verbose,
+    should_stop=None,
 ) -> SolveResult:
     if not session_dicts:
         return SolveResult(status="UNKNOWN", objective_value=0.0, solver_log="no sessions")
@@ -375,6 +376,7 @@ def _solve_tier(
         seed=seed,
         verbose=verbose,
         weights=weights,
+        should_stop=should_stop,
     )
 
 
@@ -436,6 +438,7 @@ def orchestrate(
     seed: int = DEFAULT_SEED,
     verbose: bool = False,
     weights: Optional[dict] = None,
+    should_stop=None,
 ) -> OrchestratorResult:
     tenant = tenant or schedule.tenant
     tier_mode = _tenant_tier_mode(tenant)
@@ -475,6 +478,7 @@ def orchestrate(
                 max_time_seconds,
                 seed,
                 verbose,
+                should_stop,
             )
             culture_by_id = {s.id: s for s in culture_sessions}
             _persist_assignments(
@@ -518,6 +522,7 @@ def orchestrate(
                 max_time_seconds,
                 seed,
                 verbose,
+                should_stop,
             )
             voc_by_id = {s.id: s for s in vocational_sessions}
             voc_assignments = [
@@ -560,6 +565,7 @@ def orchestrate(
                 max_time_seconds,
                 seed,
                 verbose,
+                should_stop,
             )
             sessions_by_id = {s.id: s for s in all_sessions}
             _persist_assignments(

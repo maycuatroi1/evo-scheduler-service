@@ -393,6 +393,41 @@ def _new_solver(limit, seed, verbose):
     return solver
 
 
+class _StopWhenAsked(cp_model.CpSolverSolutionCallback):
+    """Dừng bộ giải khi người dùng bấm Dừng, nhưng giữ nghiệm đã tìm được.
+
+    CP-SAT chỉ kiểm tra được yêu cầu dừng mỗi khi tìm ra một nghiệm mới,
+    nên lệnh dừng có độ trễ tới nghiệm kế tiếp. Đó là đánh đổi chấp nhận
+    được: dừng ngay giữa chừng mà chưa có nghiệm nào thì cũng không dùng
+    được kết quả.
+    """
+
+    def __init__(self, should_stop):
+        super().__init__()
+        self._should_stop = should_stop
+        self.stopped = False
+        self.solutions = 0
+
+    def on_solution_callback(self):
+        self.solutions += 1
+        try:
+            if self._should_stop():
+                self.stopped = True
+                self.StopSearch()
+        except Exception:
+            # Lỗi khi hỏi trạng thái dừng không được làm hỏng lần giải
+            pass
+
+
+def _run(solver, model, should_stop):
+    """Gọi bộ giải, gắn callback dừng nếu có."""
+    if should_stop is None:
+        return solver.StatusName(solver.Solve(model)), None
+    cb = _StopWhenAsked(should_stop)
+    status = solver.StatusName(solver.Solve(model, cb))
+    return status, cb
+
+
 def _hint_from(model, ctx, source_ctx, solver):
     """Chép nghiệm của mô hình khả thi sang mô hình có hàm mục tiêu."""
     pairs = (
@@ -407,7 +442,16 @@ def _hint_from(model, ctx, source_ctx, solver):
                 model.AddHint(target, 1)
 
 
-def _solve_in_two_phases(data, model, ctx, objective_terms, max_time_seconds, seed, verbose):
+def _solve_in_two_phases(
+    data,
+    model,
+    ctx,
+    objective_terms,
+    max_time_seconds,
+    seed,
+    verbose,
+    should_stop=None,
+):
     """Tìm một phương án khả thi trước, rồi mới tối ưu từ chính phương án đó.
 
     Trên dữ liệu thật, gắn hàm mục tiêu ngay từ đầu khiến bộ giải hết giờ mà
@@ -419,16 +463,21 @@ def _solve_in_two_phases(data, model, ctx, objective_terms, max_time_seconds, se
     total = float(max_time_seconds)
     if not objective_terms:
         solver = _new_solver(total, seed, verbose)
-        status = solver.StatusName(solver.Solve(model))
+        status, _cb = _run(solver, model, should_stop)
         return solver, ctx, status, float(solver.WallTime())
 
     feas_model, feas_ctx, _, _, _, _ = _assemble(data, ZERO_WEIGHTS, with_objective=False)
     first = _new_solver(total, seed, verbose)
-    first_status = first.StatusName(first.Solve(feas_model))
+    first_status, first_cb = _run(first, feas_model, should_stop)
     elapsed = float(first.WallTime())
     if first_status not in ("OPTIMAL", "FEASIBLE"):
         # Vô nghiệm hoặc hết giờ ở pha một thì hàm mục tiêu cũng không cứu được.
         return first, feas_ctx, first_status, elapsed
+
+    # Người dùng đã bấm Dừng ở pha một: giữ nghiệm khả thi vừa tìm được,
+    # không tốn thêm thời gian cho pha tối ưu.
+    if first_cb is not None and first_cb.stopped:
+        return first, feas_ctx, "FEASIBLE", elapsed
 
     _hint_from(model, ctx, feas_ctx, first)
     model.Minimize(sum(objective_terms))
@@ -436,7 +485,7 @@ def _solve_in_two_phases(data, model, ctx, objective_terms, max_time_seconds, se
     if remaining < 1.0:
         return first, feas_ctx, "FEASIBLE", elapsed
     second = _new_solver(remaining, seed, verbose)
-    second_status = second.StatusName(second.Solve(model))
+    second_status, _cb2 = _run(second, model, should_stop)
     elapsed += float(second.WallTime())
     if second_status in ("OPTIMAL", "FEASIBLE"):
         return second, ctx, second_status, elapsed
@@ -444,7 +493,7 @@ def _solve_in_two_phases(data, model, ctx, objective_terms, max_time_seconds, se
     return first, feas_ctx, "FEASIBLE", elapsed
 
 
-def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAULT_SEED, verbose=False, persist_callback=None, weights=None, skip_preflight=False):
+def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAULT_SEED, verbose=False, persist_callback=None, weights=None, skip_preflight=False, should_stop=None):
     if not data.get("sessions"):
         return SolveResult(status="UNKNOWN", objective_value=0.0, solver_log="no sessions")
     issues = [] if skip_preflight else feasibility.check(data)
@@ -468,7 +517,14 @@ def build_and_solve(data, max_time_seconds=DEFAULT_MAX_TIME_SECONDS, seed=DEFAUL
         )
     num_constraints = len(model.Proto().constraints)
     solver, ctx, status_name, wall_time = _solve_in_two_phases(
-        data, model, ctx, objective_terms, max_time_seconds, seed, verbose
+        data,
+        model,
+        ctx,
+        objective_terms,
+        max_time_seconds,
+        seed,
+        verbose,
+        should_stop=should_stop,
     )
     result = SolveResult(
         status=status_name,

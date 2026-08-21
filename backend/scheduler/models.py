@@ -566,6 +566,7 @@ class SolveJob(models.Model):
         SOLVING = "solving", "Solving"
         SOLVED = "solved", "Solved"
         FAILED = "failed", "Failed"
+        STOPPED = "stopped", "Đã dừng"
 
     class Phase(models.TextChoices):
         BUILDING_MODEL = "building_model", "Building Model"
@@ -592,6 +593,10 @@ class SolveJob(models.Model):
     objective_value = models.FloatField(null=True, blank=True)
     error = models.TextField(blank=True, default="")
     metrics_json = models.JSONField(default=dict, blank=True)
+    stop_requested = models.BooleanField(
+        default=False,
+        help_text="Người dùng đã bấm Dừng; bộ giải dừng ở nghiệm kế tiếp",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

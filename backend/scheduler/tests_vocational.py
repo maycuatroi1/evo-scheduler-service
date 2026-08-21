@@ -373,3 +373,47 @@ class TeacherLimitTests(VocationalConstraintTests):
             res.status, ("OPTIMAL", "FEASIBLE"),
             "Ràng buộc mềm mâu thuẫn vẫn phải ra được lịch",
         )
+
+
+class StopSolverTests(VocationalConstraintTests):
+    """FR-6.6: bấm Dừng thì bộ giải trả về nghiệm đang có, không báo lỗi."""
+
+    def test_dung_ngay_nghiem_dau_tien_van_co_ket_qua(self):
+        sessions = [self._session(i, "G%d" % i) for i in range(1, 6)]
+        data = self._data(sessions)
+        data["rules"] = [
+            {"id": -1, "type": "preference", "hardness": "soft", "weight": 1}
+        ]
+        res = engine.build_and_solve(
+            data,
+            max_time_seconds=10,
+            skip_preflight=True,
+            should_stop=lambda: True,
+        )
+        self.assertIn(res.status, ("OPTIMAL", "FEASIBLE"))
+        self.assertEqual(len(res.assignments), len(sessions))
+
+    def test_khong_bam_dung_thi_chay_binh_thuong(self):
+        sessions = [self._session(i, "G%d" % i) for i in range(1, 4)]
+        res = engine.build_and_solve(
+            self._data(sessions),
+            max_time_seconds=10,
+            skip_preflight=True,
+            should_stop=lambda: False,
+        )
+        self.assertIn(res.status, ("OPTIMAL", "FEASIBLE"))
+        self.assertEqual(len(res.assignments), len(sessions))
+
+    def test_loi_trong_ham_kiem_tra_khong_lam_vo_bo_giai(self):
+        """Mất kết nối CSDL giữa chừng không được làm hỏng cả phiên chạy."""
+
+        def _no(): raise RuntimeError("mat ket noi")
+
+        sessions = [self._session(1, "G1")]
+        res = engine.build_and_solve(
+            self._data(sessions),
+            max_time_seconds=10,
+            skip_preflight=True,
+            should_stop=_no,
+        )
+        self.assertIn(res.status, ("OPTIMAL", "FEASIBLE"))

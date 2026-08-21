@@ -76,6 +76,11 @@ def solve_schedule(self, schedule_id, config=None):
 
         from scheduler.solver.orchestrator import orchestrate
 
+        # Hỏi lại cơ sở dữ liệu mỗi khi bộ giải tìm được nghiệm mới, để
+        # biết người dùng đã bấm Dừng chưa. Chỉ đọc một cột nên rẻ.
+        def _stop_requested():
+            return SolveJob.objects.filter(id=job.id, stop_requested=True).exists()
+
         result = orchestrate(
             schedule,
             max_time_seconds=float(
@@ -83,10 +88,26 @@ def solve_schedule(self, schedule_id, config=None):
             ),
             seed=int(config.get("seed") or DEFAULT_SEED),
             verbose=bool(config.get("verbose", False)),
+            should_stop=_stop_requested,
         )
 
         _save_job(job, phase=PHASE_POST_PROCESSING, progress=85)
         metrics = _metrics(result)
+
+        # Người dùng bấm Dừng: kết quả vẫn dùng được nên báo là đã dừng
+        # chứ không phải thất bại.
+        job.refresh_from_db(fields=["stop_requested"])
+        if job.stop_requested:
+            _save_job(
+                job,
+                status=SolveJob.Status.STOPPED,
+                phase=None,
+                progress=100,
+                objective_value=float(result.objective_value or 0.0),
+                metrics_json=metrics,
+                error="",
+            )
+            return {"status": "stopped", "schedule_id": schedule.id}
 
         if result.status == Schedule.Status.SOLVED:
             _save_job(
