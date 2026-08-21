@@ -452,7 +452,7 @@ Văn hoá xếp ở lớp 2 vì **không tranh xưởng** — chỉ dùng phòng
 | FR-6.3 | Xếp hai khối tuần tự: văn hoá trước, khoá lại, rồi xếp nghề tránh các tiết đã khoá | **[ĐÃ CÓ]** |
 | FR-6.4 | Tự động phân công giáo viên khi buổi học chưa có người dạy | **[ĐÃ CÓ]** |
 | FR-6.5 | Giữ nghiệm pha 1 khi pha 2 hết giờ | **[ĐÃ CÓ]** |
-| FR-6.6 | **Dừng bộ giải giữa chừng** | **[THIẾU]** — FTKB có nút "Dừng" |
+| FR-6.6 | **Dừng bộ giải giữa chừng** | **[ĐÃ CÓ]** — giữ lại phương án đã tìm được; độ trễ tới nghiệm kế tiếp |
 | FR-6.7 | **Xếp trước (ghim tiết)**: ghim Chào cờ, Sinh hoạt, tiết không học, tiết GVCN, hoặc một mô-đun cụ thể vào ô cố định trước khi chạy. Phạm vi áp dụng: toàn trường / theo khối / theo nhóm | **[ĐỀ XUẤT]** |
 | FR-6.8 | **Kế thừa lịch cũ** (xem §7.6): chọn phiên bản gốc → dò giáo viên có thay đổi phân công → chỉ xếp lại phần của họ, hạn chế xáo trộn tiết của người khác | **[ĐỀ XUẤT]** — tính năng khác biệt của FTKB, giá trị nhất khi sang học kỳ 2 |
 | FR-6.12 | **Độ ưu tiên ràng buộc** (Cao / Trung bình / Thấp) kèm trọng số 1–5 cho từng ràng buộc, theo 4 nhóm: giáo viên, nhóm giáo viên, môn học, phòng. Có nút khôi phục mặc định | **[ĐỀ XUẤT]** |
@@ -471,24 +471,24 @@ Văn hoá xếp ở lớp 2 vì **không tranh xưởng** — chỉ dùng phòng
 | FR-7.5 | Cảnh báo xung đột ngay khi rê chuột lên ô đích | **[ĐÃ CÓ]** |
 | FR-7.6 | Xem chi tiết buổi học trong hộp thoại | **[ĐÃ CÓ]** |
 | FR-7.7 | Thẻ thống kê: tổng tiết, đã xếp, văn hoá, nghề, xung đột | **[ĐÃ CÓ]** |
-| FR-7.8 | **Bốn phương pháp tinh chỉnh thủ công** (xem §7.5) | **[ĐỀ XUẤT]** |
-| FR-7.9 | **Khay tiết chờ xếp**: kéo tiết ra khỏi lưới, để đó, xếp lại sau; chỉ thả được vào ô trống | **[ĐỀ XUẤT]** |
-| FR-7.12 | **Bảng màu vi phạm** khi tinh chỉnh: xanh = đổi được, hồng nhạt = vi phạm ràng buộc, hồng đậm = trùng tiết (chặn), da cam = vi phạm "hạn chế xếp" | **[ĐỀ XUẤT]** |
+| FR-7.8 | **Bốn phương pháp tinh chỉnh thủ công** (xem §7.5) | **[ĐÃ CÓ MỘT PHẦN]** — cách 1, 3, 4 đã có; cách 2 (đổi vòng qua giáo viên trung gian) chưa |
+| FR-7.9 | **Khay tiết chờ xếp**: kéo tiết ra khỏi lưới, để đó, xếp lại sau; chỉ thả được vào ô trống | **[ĐÃ CÓ]** |
+| FR-7.12 | **Bảng màu vi phạm** khi tinh chỉnh: xanh = đổi được, hồng nhạt = vi phạm ràng buộc, hồng đậm = trùng tiết (chặn), da cam = vi phạm "hạn chế xếp" | **[ĐÃ CÓ]** — da cam hiện suy từ `days_off_per_week`; chưa có khai báo tiết cấm theo từng ô |
 | FR-7.13 | **Khôi phục TKB gốc** và **lùi từng bước** sau khi tinh chỉnh | **[ĐỀ XUẤT]** |
 | FR-7.14 | **Kiểm tra ràng buộc sau khi xếp**: bảng theo 4 nhóm (GV, nhóm GV, môn phổ biến, môn khác), tô xanh/đỏ theo thoả/vi phạm | **[ĐỀ XUẤT]** |
 | FR-7.15 | **Bảng giáo viên toàn tuần**: mỗi dòng một GV, mỗi cột một tiết, ô ghi nhóm đang dạy; lọc theo ca; hiện ô "Không dạy" theo ràng buộc; cột tổng tiết | **[ĐỀ XUẤT]** |
 | FR-7.16 | Lưu **mọi thao tác tinh chỉnh** tự động, quản lý theo phiên bản, đối chiếu được với phiên bản gốc | **[ĐỀ XUẤT]** |
 | FR-7.10 | Khoá/mở khoá từng tiết ngay trên lưới | **[THIẾU]** — `is_locked` có trong dữ liệu nhưng không bật/tắt được từ giao diện |
-| FR-7.11 | Phát hiện xung đột phải tính cả độ dài buổi học | **[THIẾU]** — hiện chỉ so tiết bắt đầu, bỏ sót chồng lấn của buổi nhiều tiết |
+| FR-7.11 | Phát hiện xung đột phải tính cả độ dài buổi học | **[ĐÃ CÓ]** — buổi được trải đủ số tiết trước khi so, mỗi cặp chỉ báo một lần |
 
 ### FR-8. Xuất bản và phân phối
 
 | Mã | Yêu cầu | Trạng thái |
 |---|---|---|
 | FR-8.1 | Xuất Excel hai sheet: lưới tổng và bảng chi tiết | **[ĐÃ CÓ]** |
-| FR-8.2 | **Xuất PDF** đúng mẫu TKB của trường (xem §9) | **[ĐỀ XUẤT]** |
+| FR-8.2 | **Xuất PDF** đúng mẫu TKB của trường (xem §9) | **[ĐÃ CÓ]** |
 | FR-8.3 | **Xuất bản chính thức**: chuyển trạng thái `published`, chốt phiên bản (giải quyết G-6) | **[THIẾU]** |
-| FR-8.4 | Cổng xem lịch cho giáo viên và sinh viên | **[ĐỀ XUẤT]** |
+| FR-8.4 | Cổng xem lịch cho giáo viên và sinh viên | **[ĐÃ CÓ]** — giáo viên tự nhận diện qua tài khoản; sinh viên phải chọn nhóm |
 | FR-8.5 | Chia sẻ lịch bằng đường dẫn công khai | **[ĐỀ XUẤT]** |
 | FR-8.6 | Thông báo khi lịch thay đổi | **[ĐỀ XUẤT]** |
 
@@ -501,7 +501,7 @@ Văn hoá xếp ở lớp 2 vì **không tranh xưởng** — chỉ dùng phòng
 | FR-9.3 | **Báo cáo tải giảng dạy** quy đổi đúng **giờ chuẩn** (45 phút LT = 1 giờ chuẩn; 60 phút TH = 1 giờ chuẩn), đối chiếu định mức năm (CĐ 380–450, TC 430–510) | **[ĐỀ XUẤT]** — cần G-13 |
 | FR-9.4 | **Báo cáo suất sử dụng phòng/xưởng** | **[ĐỀ XUẤT]** |
 | FR-9.5 | Báo cáo tiến độ thực hiện chương trình theo mô-đun, **tách riêng quỹ giờ văn hoá và quỹ giờ nghề** cho học sinh 9+ (BR-11) | **[ĐỀ XUẤT]** |
-| FR-9.6 | Báo cáo tỉ lệ lý thuyết/thực hành theo chương trình, đối chiếu ngưỡng quy định (CĐ: TH 50–70%; TC: TH 55–75%) | **[ĐỀ XUẤT]** |
+| FR-9.6 | Báo cáo tỉ lệ lý thuyết/thực hành theo chương trình, đối chiếu ngưỡng quy định (CĐ: TH 50–70%; TC: TH 55–75%) | **[ĐÃ CÓ]** — ngưỡng đặt trong `config_json.practice_ratio`, không mã hoá cứng |
 
 ---
 
