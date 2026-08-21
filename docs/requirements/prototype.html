@@ -169,6 +169,24 @@ input[type=range]{accent-color:var(--ng);width:110px}
 .sw-toggle[aria-pressed="true"]::after{transform:translateX(15px)}
 @media(prefers-reduced-motion:reduce){.sw-toggle::after,.bar i{transition:none}}
 
+.wizbar{display:flex;gap:0;background:var(--panel);border:1px solid var(--line);border-radius:7px;
+  box-shadow:var(--sh);overflow-x:auto;margin-bottom:15px}
+.wstep{flex:1;min-width:150px;display:flex;gap:9px;align-items:center;padding:11px 13px;background:none;
+  border:0;border-bottom:3px solid transparent;cursor:pointer;color:var(--ink2);text-align:left;font:inherit}
+.wstep:not(:last-child){border-right:1px solid var(--line)}
+.wstep:hover{background:var(--panel2);color:var(--ink)}
+.wstep.on{border-bottom-color:var(--ng);background:var(--ng-bg)}
+.wstep.done .wn{background:var(--ok);border-color:var(--ok);color:#fff}
+.wstep .wn{flex:none;width:23px;height:23px;border-radius:50%;border:1.5px solid var(--line2);
+  display:grid;place-items:center;font-family:"Roboto Mono",monospace;font-size:11px;font-weight:600;color:var(--ink3)}
+.wstep.on .wn{background:var(--ng);border-color:var(--ng);color:#fff}
+.wstep .wt{min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.wstep .wt b{font-size:13px;font-weight:600;white-space:nowrap}
+.wstep .wt i{font-style:normal;font-size:11px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wstep.on .wt b{color:var(--ng)}
+.wnav{display:flex;align-items:center;gap:10px;margin-top:15px;padding:12px 15px;background:var(--panel);
+  border:1px solid var(--line);border-radius:7px;box-shadow:var(--sh)}
+@media(max-width:880px){.wstep{min-width:118px;padding:9px}.wstep .wt i{display:none}}
 .scrim{position:fixed;inset:0;background:rgba(27,34,42,.5);z-index:60;display:none}.scrim.on{display:block}
 .dw{position:fixed;top:0;right:0;bottom:0;width:min(400px,94vw);background:var(--panel);border-left:1px solid var(--line2);z-index:61;transform:translateX(100%);transition:transform .2s;display:flex;flex-direction:column}
 .dw.on{transform:none}
@@ -199,13 +217,9 @@ input[type=range]{accent-color:var(--ng);width:110px}
   <div class="navg"><p>Vận hành</p>
     <a data-v="dash" class="on"><i>▤</i>Tổng quan</a>
     <a data-v="tkb"><i>▦</i>Thời khoá biểu<span class="cnt" id="nTkb">319</span></a>
-    <a data-v="kehoach"><i>⇉</i>Kế hoạch xếp<span class="cnt">4</span></a>
-    <a data-v="ghim"><i>📌</i>Xếp trước môn<span class="cnt" id="nGhim">3</span></a>
-    <a data-v="solve"><i>▶</i>Xếp lịch</a>
-    <a data-v="tinhchinh"><i>✋</i>Tinh chỉnh tay</a>
+    <a data-v="xeplich"><i>▶</i>Xếp thời khoá biểu<span class="cnt al" id="nChk">3</span></a>
     <a data-v="kethua"><i>♻</i>Kế thừa lịch cũ</a>
     <a data-v="banggv"><i>▥</i>Bảng giáo viên</a>
-    <a data-v="check"><i>⚑</i>Kiểm tra<span class="cnt al" id="nChk">3</span></a>
   </div>
   <div class="navg"><p>Dữ liệu</p>
     <a data-v="lop"><i>◫</i>Lớp &amp; nhóm nghề<span class="cnt" id="nLop">14</span></a>
@@ -313,7 +327,21 @@ input[type=range]{accent-color:var(--ng);width:110px}
   </section>
 
   <!-- ===== KẾ HOẠCH XẾP ===== -->
-  <section class="view" id="v-kehoach">
+    <!-- ===== XẾP THỜI KHOÁ BIỂU (5 bước) ===== -->
+  <section class="view" id="v-xeplich">
+    <div class="wizbar" id="wizBar">
+      <button class="wstep on" data-wz="kehoach">
+        <span class="wn">1</span><span class="wt"><b>Kế hoạch xếp</b><i>Đặt thứ tự các lớp sẽ xếp</i></span></button>
+      <button class="wstep" data-wz="ghim">
+        <span class="wn">2</span><span class="wt"><b>Xếp trước môn</b><i><span id="nGhim">3</span> tiết đã ghim</i></span></button>
+      <button class="wstep" data-wz="check">
+        <span class="wn">3</span><span class="wt"><b>Kiểm tra khả thi</b><i>Bắt mâu thuẫn trước khi chạy</i></span></button>
+      <button class="wstep" data-wz="solve">
+        <span class="wn">4</span><span class="wt"><b>Chạy bộ giải</b><i>Xếp tự động</i></span></button>
+      <button class="wstep" data-wz="tinhchinh">
+        <span class="wn">5</span><span class="wt"><b>Tinh chỉnh tay</b><i>Sửa thủ công sau khi xếp</i></span></button>
+    </div>
+    <div class="wpane" id="wp-kehoach">
     <div class="card">
       <div class="ch"><h3>Thứ tự xếp lịch</h3><span class="sp"></span>
         <span class="pill p-wn">Xếp theo lớp · khoá dần</span>
@@ -353,10 +381,8 @@ input[type=range]{accent-color:var(--ng);width:110px}
           </tbody></table></div>
       </div>
     </div>
-  </section>
-
-  <!-- ===== XẾP TRƯỚC MÔN HỌC ===== -->
-  <section class="view" id="v-ghim">
+  </div>
+    <div class="wpane" id="wp-ghim" style="display:none">
     <div class="card">
       <div class="ch"><h3>Xếp trước môn học</h3><span class="sp"></span>
         <span class="pill p-mu">Ghim trước khi chạy bộ giải</span>
@@ -382,10 +408,59 @@ input[type=range]{accent-color:var(--ng);width:110px}
       </div>
       <div class="lg"><span>Chào cờ thứ Hai 7h25 là sự kiện chặn toàn trường — bắt buộc ghim trước.</span></div>
     </div>
-  </section>
-
-  <!-- ===== TINH CHỈNH TAY ===== -->
-  <section class="view" id="v-tinhchinh">
+  </div>
+    <div class="wpane" id="wp-check" style="display:none">
+    <div class="card">
+      <div class="ch"><h3>Kiểm tra khả thi</h3><span class="sp"></span>
+        <span class="pill p-er" id="chkN">2 lỗi chặn</span><button class="btn" id="bChk">Kiểm tra lại</button></div>
+      <div class="cb">
+        <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">
+          <b class="mono" style="color:var(--err)">✕ Lỗi</b> phải sửa trước khi xếp — còn lỗi thì chắc chắn không ra được lịch.
+          <b class="mono" style="color:var(--wn)">! Cảnh báo</b> vẫn xếp được nhưng lịch sẽ kém.</p>
+        <div id="chkOut"></div>
+      </div>
+    </div>
+  </div>
+    <div class="wpane" id="wp-solve" style="display:none">
+    <div class="card">
+      <div class="ch"><h3>Chạy bộ giải</h3><span class="sp"></span>
+        <button class="btn pri" id="bRun">▶ Bắt đầu xếp</button>
+        <button class="btn" id="bStop" disabled>■ Dừng</button></div>
+      <div class="cb">
+        <p style="margin:0 0 13px;color:var(--ink2);font-size:13px">
+          Thường mất 2–10 phút. Có thể bấm <b>Dừng</b> bất cứ lúc nào — phương án đã tìm được vẫn giữ nguyên.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:13px">
+          <label class="fld"><span>Phạm vi xếp</span><select id="sScope">
+            <option>Theo kế hoạch · cả 4 lớp</option>
+            <option>Lớp 1 · Văn hoá theo khối</option>
+            <option selected>Lớp 2 · Nghề hệ song bằng 9+</option>
+            <option>Lớp 3 · TC thường + Cao đẳng</option>
+            <option>Một lớp cụ thể…</option></select></label>
+          <label class="fld"><span>Giới hạn thời gian</span><select id="sTime"><option>2 phút</option><option selected>5 phút</option><option>10 phút</option></select></label>
+          <label class="fld"><span>Giữ lịch cũ</span><select id="sKeep"><option>Có — chỉ xếp lại GV đổi phân công</option><option>Không — xếp mới hoàn toàn</option></select></label>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px">
+          <span id="sPhase">Sẵn sàng</span><span class="mono" id="sPct"></span></div>
+        <div class="bar" id="sBar"><i></i></div>
+        <div class="g2" style="margin-top:14px">
+          <div class="box nu" style="display:block"><b style="font-size:12.5px">Pha 1 · tìm phương án khả thi</b>
+            <div style="font-size:12px;color:var(--ink2);margin-top:3px">Bỏ hàm mục tiêu, dừng ngay khi có lời giải đầu tiên.</div>
+            <div style="margin-top:6px" id="sP1"><span class="pill p-mu">Chờ</span></div></div>
+          <div class="box nu" style="display:block"><b style="font-size:12.5px">Pha 2 · tối ưu</b>
+            <div style="font-size:12px;color:var(--ink2);margin-top:3px">Lấy nghiệm pha 1 làm gợi ý rồi tối ưu. Hết giờ vẫn giữ nghiệm pha 1.</div>
+            <div style="margin-top:6px" id="sP2"><span class="pill p-mu">Chờ</span></div></div>
+        </div>
+        <div id="sOut" style="margin-top:13px"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3>Lịch sử phiên chạy</h3></div>
+      <div class="cb t0"><table class="d">
+        <thead><tr><th>Phiên</th><th>Thời điểm</th><th>Trạng thái</th><th class="n">Đã xếp</th><th class="n">Mục tiêu</th><th></th></tr></thead>
+        <tbody id="tbHist"></tbody></table></div>
+    </div>
+  </div>
+    <div class="wpane" id="wp-tinhchinh" style="display:none">
     <div class="card">
       <div class="ch"><h3>Tinh chỉnh thủ công</h3><span class="sp"></span>
         <button class="btn sm" id="bBack1">↩ Lùi 1 bước</button>
@@ -439,7 +514,23 @@ input[type=range]{accent-color:var(--ng);width:110px}
         <thead><tr><th style="width:38px">STT</th><th>Đối tượng</th><th>Danh sách ràng buộc</th><th style="width:130px">Trạng thái</th></tr></thead>
         <tbody id="tbRbChk"></tbody></table></div>
     </div>
+  </div>
+    <div class="wnav">
+      <button class="btn" id="wPrev">← Bước trước</button>
+      <span class="sp" style="flex:1"></span>
+      <span style="font-size:12.5px;color:var(--ink3)" id="wPos"></span>
+      <span class="sp" style="flex:1"></span>
+      <button class="btn pri" id="wNext">Bước tiếp →</button>
+    </div>
   </section>
+
+
+
+  <!-- ===== XẾP TRƯỚC MÔN HỌC ===== -->
+  
+
+  <!-- ===== TINH CHỈNH TAY ===== -->
+  
 
   <!-- ===== KẾ THỪA LỊCH CŨ ===== -->
   <section class="view" id="v-kethua">
@@ -544,59 +635,10 @@ input[type=range]{accent-color:var(--ng);width:110px}
   </section>
 
   <!-- ===== XẾP LỊCH ===== -->
-  <section class="view" id="v-solve">
-    <div class="card">
-      <div class="ch"><h3>Chạy bộ giải</h3><span class="sp"></span>
-        <button class="btn pri" id="bRun">▶ Bắt đầu xếp</button>
-        <button class="btn" id="bStop" disabled>■ Dừng</button></div>
-      <div class="cb">
-        <p style="margin:0 0 13px;color:var(--ink2);font-size:13px">
-          Thường mất 2–10 phút. Có thể bấm <b>Dừng</b> bất cứ lúc nào — phương án đã tìm được vẫn giữ nguyên.</p>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:13px">
-          <label class="fld"><span>Phạm vi xếp</span><select id="sScope">
-            <option>Theo kế hoạch · cả 4 lớp</option>
-            <option>Lớp 1 · Văn hoá theo khối</option>
-            <option selected>Lớp 2 · Nghề hệ song bằng 9+</option>
-            <option>Lớp 3 · TC thường + Cao đẳng</option>
-            <option>Một lớp cụ thể…</option></select></label>
-          <label class="fld"><span>Giới hạn thời gian</span><select id="sTime"><option>2 phút</option><option selected>5 phút</option><option>10 phút</option></select></label>
-          <label class="fld"><span>Giữ lịch cũ</span><select id="sKeep"><option>Có — chỉ xếp lại GV đổi phân công</option><option>Không — xếp mới hoàn toàn</option></select></label>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px">
-          <span id="sPhase">Sẵn sàng</span><span class="mono" id="sPct"></span></div>
-        <div class="bar" id="sBar"><i></i></div>
-        <div class="g2" style="margin-top:14px">
-          <div class="box nu" style="display:block"><b style="font-size:12.5px">Pha 1 · tìm phương án khả thi</b>
-            <div style="font-size:12px;color:var(--ink2);margin-top:3px">Bỏ hàm mục tiêu, dừng ngay khi có lời giải đầu tiên.</div>
-            <div style="margin-top:6px" id="sP1"><span class="pill p-mu">Chờ</span></div></div>
-          <div class="box nu" style="display:block"><b style="font-size:12.5px">Pha 2 · tối ưu</b>
-            <div style="font-size:12px;color:var(--ink2);margin-top:3px">Lấy nghiệm pha 1 làm gợi ý rồi tối ưu. Hết giờ vẫn giữ nghiệm pha 1.</div>
-            <div style="margin-top:6px" id="sP2"><span class="pill p-mu">Chờ</span></div></div>
-        </div>
-        <div id="sOut" style="margin-top:13px"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="ch"><h3>Lịch sử phiên chạy</h3></div>
-      <div class="cb t0"><table class="d">
-        <thead><tr><th>Phiên</th><th>Thời điểm</th><th>Trạng thái</th><th class="n">Đã xếp</th><th class="n">Mục tiêu</th><th></th></tr></thead>
-        <tbody id="tbHist"></tbody></table></div>
-    </div>
-  </section>
+  
 
   <!-- ===== KIỂM TRA ===== -->
-  <section class="view" id="v-check">
-    <div class="card">
-      <div class="ch"><h3>Kiểm tra khả thi</h3><span class="sp"></span>
-        <span class="pill p-er" id="chkN">2 lỗi chặn</span><button class="btn" id="bChk">Kiểm tra lại</button></div>
-      <div class="cb">
-        <p style="margin:0 0 12px;color:var(--ink2);font-size:13px">
-          <b class="mono" style="color:var(--err)">✕ Lỗi</b> phải sửa trước khi xếp — còn lỗi thì chắc chắn không ra được lịch.
-          <b class="mono" style="color:var(--wn)">! Cảnh báo</b> vẫn xếp được nhưng lịch sẽ kém.</p>
-        <div id="chkOut"></div>
-      </div>
-    </div>
-  </section>
+  
 
   <!-- ===== LỚP ===== -->
   <section class="view" id="v-lop">
@@ -829,14 +871,11 @@ input[type=range]{accent-color:var(--ng);width:110px}
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const VT={dash:["Tổng quan","Học kỳ I · 2026–2027"],
 tkb:["Thời khoá biểu","Tuần 03 · 24–28/8/2026"],
-  kehoach:["Kế hoạch xếp lịch","4 lớp xếp · khoá dần"],
   kethua:["Kế thừa lịch cũ","Giữ phần lớn TKB đã xếp"],
   uutien:["Độ ưu tiên ràng buộc","Cao · Trung bình · Thấp"],
   ghepnhom:["Lớp ghép & đồng giảng","4 tình huống đặc thù"],
-  ghim:["Xếp trước môn học","Ghim tiết cố định"],
-  tinhchinh:["Tinh chỉnh thủ công","4 phương pháp đổi tiết"],
   banggv:["Bảng giáo viên","Toàn tuần · theo ca"],
-  solve:["Xếp lịch tự động","Bộ giải CP-SAT"],check:["Kiểm tra khả thi","Tiền kiểm số học"],
+  xeplich:["Xếp thời khoá biểu","Quy trình 5 bước"],
   lop:["Lớp & nhóm nghề","14 nhóm · 445 HS · 11 lớp VH"],gv:["Giáo viên","41 giáo viên · định mức 550"],
   phong:["Phòng & xưởng","59 phòng"],mon:["Mô-đun","Chương trình khối 11"],
   ctdt:["Chương trình đào tạo","Cao đẳng · Song bằng · Trung cấp"],
@@ -849,7 +888,10 @@ function go(v){
   window.scrollTo({top:0,behavior:"smooth"});
 }
 $$(".side a").forEach(a=>a.addEventListener("click",()=>go(a.dataset.v)));
-$$("[data-go]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.go)));
+$$("[data-go]").forEach(b=>b.addEventListener("click",()=>{
+  const t=b.dataset.go;
+  if(WZ.indexOf(t)>=0)goStep(t);else go(t);
+}));
 $("#thBtn").addEventListener("click",()=>{
   const c=document.documentElement.getAttribute("data-theme");
   const d=c?c==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
@@ -1826,6 +1868,40 @@ mgAuto();
   if(typeof gvRender==="function")gvRender();
 })();
 
+
+/* ================= THANH TIẾN TRÌNH XẾP LỊCH ================= */
+const WZ=["kehoach","ghim","check","solve","tinhchinh"];
+const WZLBL={kehoach:"Kế hoạch xếp",ghim:"Xếp trước môn",check:"Kiểm tra khả thi",
+  solve:"Chạy bộ giải",tinhchinh:"Tinh chỉnh tay"};
+let wzAt=0;
+function wzGo(idx,quiet){
+  wzAt=Math.max(0,Math.min(WZ.length-1,idx));
+  WZ.forEach((id,i)=>{
+    const pane=$("#wp-"+id);if(pane)pane.style.display=i===wzAt?"":"none";
+  });
+  $$("#wizBar .wstep").forEach((b,i)=>{
+    b.classList.toggle("on",i===wzAt);
+    b.classList.toggle("done",i<wzAt);
+  });
+  $("#wPos").textContent="Bước "+(wzAt+1)+" / "+WZ.length+" · "+WZLBL[WZ[wzAt]];
+  $("#wPrev").disabled=wzAt===0;
+  $("#wNext").disabled=wzAt===WZ.length-1;
+  if(!quiet)window.scrollTo({top:0,behavior:"smooth"});
+}
+$$("#wizBar .wstep").forEach((b,i)=>b.addEventListener("click",()=>wzGo(i)));
+$("#wPrev").addEventListener("click",()=>wzGo(wzAt-1));
+$("#wNext").addEventListener("click",()=>{
+  wzGo(wzAt+1);
+  toast("Sang bước "+(wzAt+1)+": "+WZLBL[WZ[wzAt]]);
+});
+/* Cho phép nhảy thẳng tới một bước từ nơi khác */
+function goStep(id){
+  const i=WZ.indexOf(id);
+  go("xeplich");
+  if(i>=0)wzGo(i,true);
+}
+wzGo(0,true);
+
 fillCt();
 
 /* ================= KIỂM TRA ================= */
@@ -1877,7 +1953,7 @@ $("#bRun").addEventListener("click",()=>{
       $("#bRun").disabled=false;$("#bStop").disabled=true;
       $("#sOut").innerHTML=`<div class="box ok"><span class="i">✓</span><span class="x"><b>Đã xếp 316/319 buổi.</b> Còn 3 buổi chưa xếp do thiếu xưởng theo ngưỡng sức chứa.
         <span class="f">Xem chi tiết ở mục Kiểm tra. Có thể xuất bản bản này rồi xếp tay 3 buổi còn lại.</span></span></div>`;
-      toast("Xếp lịch xong. Sang mục Thời khoá biểu để rà soát.");return;}
+      toast("Xếp lịch xong. Bấm Bước tiếp để tinh chỉnh.");return;}
     fill.style.width=pct+"%";$("#sPct").textContent=Math.floor(pct)+"%";
     $("#sPhase").textContent=pct<15?"Đang dựng mô hình":pct<55?"Pha 1 · tìm phương án khả thi":pct<90?"Pha 2 · tối ưu mục tiêu":"Đang ghi kết quả";
     if(pct>55&&$("#sP1").textContent.includes("Đang")){$("#sP1").innerHTML='<span class="pill p-ok">Xong · 42 giây</span>';$("#sP2").innerHTML='<span class="pill p-wn">Đang chạy</span>';}
